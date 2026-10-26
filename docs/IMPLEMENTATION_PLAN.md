@@ -49,7 +49,7 @@ Darbai:
 - validuoti klasių ir įrašų pakankamumą prieš mokymą; jei nepakanka, grąžinti struktūruotą `insufficient_data` būseną;
 - fiksuoti random seed ir modelio versijos metaduomenis;
 - saugoti prognozes atskirai nuo anotacijų; nerodyti nevaliduotos taisyklės kaip ML modelio rezultato;
-- numatyti neapdoroto HTML/Markdown teksto drošības attīrīšanu parādīšanai šablonos.
+- numatyti saugų nepatikimo HTML/Markdown turinio atvaizdavimą šablonuose.
 
 Priėmimas: vienetiniai testai tikrina paruošimą, mokymo sąlygas, prognozės formatą, išsaugotų anotacijų apsaugą ir deterministinį rezultatų apdorojimą. Jokio modelio mokymo iš testų.
 
