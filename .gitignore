@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Environment secrets
+.env
+.env.*
+!.env.example
+
+# Local databases and imported datasets
+data/*
+!data/.gitkeep
+*.db
+*.sqlite
+*.sqlite3
+*.csv
+
+# Local trained models / exports
+models/*
+!models/.gitkeep
+*.joblib
+*.pkl
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
