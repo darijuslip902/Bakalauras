@@ -6,7 +6,7 @@
 
 Dirbk tiesiogiai šiame projekte. Pirmiausia perskaityk `CLAUDE.md` ir tik aktualias `ARCHITECTURE.md bei `docs/IMPLEMENTATION_PLAN.md` dalis. Patikrink `git status --short` ir išsaugok visus esamus pakeitimus.
 
-Įgyvendink tik **0 etapą** iš `docs/IMPLEMENTATION_PLAN.md`: minimalų FastAPI karkasą, paleidimo / sveikatos patikrinimo maršrutą, minimalų Jinja2 puslapį ir testą(-us), kad būtų galima patikrinti priėmimo kriterijus. Kai kurie konfigūracijos failai jau sukurti – juos peržiūrėk ir papildyk tik jei būtina, neperrašyk be reikalaus.
+Įgyvendink tik **0 etapą** iš `docs/IMPLEMENTATION_PLAN.md`: minimalų FastAPI karkasą, paleidimo / sveikatos patikrinimo maršrutą, minimalų Jinja2 puslapį ir testą(-us), kad būtų galima patikrinti priėmimo kriterijus. Kai kurie konfigūracijos failai jau sukurti – juos peržiūrėk ir papildyk tik jei būtina, neperrašyk be reikalo.
 
 Taupydamas laiką ir tokenus:
 - nesukurk visos sistemos vienu kartu ir neįgyvendink 1–5 etapų;
