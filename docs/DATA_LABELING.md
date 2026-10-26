@@ -46,8 +46,8 @@ Nepriskirti P0 vien todėl, kad issue aprašyme yra žodis „critical“. Jei n
 2. Patikrinti turimą kontekstą ir GitHub label, bet nelaikyti jų automatiškai teisingomis.
 3. Kiekvienam laukui pasirinkti reikšmę tik tada, kai yra pagrindas.
 4. Nežinomą lauką palikti tuščią, o ne sugalvoti.
-5. Jaunu / neskaidru atveju pierakstīt īsu iemeslu darba piezīmēs vai atsevišķā pētījuma dokumentā, nevis mainīt source issue.
-6. Ja iespējams, atkārtoti anotēt daļu piemēru pēc laika vai ar otru vērtētāju, lai novērtētu konsekvenci.
+5. Jei atvejis neaiškus, trumpą pagrindimą užrašyti darbo pastabose ar atskirame tyrimo dokumente, o ne keisti šaltinio issue.
+6. Jei įmanoma, po laiko iš naujo anotuoti dalį pavyzdžių arba paprašyti antro vertintojo, kad būtų galima įvertinti nuoseklumą.
 
 ## Datu sākotnė atranka
 
