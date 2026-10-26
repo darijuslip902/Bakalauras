@@ -24,9 +24,9 @@ GitHub etiketės nėra automatiškai laikomos teisingomis kategorijos, prioritet
 
 ## Įgyvendinimo būsena
 
-Šis commit įtraukia architektūros ir įgyvendinimo specifikacijas; programos kodas bus kuriamas pagal etapus, aprašytus docs/IMPLEMENTATION_PLAN.md.
+Įgyvendintas 0 etapas: FastAPI karkasas, `GET /health` ir minimalus Jinja2 pagrindinis puslapis `GET /`. Likę etapai kuriami pagal docs/IMPLEMENTATION_PLAN.md.
 
-## Vietinis paleidimas (kai įgyvendintas pirmasis etapas)
+## Vietinis paleidimas
 
 Rekomenduojamas Python 3.12 ar naujesnis palaikomas leidimas.
 
@@ -41,7 +41,13 @@ python -m pip install -r requirements.txt
 uvicorn app.main:app --reload
 ```
 
-Numatomas vietinis adresas: http://127.0.0.1:8000. Pradinėse stadijose šios komandos gali neveikti, kol neįgyvendinti atitinkami plano etapai.
+Vietinis adresas: http://127.0.0.1:8000 (sveikatos patikrinimas: http://127.0.0.1:8000/health).
+
+Testai:
+
+```bash
+python -m pytest
+```
 
 ## Saugumas ir apribojimai
 
