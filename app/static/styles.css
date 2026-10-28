@@ -15,3 +15,33 @@ main {
 a {
   color: #0b5cad;
 }
+
+label {
+  font-weight: 600;
+}
+
+input {
+  padding: 0.4rem;
+  min-width: 16rem;
+  font: inherit;
+}
+
+button {
+  padding: 0.5rem 1rem;
+  font: inherit;
+}
+
+.error {
+  padding: 0.75rem 1rem;
+  border: 1px solid #b00020;
+  color: #8a0019;
+  background: #fdecee;
+}
+
+dt {
+  font-weight: 600;
+}
+
+dd {
+  margin: 0 0 0.5rem;
+}

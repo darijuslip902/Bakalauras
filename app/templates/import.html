@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="lt">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GitHub issues importas</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='styles.css') }}">
+</head>
+<body>
+  <main>
+    <h1>GitHub issues importas</h1>
+    <p>Importuojami tik vieši issues (pull request įrašai praleidžiami). GitHub duomenys nekeičiami.</p>
+
+    {% if error %}
+    <p class="error" role="alert">{{ error }}</p>
+    {% endif %}
+
+    {% if result %}
+    <section aria-labelledby="result-heading">
+      <h2 id="result-heading">Importo rezultatas: {{ imported_repository }}</h2>
+      <dl>
+        <dt>Importuota naujų</dt><dd>{{ result.imported }}</dd>
+        <dt>Atnaujinta esamų</dt><dd>{{ result.updated }}</dd>
+        <dt>Praleista (pull request)</dt><dd>{{ result.skipped_pull_requests }}</dd>
+        <dt>Nepavyko</dt><dd>{{ result.failed }}</dd>
+      </dl>
+    </section>
+    {% endif %}
+
+    <form method="post" action="/import">
+      <p>
+        <label for="repository">Repozitorija (owner/repo)</label><br>
+        <input id="repository" name="repository" type="text" required
+               placeholder="pvz., owner/repo" value="{{ repository }}">
+      </p>
+      <p>
+        <label for="limit">Didžiausias importuojamų issues kiekis (1&ndash;{{ max_limit }})</label><br>
+        <input id="limit" name="limit" type="number" min="1" max="{{ max_limit }}" required
+               value="{{ limit }}">
+      </p>
+      <button type="submit">Importuoti</button>
+    </form>
+
+    <p><a href="/">Į pradžią</a></p>
+  </main>
+</body>
+</html>

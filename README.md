@@ -34,7 +34,7 @@ GitHub etiketės nėra automatiškai laikomos teisingomis kategorijos, prioritet
 
 ## Įgyvendinimo būsena
 
-Įgyvendintas 0 etapas: FastAPI karkasas, `GET /health` ir minimalus Jinja2 pagrindinis puslapis `GET /`. Likę etapai kuriami pagal docs/IMPLEMENTATION_PLAN.md.
+Įgyvendinti 0 ir 1 etapai: FastAPI karkasas su `GET /health` ir pagrindiniu puslapiu `GET /`, SQLite schema (`bug_reports`, `github_issues`) bei viešų GitHub issues importas per puslapį `/import` (`owner/repo` arba `https://github.com/owner/repo`, importo kiekis iki `GITHUB_IMPORT_LIMIT`). Pull request įrašai praleidžiami, pakartotinis importas nedubliuoja įrašų ir neperrašo žmogaus patvirtintų žymų. Duomenų bazė kuriama automatiškai pirmo importo metu (`DATABASE_PATH`, pagal nutylėjimą `data/bakalauras.sqlite3`; failas nėra committinamas). Likę etapai kuriami pagal docs/IMPLEMENTATION_PLAN.md.
 
 ## Vietinis paleidimas
 
