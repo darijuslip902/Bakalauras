@@ -1,10 +1,20 @@
 # Programinės įrangos klaidų automatinio klasifikavimo ir prioritizavimo sistema
 
-Bakalauro darbo prototipas: sistema importuoja klaidų aprašymus iš GitHub Issues, leidžia priskirti patvirtintas žymas, mokyti teksto klasifikavimo modelius ir palyginti jų rezultatus su pradine baze.
+Bakalauro darbo prototipas – klaidų registravimo ir valdymo svetainė su automatiniu teksto klasifikavimu. Klientas / testuotojas be paskyros pateikia klaidą viešoje formoje. Sistema bando automatiškai nustatyti jos kategoriją, prioritetą ir sudėtingumą. Programuotojas / koordinatorius prisijungęs peržiūri, filtruoja ir tvarko pranešimus, keičia jų būsenas ir mato išspręstų klaidų istoriją. Vieši GitHub Issues importuojami atskirai modelio mokymui ir vertinimui.
 
 ## Tikslas
 
 Automatiškai pasiūlyti klaidos **kategoriją**, **sudėtingumo lygį** ir **prioritetą**. Sistema turi parodyti, kokiu būdu gautas rezultatas, jo pasitikėjimo įvertį ir aiškiai pažymėti atvejus, kai patikimų prognozių dar negalima teikti. Atsakingo programuotojo parinkimas sąmoningai neįtrauktas į pirmąją versiją.
+
+## Pagrindinis funkcionalumas
+
+- Vieša klaidos pateikimo forma be kliento paskyros; klientas mato tik pateikimo patvirtinimą.
+- Vidinė, prisijungimu apsaugota programuotojo / koordinatoriaus aplinka.
+- Visų pranešimų sąrašas, paieška ir filtravimas pagal būseną, kategoriją, prioritetą bei sudėtingumą.
+- Būsenos new, in_progress, resolved; išspręstos klaidos lieka istorijoje.
+- Automatinė klasifikacija veikia tik kai yra tinkamas apmokytas modelis; kitu atveju sistema vis tiek išsaugo pranešimą ir aiškiai parodo, kad prognozės nėra.
+- Programuotojas gali pataisyti prognozę; modelio prognozė ir žmogaus patvirtinta žyma saugomos atskirai.
+- Vieši GitHub Issues naudojami kaip atskiras mokymo duomenų šaltinis, o GitHub pusėje sistema nieko nekeičia.
 
 ## Architektūros sprendimai
 
@@ -51,7 +61,7 @@ python -m pytest
 
 ## Saugumas ir apribojimai
 
-- Pradinė versija skirta vietiniam akademiniam prototipui, o ne viešai diegiamai daugiavartotojų sistemai.
+- Pradinė versija skirta vietiniam akademiniam prototipui, o ne viešai diegiamai daugiavartotojų sistemai. Vieša forma priima pranešimus be paskyros, tačiau visi pranešimų sąrašo ir valdymo puslapiai turi būti apsaugoti programuotojo / koordinatoriaus prisijungimu.
 - GitHub prieigos žetonas, jei reikalingas, pateikiamas per aplinkos kintamąjį GITHUB_TOKEN; jo negalima įrašyti į kodą, duomenų bazę, žurnalus ar Git istoriją.
 - Sistema nekeičia GitHub Issues, jų etikečių ar priskirtų programuotojų.
 - Kategorijos, prioritetas ir sudėtingumas yra rekomendacijos, o ne automatiškai patvirtinti faktai.
