@@ -10,6 +10,15 @@
 
 Jei dokumentai prieštarauja vienas kitam, nekurk naujų prielaidų: pažymėk prieštaravimą, pasiūlyk mažiausią sprendimą ir atnaujink atitinkamą dokumentą tik jei dabartinė užduotis tai leidžia.
 
+## Galutinis produkto funkcionalumas
+- Vieša forma leidžia klientui / testuotojui be paskyros pateikti klaidos pavadinimą ir aprašymą.
+- Programuotojas / koordinatorius prisijungia prie vidinės aplinkos, mato visus pranešimus, filtruoja / ieško, keičia būsenas new, in_progress, resolved ir peržiūri išspręstų klaidų istoriją.
+- Naujas pranešimas automatiškai klasifikuojamas tik jei paruoštas tinkamas modelis. Jei duomenų nepakanka, pranešimas vis tiek išsaugomas, o prognozės trūkumas aiškiai rodomas.
+- Prognozė ir žmogaus pataisyta / patvirtinta žyma visada saugomos atskirai.
+- Vieši GitHub Issues naudojami atskirai mokymo duomenims; integracija nekeičia GitHub pusėje esančių issues.
+- Klientui nereikia paskyros ir jis negali peržiūrėti kitų pranešimų. Atsakingo programuotojo automatinis parinkimas neįtrauktas.
+- Įgyvendinimo etapus ir jų eilę skaityti iš docs/IMPLEMENTATION_PLAN.md; nekeisti kodo visai sistemai vienu kartu.
+
 ## Taupūs darbo principai
 - Prieš keičiant kodą vykdyk `git status --short` ir patikrink tik su dabartine užduotimi susijusius failus.
 - Kiekvienam prašymui įgyvendink **tik vieną aiškiai nurodytą etapą**. Neįgyvendink visos sistemos vienu kartu.
