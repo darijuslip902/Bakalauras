@@ -6,9 +6,10 @@ Ar issue pavadinimo ir aprašymo teksto požymiai (TF-IDF) su prižiūrimu Logis
 
 Vertinti tris laukus atskirai. Galima turėti skirtingą pavyzdžių skaičių kiekvienam laukui, nes ne visos klaidos turės visas tris patvirtintas žymas.
 
-## 2. Duomenų sagatavošana un kvalitāte
+## 2. Duomenų paruošimas ir kokybė
 
-- Iš viešo GitHub importo gauti issue pavadinimą, aprašymą, etiketes, būseną, datą ir URL.
+- Iš viešo GitHub importo gauti issue pavadinimą, aprašymą, etiketes, būseną, datą ir URL. Pagrindiniame eksperimentiniame rinkinyje naudoti GitHub įrašus, kurių kilmė ir anotavimas dokumentuoti.
+- Svetainės klientų pateikti bug_reports įrašai pagal nutylėjimą nėra mokymo / testo duomenys. Juos galima įtraukti tik žmogui patvirtinus žymas ir aiškiai dokumentavus duomenų rinkinio sudarymo taisykles.
 - Pull request įrašus išmesti.
 - Dublikatus šalinti / identifikuoti prieš dalijant duomenis.
 - Automatiškai neinterpretuoti visų GitHub label kaip ground truth: jos gali būti repo specifinės, prieštaringos arba nesusijusios su užduoties klasėmis.

@@ -1,85 +1,105 @@
 # Įgyvendinimo planas
 
-Laikytis etapų eilės. Kiekvieno etapo pabaigoje paleisti susijusius testus ir trumpai aprašyti rezultatą. Claude Code sesijai nurodyti vieną etapą, o ne visą planą. Jei darbą reikia tęsti kitoje sesijoje, perduoti tik šį planą, CLAUDE.md ir paskutinės sesijos santrauką.
+Laikytis etapų eilės. Vienoje Claude Code sesijoje įgyvendinti tik vieną etapą, paleisti su juo susijusius testus ir užrašyti faktinius rezultatus. Neperrašyti jau veikiančio 0 etapo karkaso.
 
-## 0 etapas – minimalus projekto pagrindas
-**Tikslas:** pakartojama aplinka, maža priklausomybių aibė, paleidžiamas FastAPI karkasas.
+## 0 etapas – minimalus projekto pagrindas (ATLIKTA)
+**Tikslas:** pakartojama aplinka ir paleidžiamas FastAPI karkasas.
 
-Darbai:
-- pridėti `requirements.txt`, `.gitignore`, `.env.example`;
-- pridėti `app/main.py` su FastAPI programos kūrimo funkcija ir paprastu sveikatos patikrinimo maršrutu;
-- pridėti minimalų Jinja2 pagrindinį HTML puslapį ir CSS, jei tai reikalinga jau šiame etape;
-- aprašyti lokalią venv instaliaciją README;
-- pridėti vieną paleidimo ir vieną sveikatos patikrinimo testą.
-
-Priėmimas: priklausomybes galima įdiegti švarioje venv; `uvicorn app.main:app` paleidžia serverį; health maršrutas ir pytest veikia.
+Atlikta: FastAPI programos kūrimo funkcija create_app(), GET /health, Jinja2 pagrindinis puslapis GET /, CSS, pytest konfigūracija ir pradiniai testai.
 
 ## 1 etapas – SQLite ir GitHub importas
-**Tikslas:** importuoti viešos repozitorijos issues, išvengiant dublikatų.
+**Tikslas:** paruošti duomenų saugyklą ir importuoti viešus GitHub issues mokymo duomenims.
 
 Darbai:
-- sukurti DB inicializaciją ir `issues` schemą pagal ARCHITECTURE.md;
-- GitHub klientas priima tik normalizuotą `owner/repo`, naudoja HTTPS GitHub API, paginaciją ir ribotą importą;
-- atpažinti pull request ir neįtraukti jų;
-- upsert metu atnaujinti šaltinio laukus, bet išsaugoti žmogaus anotacijas;
-- UI leidžia įvesti repo, paleisti importą, matyti klaidas ir importuotų issue sąrašą;
-- naudoti mock'us HTTP testams; nedaryti gyvų interneto užklausų automatinio testavimo metu.
+- sukurti SQLite inicializaciją ir atskirti lenteles sistemos pranešimams (bug_reports) bei iš GitHub importuotiems mokymo įrašams (github_issues);
+- GitHub klientas priima tik normalizuotą owner/repo, naudoja HTTPS, paginaciją ir ribotą importą;
+- atpažinti pull request ir jų neimportuoti;
+- pakartotinis importas nedubliuoja įrašų ir neperrašo žmogaus patvirtintų žymų;
+- UI leidžia įvesti repozitoriją, paleisti importą, matyti rezultatą ir klaidų pranešimus;
+- automatiniuose testuose naudoti mock'us, ne gyvą GitHub tinklą.
 
-Priėmimas: testai patvirtina puslapiavimą, klaidų atvejus, PR filtro veikimą, idempotentiškumą ir anotacijų išsaugojimą. Savavališki hostai atmetami.
+Priėmimas: testai tikrina paginaciją, HTTP klaidas, PR filtrą, dublikatų prevenciją, anotacijų išsaugojimą ir savavališkų hostų atmetimą.
 
-## 2 etapas – rankinis žymėjimas
+## 2 etapas – vieša klaidos pateikimo forma
+**Tikslas:** klientas / testuotojas gali pateikti klaidą be paskyros.
+
+Darbai:
+- sukurti viešą HTML formą su pavadinimu ir išsamiu aprašymu;
+- validuoti privalomus laukus ir teksto ilgius serverio pusėje;
+- išsaugoti pateiktą įrašą bug_reports lentelėje, priskirti new būseną ir sukūrimo laiką;
+- parodyti pateikimo patvirtinimą, bet neatskleisti kitų įrašų;
+- viešai nerodyti vidinio sąrašo, prognozių ar anotavimo veiksmų.
+
+Priėmimas: teisingas įrašas išsaugomas, neteisinga forma atmetama su aiškiu pranešimu, o po pateikimo klientas negali pasiekti kitų pranešimų.
+
+## 3 etapas – programuotojo prisijungimas ir klaidų valdymo aplinka
+**Tikslas:** programuotojas / koordinatorius gali saugiai tvarkyti pateiktas klaidas.
+
+Darbai:
+- sukurti vieną administratoriaus / koordinatoriaus prisijungimą, tinkamą vietiniam bakalauro prototipui; slaptažodį imti iš aplinkos kintamojo arba tikrinti saugų maišą, niekada nelaikyti atviro teksto kode;
+- apsaugoti visus vidinius sąrašo, detalių, būsenų keitimo, anotavimo, mokymo ir vertinimo maršrutus;
+- sukurti vidinį klaidų sąrašą, detalių puslapį, paiešką ir filtrus pagal būseną, kategoriją, prioritetą ir sudėtingumą;
+- leisti keisti būseną new, in_progress, resolved; išspręsti įrašai lieka istorijoje;
+- rodyti aiškias būsenas ir klaidų pranešimus.
+
+Priėmimas: neautentifikuoti prašymai į vidinius maršrutus nukreipiami į prisijungimą arba atmetami; prisijungęs naudotojas gali peržiūrėti ir keisti būsenas; išspręsti įrašai nedingsta iš istorijos. Testuoti autentifikavimą ir leidimus.
+
+## 4 etapas – rankinis GitHub įrašų žymėjimas
 **Tikslas:** sukurti patikimą mokymo duomenų pagrindą.
 
 Darbai:
-- issue detalių puslapyje leidžiama atskirai pasirinkti category, complexity ir priority;
-- nežinomos žymos lieka NULL, jokio automatinio užpildymo iš spėlionių;
-- išsaugoti anotavimo šaltinį ir laiką;
-- pateikti žymų reikšmes iš bendros konfigūracijos / enumų, ne dubliuoti tarp šablonų ir servisų;
-- rodyti, kiek anotacijų yra kiekvienam laukui ir kiekvienai klasei.
+- GitHub issue detalių puslapyje atskirai pasirinkti kategoriją, sudėtingumą ir prioritetą;
+- nežinomas žymas palikti NULL;
+- saugoti anotavimo šaltinį ir laiką;
+- rodyti anotacijų skaičių kiekvienam laukui ir klasei;
+- neleisti automatiškai laikyti GitHub etikečių teisingomis žymomis be žmogaus patvirtinimo.
 
-Priėmimas: forma ir POST endpointas validuoja leistinas reikšmes; galima išsaugoti ir vėl atverti žymas; vieno lauko redagavimas netrina kitų laukų.
+Priėmimas: galima išsaugoti ir vėl atverti žymas; vieno lauko redagavimas netrina kitų; sistemos klientų pateikti pranešimai netampa mokymo duomenimis be patvirtinimo.
 
-## 3 etapas – mokymas ir prognozavimas
-**Tikslas:** sukurti patikrinamą ML bazinį modelį.
-
-Darbai:
-- sujungti title ir body viename deterministiniame tekste;
-- sukurti atskirą scikit-learn Pipeline kiekvienam iš trijų laukų: TF-IDF + LogisticRegression;
-- naudoti tik atitinkamo lauko ne NULL, žmogaus patvirtintas žymas;
-- validuoti klasių ir įrašų pakankamumą prieš mokymą; jei nepakanka, grąžinti struktūruotą `insufficient_data` būseną;
-- fiksuoti random seed ir modelio versijos metaduomenis;
-- saugoti prognozes atskirai nuo anotacijų; nerodyti nevaliduotos taisyklės kaip ML modelio rezultato;
-- numatyti saugų nepatikimo HTML/Markdown turinio atvaizdavimą šablonuose.
-
-Priėmimas: vienetiniai testai tikrina paruošimą, mokymo sąlygas, prognozės formatą, išsaugotų anotacijų apsaugą ir deterministinį rezultatų apdorojimą. Jokio modelio mokymo iš testų.
-
-## 4 etapas – vertinimas ir vartotojo sąsajos užbaigimas
-**Tikslas:** pateikti rezultatą, kurį galima pagrįsti bakalauro darbe.
+## 5 etapas – mokymas ir automatinis klasifikavimas
+**Tikslas:** sistema automatiškai pasiūlo kategoriją, prioritetą ir, jei duomenų pakanka, sudėtingumą.
 
 Darbai:
-- sukurti atskirą vertinimo srautą, kuriame užfiksuojami split nustatymai;
-- palyginti majority-class baseline su TF-IDF + LogisticRegression tuo pačiu split;
-- pateikti per lauką duomenų kiekį, class distribution, precision, recall, F1, macro-F1 ir confusion matrix, kai duomenų kiekis leidžia;
-- UI pridėti anotacijų/prognozių būsenas, vertinimo puslapį, klaidų pranešimus ir nuorodas į šaltinį;
-- README aprašyti paleidimą, GitHub tokeną (pasirinktinį), žymėjimą, ribas ir vertinimą.
+- sujungti pavadinimą ir aprašymą į deterministinį tekstą;
+- sukurti atskirą scikit-learn Pipeline kiekvienam laukui: TF-IDF + LogisticRegression;
+- naudoti tik žmogaus patvirtintas konkretaus lauko žymas;
+- prieš mokymą patikrinti įrašų skaičių ir klasių pakankamumą; kitu atveju grąžinti insufficient_data;
+- po naujo viešo pranešimo išsaugojimo paleisti paruošto modelio prognozę ir išsaugoti ją atskirai nuo žmogaus patvirtintų žymų;
+- jei modelis dar neapmokytas arba trūksta duomenų, vis tiek priimti pranešimą ir parodyti, kad automatinė prognozė dar negalima;
+- programuotojui leisti pataisyti prognozę, išsaugant prognozę ir patvirtintą reikšmę atskirai;
+- fiksuoti modelio versiją, treniravimo metaduomenis ir deterministinį seed.
 
-Priėmimas: vertinimo testai patvirtina, kad mokymas/vertinimas nesimaišo; per mažo dataset'o atveju rodomas įspėjimas, o ne išgalvotos metrikos.
+Priėmimas: testai patikrina mokymo sąlygas, insufficient_data, prognozės formatą, automatinį naujo pranešimo klasifikavimą, prognozės ir anotacijos atskyrimą. Neteigiama, kad score yra kalibruota tikimybė, jei kalibracija nepatikrinta.
 
-## 5 etapas – užbaigimas
+## 6 etapas – vertinimas ir sąsajos užbaigimas
+**Tikslas:** parengti atkuriamą, bakalauro darbui tinkamą modelio vertinimą.
+
+Darbai:
+- palyginti daugumos klasės baseline su TF-IDF + LogisticRegression tuo pačiu duomenų split;
+- pateikti per lauką duomenų kiekį, klasių pasiskirstymą, precision, recall, F1, macro-F1 ir confusion matrix, kai imtis leidžia;
+- vidiniame puslapyje pateikti modelio būseną, prognozės metodą, vertinimo ataskaitą ir aiškius duomenų nepakankamumo pranešimus;
+- parodyti aktyvių ir išspręstų pranešimų skaičius;
+- CSV eksportą įgyvendinti tik jei tai naudinga realiam vertinimui ir nepadidina apimties neproporcingai;
+- README suderinti su faktiškai įgyvendintu funkcionalumu.
+
+Priėmimas: testai įrodo, kad mokymo ir testavimo duomenys nesimaišo; esant mažai imčiai rodomas įspėjimas, o ne išgalvotos metrikos.
+
+## 7 etapas – užbaigimas
 **Tikslas:** kokybinė patikra, ne naujos funkcijos.
 
 Darbai:
-- paleisti visą testų rinkinį ir pataisyti realius defektus;
-- patikrinti švarios instaliacijos instrukcijas;
-- patikrinti logus/slaptažodžių saugumą ir tai, kad jokie duomenys, tokenai, modeliai ar DB netyčia necommittinami;
+- paleisti visą testų rinkinį ir taisyti realius defektus;
+- patikrinti švarios aplinkos diegimą, autentifikavimą, serverio validaciją, logus ir paslapčių apsaugą;
+- patikrinti, kad DB, modeliai, tokenai ir privatūs duomenys netyčia necommittinami;
 - atnaujinti žinomų apribojimų sąrašą;
-- nerašyti išgalvotų rezultatų ar pildyti tyrimo duomenų sintetiniu turiniu, kurį pristatytum kaip realų.
+- užfiksuoti tik realiai gautus testų ir modelio vertinimo rezultatus.
 
-Priėmimas: visi automatizuoti testai praeina; nėra nepaaiškintų klaidų; README ir vertinimo metodika atitinka faktinį kodą.
+Priėmimas: visi automatiniai testai praeina; dokumentai atitinka kodą; nėra išgalvotų rezultatų.
 
 ## Bendros taisyklės
 - Vienu metu įgyvendinti tik nurodytą etapą.
-- Jei etapo apimtis tampa per didelė, įgyvendinti jo pirmą end-to-end vertę ir papildyti etapų kontrolinį sąrašą; nekurti alternatyvios architektūros.
-- Nepakeisti viešos GitHub issue būsenų ar metaduomenų.
-- Nenaudoti tikrų GitHub prisijungimų automatiniuose testuose.
-- Kiekviename atsakyme išskirti testų, kurie tikrai paleisti, rezultatus.
+- Nenaudoti naujų priklausomybių, jei funkciją galima paprastai įgyvendinti esamu rinkiniu arba standartine biblioteka.
+- Nenaudoti React/Vue, Node, Docker, ORM, Redis, task queue, mokamos LLM API ar mikroservisų.
+- GitHub integracija lieka tik skaitymo režimu.
+- Automatiniuose testuose nenaudoti tikro tinklo.
+- Kiekvieno etapo pabaigoje aiškiai atskirti paleistus testus nuo tų, kurie tik numatyti.
