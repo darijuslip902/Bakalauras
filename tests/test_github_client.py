@@ -55,11 +55,24 @@ def test_parse_repository_accepts_valid_values(value: str) -> None:
 @pytest.mark.parametrize(
     "value",
     [
+        "owner/repo.git",
+        "https://github.com/owner/repo.git",
+        "https://github.com/owner/repo.GIT/",
+    ],
+)
+def test_parse_repository_strips_git_suffix(value: str) -> None:
+    assert parse_repository(value) == "owner/repo"
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
         "",
         "owner",
         "a/b/c",
         "-owner/repo",
         "owner/..",
+        "owner/.git",
         "owner/re po",
         "owner/repo?x=1",
         "http://github.com/owner/repo",

@@ -63,6 +63,9 @@ def parse_repository(value: str) -> str:
     if len(segments) != 2:
         raise InvalidRepositoryError(_INVALID_REPOSITORY_MESSAGE)
     owner, repo = segments
+    # GitHub nuorodos dažnai kopijuojamos su `.git` galūne (clone URL).
+    if repo.lower().endswith(".git"):
+        repo = repo[: -len(".git")]
     if (
         not _OWNER_RE.fullmatch(owner)
         or not _REPO_RE.fullmatch(repo)
