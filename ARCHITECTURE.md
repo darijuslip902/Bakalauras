@@ -2,9 +2,14 @@
 
 ## 1. Architektūros tikslas ir ribos
 
-Projektas yra individualaus bakalauro darbo prototipas, skirtas ištirti, ar iš GitHub issue pavadinimo ir aprašymo galima automatiškai pasiūlyti programinės įrangos klaidos kategoriją, sudėtingumą ir prioritetą.
+Projektas yra individualaus bakalauro darbo prototipas – nedidelė internetinė programinės įrangos klaidų registravimo ir valdymo sistema su automatiniu teksto klasifikavimo moduliu. Ji turi dvi sąsajos dalis: viešą klaidos pranešimo formą klientui / testuotojui ir vidinę, prisijungimu apsaugotą programuotojo / klaidų koordinatoriaus aplinką. ML tyrimui atskirai importuojami vieši GitHub Issues įrašai.
 
 Pirmoji versija:
+- leidžia klientui / testuotojui be paskyros pateikti klaidos aprašymą viešoje formoje;
+- išsaugo pateiktą klaidą ir automatiškai bando nustatyti kategoriją, prioritetą bei, jei duomenų pakanka, sudėtingumą;
+- leidžia programuotojui / koordinatoriui prisijungti prie vidinės aplinkos, peržiūrėti visas klaidas, filtruoti ir ieškoti įrašų;
+- leidžia keisti klaidos būseną (`new`, `in_progress`, `resolved`) ir išsaugoti ištaisytų klaidų istoriją;
+- leidžia programuotojui pataisyti neteisingą automatinę prognozę; žmogaus patvirtinta žyma laikoma atskirai nuo modelio prognozės;
 - importuoja viešos GitHub repozitorijos issues tik skaitymo režimu;
 - leidžia peržiūrėti importuotus įrašus ir rankiniu būdu patvirtinti mokymo žymas;
 - paruošia tekstą ir mokymo duomenis;
@@ -114,7 +119,21 @@ Tai loginė struktūra, ne reikalavimas nuo pirmos dienos sukurti kiekvieną mod
 
 ## 5. Duomenų modelis
 
-### `issues`
+Duomenų bazėje atskirti du susiję, bet skirtingos paskirties srautai: (1) sistemoje per viešą formą pateikti pranešimai ir jų valdymas; (2) iš GitHub importuoti įrašai, naudojami mokymo duomenims ir eksperimentams. Jie gali naudoti bendrą `issues` lentelę tik jei šaltinis aiškiai atskiriamas; paprasčiausiam ir saugesniam įgyvendinimui rekomenduojamos atskiros `bug_reports` ir `github_issues` lentelės. Neleisti, kad viešas pranešimas automatiškai taptų mokymo pavyzdžiu be žmogaus patvirtintos žymos.
+
+### `bug_reports` – svetainės pateikti klaidų pranešimai
+
+| Laukas | Paskirtis |
+|---|---|
+| `id` | Vidinis pirminis raktas |
+| `title`, `description` | Kliento / testuotojo pateikti duomenys |
+| `status` | `new`, `in_progress` arba `resolved` |
+| `created_at`, `updated_at`, `resolved_at` | Įrašo gyvavimo ciklo datos |
+| `category_label`, `complexity_label`, `priority_label` | Tik žmogaus patvirtintos / pataisytos žymos, gali būti NULL |
+
+Viešai formai rinkti tik būtinus laukus: pavadinimą ir išsamų aprašymą; papildomas kontaktinis laukas nėra būtinas pirmajai versijai. Pateikimo metu sistema bando atlikti prognozę, tačiau jei modelio nepakanka, įrašas vis tiek išsaugomas ir aiškiai pažymimas, kad prognozė nepasiekiama.
+
+### `github_issues`
 
 | Laukas | Paskirtis |
 |---|---|
@@ -136,7 +155,7 @@ Unikalus apribojimas: `(repository_full_name, issue_number)`. Importuojant tą p
 
 ### `prediction_runs`
 
-Saugoti prognozės istoriją (issue ID, laukas, prognozuota reikšmė, confidence jei prieinamas, metodas, modelio versija, sukūrimo laikas ir statusas). Prognozė niekada neperrašo žmogaus patvirtintos žymos.
+Saugoti prognozės istoriją (įrašo tipas ir ID, laukas, prognozuota reikšmė, score jei prieinamas, metodas, modelio versija, sukūrimo laikas ir statusas). Prognozė niekada neperrašo žmogaus patvirtintos žymos.
 
 ### `model_versions`
 
@@ -173,16 +192,29 @@ Pradinis modelis: `Pipeline(TfidfVectorizer(...), LogisticRegression(...))`. Tek
 
 ## 8. Pagrindiniai naudotojo scenarijai
 
-1. Atidaryti dashboard ir matyti importuotų issues / pažymėtų issues skaičių.
-2. Įvesti viešą GitHub repozitoriją ir importuoti ribotą skaičių issues.
-3. Peržiūrėti issue su pavadinimu, aprašymu, GitHub etiketėmis ir nuoroda.
-4. Rankiniu būdu patvirtinti kategoriją, sudėtingumą ir prioritetą; galima pažymėti lauką kaip nežinomą.
-5. Paleisti kiekvieno tinkamo lauko modelio mokymą.
-6. Prognozuoti pasirinktą issue ir pamatyti rezultatą, metodą, modelio versiją ir peržiūros indikatorių.
-7. Atidaryti vertinimo puslapį ir pamatyti metrikas, duomenų kiekį, klasių balansą bei apribojimus.
-8. Eksportuoti anotacijų / vertinimo santrauką CSV formatu, jei tai padeda tyrimui.
+1. Klientas / testuotojas atidaro viešą formą ir pateikia pavadinimą bei klaidos aprašymą; paskyra nereikalinga.
+2. Sistema validuoja įvestį, išsaugo pranešimą ir automatiškai bando klasifikuoti kategoriją, prioritetą bei sudėtingumą. Jei modelio duomenų nepakanka, pranešimas vis tiek sukuriamas be išgalvotos prognozės.
+3. Klientui parodomas aiškus patvirtinimas, kad pranešimas priimtas. Klientas nemato kitų naudotojų pranešimų ir neturi prieigos prie vidinės aplinkos.
+4. Programuotojas / koordinatorius prisijungia prie vidinės aplinkos, mato visus pranešimus, aktyvias ir išspręstas klaidas, filtruoja pagal būseną, kategoriją ir prioritetą, atidaro detales.
+5. Programuotojas keičia būseną `new` → `in_progress` → `resolved`, o išspręstas įrašas lieka istorijoje; prireikus jis pataiso prognozuotą kategoriją, prioritetą ar sudėtingumą.
+6. Atidaryti dashboard ir matyti importuotų issues / pažymėtų issues skaičių.
+7. Įvesti viešą GitHub repozitoriją ir importuoti ribotą skaičių issues.
+8. Peržiūrėti GitHub issue su pavadinimu, aprašymu, GitHub etiketėmis ir nuoroda.
+9. Rankiniu būdu patvirtinti GitHub įrašo kategoriją, sudėtingumą ir prioritetą; galima pažymėti lauką kaip nežinomą.
+10. Paleisti kiekvieno tinkamo lauko modelio mokymą.
+11. Prognozuoti pasirinktą GitHub issue ir pamatyti rezultatą, metodą, modelio versiją ir peržiūros indikatorių.
+12. Atidaryti vertinimo puslapį ir pamatyti metrikas, duomenų kiekį, klasių balansą bei apribojimus.
+13. Eksportuoti anotacijų / vertinimo santrauką CSV formatu, jei tai padeda tyrimui.
 
-## 9. Nefunkciniai reikalavimai
+## 9. Prisijungimas ir saugumas
+
+- Tik programuotojo / koordinatoriaus vidiniai maršrutai reikalauja autentifikavimo; viešas pranešimo pateikimo maršrutas lieka pasiekiamas be paskyros.
+- Pirmajai vietinei bakalauro prototipo versijai pakanka vienos administratoriaus / koordinatoriaus paskyros, kurios slaptažodis laikomas aplinkos kintamajame arba saugomas tik saugiu slaptažodžio maišu. Niekada nelaikyti slaptažodžio atviro teksto pavidalu kode ar repozitorijoje.
+- Apsaugoti vidinius sąrašo, detalių, būsenų keitimo, anotavimo, mokymo ir vertinimo maršrutus. Vien paslėpti nuorodas HTML puslapyje nepakanka.
+- Validuoti formas serverio pusėje, naudoti parametrizuotą SQL, šablonuose automatiškai escapinti naudotojo tekstą ir riboti pateikiamo teksto ilgį.
+- Pirmoje versijoje nereikia klientų paskyrų, vaidmenų valdymo sistemos, atsakingo programuotojo automatinio parinkimo ar viešo visų klaidų sąrašo.
+
+## 10. Nefunkciniai reikalavimai
 
 - Įprastas vietinis paleidimas vienu serverio procesu.
 - Pakartojamas modelio treniravimas su fiksuotu seed ir išsaugotais duomenų skirstymo parametrais.
@@ -193,7 +225,7 @@ Pradinis modelis: `Pipeline(TfidfVectorizer(...), LogisticRegression(...))`. Tek
 - Modelio ataskaita turi atskirti validuotus rezultatus nuo pavyzdinių taisyklių.
 - Minimalūs prieinamumo principai: semantinis HTML, label laukams, tinkamas kontrastas, aiškus klaidų tekstas.
 
-## 10. Rizikos ir jų valdymas
+## 11. Rizikos ir jų valdymas
 
 | Rizika | Valdymas |
 |---|---|
@@ -205,8 +237,12 @@ Pradinis modelis: `Pipeline(TfidfVectorizer(...), LogisticRegression(...))`. Tek
 | Per didelė darbų apimtis | Nėra assignee rekomendavimo ir išorinių LLM pirmoje versijoje |
 | Netiksliai interpretuojamas confidence | Aiškiai žymėti kaip score; kalibruoti tik atskirai įvertinus |
 
-## 11. Architektūros priėmimo kriterijai
+## 12. Architektūros priėmimo kriterijai
 
+- Klientas be paskyros gali pateikti klaidos pranešimą, o sistema patvirtina jo priėmimą.
+- Neprisijungęs naudotojas negali peržiūrėti kitų pranešimų ar pasiekti vidinių maršrutų.
+- Prisijungęs programuotojas gali peržiūrėti, filtruoti, atverti ir keisti klaidų būsenas; išspręstos klaidos lieka istorijoje.
+- Naujas pranešimas automatiškai klasifikuojamas tik tada, kai tinkamas modelis yra paruoštas; kitaip rodoma aiški duomenų nepakankamumo būsena.
 - Galima importuoti viešos repozitorijos issues ir neimportuoti PR.
 - Pakartotinis importas nesukuria dublikatų ir neperrašo anotacijų.
 - Galima rankiniu būdu pažymėti kiekvieną iš trijų laukų nepriklausomai.
