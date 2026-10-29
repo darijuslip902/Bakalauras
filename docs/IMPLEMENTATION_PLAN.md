@@ -65,11 +65,14 @@ Darbai:
 - naudoti tik žmogaus patvirtintas konkretaus lauko žymas;
 - prieš mokymą patikrinti įrašų skaičių ir klasių pakankamumą; kitu atveju grąžinti insufficient_data;
 - po naujo viešo pranešimo išsaugojimo paleisti paruošto modelio prognozę ir išsaugoti ją atskirai nuo žmogaus patvirtintų žymų;
+- kiekvienai prognozei išsaugoti modelio pateiktą pasitikėjimo įvertį, aiškiai atskiriant jį nuo patvirtinto tikslumo; jei įvertis nėra kalibruotas, sąsajoje jo nepateikti kaip garantuotos teisingumo tikimybės;
+- nustatyti ir dokumentuoti peržiūros slenkstį: kai prognozės pasitikėjimo įvertis žemesnis už slenkstį, automatiškai pažymėti įrašą „Rekomenduojama peržiūra“, bet neatimti iš sistemos automatinio klasifikavimo galimybės;
+- vertinti kiekvieną lauką (kategoriją, prioritetą, sudėtingumą) atskirai, nes vieno lauko prognozė gali būti patikimesnė už kito;
 - jei modelis dar neapmokytas arba trūksta duomenų, vis tiek priimti pranešimą ir parodyti, kad automatinė prognozė dar negalima;
 - programuotojui leisti pataisyti prognozę, išsaugant prognozę ir patvirtintą reikšmę atskirai;
 - fiksuoti modelio versiją, treniravimo metaduomenis ir deterministinį seed.
 
-Priėmimas: testai patikrina mokymo sąlygas, insufficient_data, prognozės formatą, automatinį naujo pranešimo klasifikavimą, prognozės ir anotacijos atskyrimą. Neteigiama, kad score yra kalibruota tikimybė, jei kalibracija nepatikrinta.
+Priėmimas: testai patikrina mokymo sąlygas, insufficient_data, prognozės formatą, automatinį naujo pranešimo klasifikavimą, prognozės ir anotacijos atskyrimą bei žemo pasitikėjimo žymos nustatymą. Neteigiama, kad score yra kalibruota tikimybė, jei kalibracija nepatikrinta.
 
 ## 6 etapas – vertinimas ir sąsajos užbaigimas
 **Tikslas:** parengti atkuriamą, bakalauro darbui tinkamą modelio vertinimą.
@@ -78,11 +81,13 @@ Darbai:
 - palyginti daugumos klasės baseline su TF-IDF + LogisticRegression tuo pačiu duomenų split;
 - pateikti per lauką duomenų kiekį, klasių pasiskirstymą, precision, recall, F1, macro-F1 ir confusion matrix, kai imtis leidžia;
 - vidiniame puslapyje pateikti modelio būseną, prognozės metodą, vertinimo ataskaitą ir aiškius duomenų nepakankamumo pranešimus;
+- klaidų sąraše ir detalėse rodyti pasitikėjimo įvertį bei aiškią žymą „Automatinė klasifikacija“ arba „Rekomenduojama peržiūra“ pagal dokumentuotą slenkstį;
+- patikrinti, ar peržiūros slenkstis pagrįstai parinktas vertinimo duomenimis; ataskaitoje nurodyti, kiek prognozių pažymima peržiūrai ir kokia jų faktinė klasifikavimo kokybė, jei duomenų imtis leidžia;
 - parodyti aktyvių ir išspręstų pranešimų skaičius;
 - CSV eksportą įgyvendinti tik jei tai naudinga realiam vertinimui ir nepadidina apimties neproporcingai;
 - README suderinti su faktiškai įgyvendintu funkcionalumu.
 
-Priėmimas: testai įrodo, kad mokymo ir testavimo duomenys nesimaišo; esant mažai imčiai rodomas įspėjimas, o ne išgalvotos metrikos.
+Priėmimas: testai įrodo, kad mokymo ir testavimo duomenys nesimaišo; esant mažai imčiai rodomas įspėjimas, o ne išgalvotos metrikos; peržiūros žyma veikia pagal nustatytą slenkstį ir sąsaja nevadina nepatikrinto score tikslumo garantija.
 
 ## 7 etapas – užbaigimas
 **Tikslas:** kokybinė patikra, ne naujos funkcijos.
