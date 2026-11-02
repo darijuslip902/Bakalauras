@@ -7,7 +7,7 @@ Laikytis etapų eilės. Vienoje Claude Code sesijoje įgyvendinti tik vieną eta
 
 Atlikta: FastAPI programos kūrimo funkcija create_app(), GET /health, Jinja2 pagrindinis puslapis GET /, CSS, pytest konfigūracija ir pradiniai testai.
 
-## 1 etapas – SQLite ir GitHub importas
+## 1 etapas – SQLite ir GitHub importas (ATLIKTA)
 **Tikslas:** paruošti duomenų saugyklą ir importuoti viešus GitHub issues mokymo duomenims.
 
 Darbai:
@@ -20,7 +20,7 @@ Darbai:
 
 Priėmimas: testai tikrina paginaciją, HTTP klaidas, PR filtrą, dublikatų prevenciją, anotacijų išsaugojimą ir savavališkų hostų atmetimą.
 
-## 2 etapas – vieša klaidos pateikimo forma
+## 2 etapas – vieša klaidos pateikimo forma (ATLIKTA)
 **Tikslas:** klientas / testuotojas gali pateikti klaidą be paskyros.
 
 Darbai:

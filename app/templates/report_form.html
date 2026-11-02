@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="lt">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pranešti apie klaidą</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='styles.css') }}">
+</head>
+<body>
+  <main>
+    <h1>Pranešti apie klaidą</h1>
+    <p>Aprašykite pastebėtą programinės įrangos klaidą. Paskyra nereikalinga. Abu laukai privalomi.</p>
+
+    {% if errors %}
+    <div class="error" role="alert">
+      <p>Pranešimas neišsiųstas. Pataisykite pažymėtus laukus:</p>
+      <ul>
+        {% for message in errors.values() %}
+        <li>{{ message }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
+    <form method="post" action="/report">
+      <p>
+        <label for="title">Klaidos pavadinimas</label><br>
+        <input id="title" name="title" type="text" class="wide" required
+               maxlength="{{ title_max_length }}" value="{{ title }}"
+               {% if errors.title %}aria-invalid="true" aria-describedby="title-error"{% endif %}>
+        {% if errors.title %}<span id="title-error" class="field-error">{{ errors.title }}</span>{% endif %}
+      </p>
+      <p>
+        <label for="description">Išsamus klaidos aprašymas</label><br>
+        <span class="hint">Ką darėte, kas įvyko ir ko tikėjotės (iki {{ description_max_length }} simbolių).</span><br>
+        <textarea id="description" name="description" class="wide" rows="10" required
+                  maxlength="{{ description_max_length }}"
+                  {% if errors.description %}aria-invalid="true" aria-describedby="description-error"{% endif %}>{{ description }}</textarea>
+        {% if errors.description %}<span id="description-error" class="field-error">{{ errors.description }}</span>{% endif %}
+      </p>
+      <button type="submit">Pateikti pranešimą</button>
+    </form>
+
+    <p><a href="/">Į pradžią</a></p>
+  </main>
+</body>
+</html>

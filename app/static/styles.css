@@ -26,6 +26,38 @@ input {
   font: inherit;
 }
 
+textarea {
+  padding: 0.4rem;
+  font: inherit;
+}
+
+.wide {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.hint {
+  color: #555;
+  font-size: 0.9rem;
+}
+
+.field-error {
+  display: block;
+  margin-top: 0.25rem;
+  color: #8a0019;
+}
+
+[aria-invalid="true"] {
+  border: 2px solid #b00020;
+}
+
+.success {
+  padding: 0.75rem 1rem;
+  border: 1px solid #1e7b34;
+  color: #14532d;
+  background: #e8f5ec;
+}
+
 button {
   padding: 0.5rem 1rem;
   font: inherit;
