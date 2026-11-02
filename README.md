@@ -34,7 +34,7 @@ GitHub etiketės nėra automatiškai laikomos teisingomis kategorijos, prioritet
 
 ## Įgyvendinimo būsena
 
-Įgyvendinti 0 ir 1 etapai: FastAPI karkasas su `GET /health` ir pagrindiniu puslapiu `GET /`, SQLite schema (`bug_reports`, `github_issues`) bei viešų GitHub issues importas per puslapį `/import` (`owner/repo` arba `https://github.com/owner/repo`, importo kiekis iki `GITHUB_IMPORT_LIMIT`). Pull request įrašai praleidžiami, pakartotinis importas nedubliuoja įrašų ir neperrašo žmogaus patvirtintų žymų. Duomenų bazė kuriama automatiškai pirmo importo metu (`DATABASE_PATH`, pagal nutylėjimą `data/bakalauras.sqlite3`; failas nėra committinamas). Likę etapai kuriami pagal docs/IMPLEMENTATION_PLAN.md.
+Įgyvendinti 0, 1 ir 2 etapai: FastAPI karkasas su `GET /health` ir pagrindiniu puslapiu `GET /`, SQLite schema (`bug_reports`, `github_issues`) bei viešų GitHub issues importas per puslapį `/import` (`owner/repo` arba `https://github.com/owner/repo`, importo kiekis iki `GITHUB_IMPORT_LIMIT`). Pull request įrašai praleidžiami, pakartotinis importas nedubliuoja įrašų ir neperrašo žmogaus patvirtintų žymų. Duomenų bazė kuriama automatiškai pirmo importo arba pirmo klaidos pranešimo metu (`DATABASE_PATH`, pagal nutylėjimą `data/bakalauras.sqlite3`; failas nėra committinamas). Vieša klaidos pateikimo forma `/report` leidžia be paskyros pateikti pavadinimą (iki 200 simbolių) ir aprašymą (iki 10000 simbolių); validacija vyksta serverio pusėje, įrašas išsaugomas `bug_reports` lentelėje su būsena `new`, o naudotojui rodomas tik patvirtinimas (`/report/submitted`). Likę etapai kuriami pagal docs/IMPLEMENTATION_PLAN.md.
 
 ## Vietinis paleidimas
 
