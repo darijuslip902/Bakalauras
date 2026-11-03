@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="lt">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{% endblock %} – vidinė aplinka</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='styles.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="/dashboard">Klaidų valdymas</a>
+      <nav class="topnav" aria-label="Vidinė navigacija">
+        <a href="/dashboard"{% if active == "dashboard" %} aria-current="page"{% endif %}>Klaidų sąrašas</a>
+        <a href="/import"{% if active == "import" %} aria-current="page"{% endif %}>GitHub importas</a>
+        <a href="/report">Vieša forma</a>
+      </nav>
+      <form class="logout" method="post" action="/logout">
+        <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+        <span class="user" title="Prisijungęs naudotojas">{{ session.username }}</span>
+        <button type="submit" class="secondary">Atsijungti</button>
+      </form>
+    </div>
+  </header>
+  <main class="wide">
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

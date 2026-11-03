@@ -32,7 +32,7 @@ Darbai:
 
 Priėmimas: teisingas įrašas išsaugomas, neteisinga forma atmetama su aiškiu pranešimu, o po pateikimo klientas negali pasiekti kitų pranešimų.
 
-## 3 etapas – programuotojo prisijungimas ir klaidų valdymo aplinka
+## 3 etapas – programuotojo prisijungimas ir klaidų valdymo aplinka (ATLIKTA)
 **Tikslas:** programuotojas / koordinatorius gali saugiai tvarkyti pateiktas klaidas.
 
 Darbai:

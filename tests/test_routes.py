@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 
 from app.main import create_app
 from app.routes.issues import get_database_path, get_github_transport
+from tests.auth_utils import csrf_token, login, use_test_auth
 from tests.test_github_client import make_issue
 
 
@@ -42,7 +43,11 @@ class ImportApp:
         app = create_app()
         app.dependency_overrides[get_database_path] = lambda: db_path
         app.dependency_overrides[get_github_transport] = lambda: httpx.MockTransport(self._handle)
+        use_test_auth(app)
         self.client = TestClient(app)
+        # /import yra vidinis maršrutas: testai prisijungia ir naudoja CSRF žetoną.
+        login(self.client)
+        self.csrf_token = csrf_token(self.client, "/import")
 
     def _handle(self, request: httpx.Request) -> httpx.Response:
         self.requests.append(request)
@@ -52,7 +57,8 @@ class ImportApp:
         return httpx.Response(200, json=self.issues if page == 1 else [])
 
     def post(self, repository: str, limit: str = "10") -> httpx.Response:
-        return self.client.post("/import", data={"repository": repository, "limit": limit})
+        data = {"repository": repository, "limit": limit, "csrf_token": self.csrf_token}
+        return self.client.post("/import", data=data)
 
     def issue_count(self) -> int:
         conn = sqlite3.connect(self.db_path)
@@ -148,3 +154,35 @@ def test_github_errors_are_shown(
     assert expected_text in response.text
     assert 'role="alert"' in response.text
     assert import_app.issue_count() == 0
+
+
+def test_import_requires_login(tmp_path: Path) -> None:
+    app = create_app()
+    app.dependency_overrides[get_database_path] = lambda: tmp_path / "routes.sqlite3"
+    app.dependency_overrides[get_github_transport] = lambda: httpx.MockTransport(
+        lambda request: pytest.fail("neprisijungus GitHub neturi būti kviečiamas")
+    )
+    use_test_auth(app)
+    client = TestClient(app)
+
+    page = client.get("/import", follow_redirects=False)
+    submit = client.post("/import", data={"repository": "owner/repo", "limit": "1"}, follow_redirects=False)
+
+    assert page.status_code == 303
+    assert page.headers["location"] == "/login?next=%2Fimport"
+    assert submit.status_code == 303
+    assert submit.headers["location"].startswith("/login")
+    assert not (tmp_path / "routes.sqlite3").exists()
+
+
+def test_import_rejects_missing_or_wrong_csrf_token(import_app: ImportApp) -> None:
+    import_app.issues = [make_issue(1)]
+
+    for token in ("", "neteisingas"):
+        response = import_app.client.post(
+            "/import", data={"repository": "owner/repo", "limit": "1", "csrf_token": token}
+        )
+        assert response.status_code == 403
+        assert "CSRF" in response.text
+
+    assert import_app.requests == []

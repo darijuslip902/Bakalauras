@@ -34,7 +34,14 @@ GitHub etiketės nėra automatiškai laikomos teisingomis kategorijos, prioritet
 
 ## Įgyvendinimo būsena
 
-Įgyvendinti 0, 1 ir 2 etapai: FastAPI karkasas su `GET /health` ir pagrindiniu puslapiu `GET /`, SQLite schema (`bug_reports`, `github_issues`) bei viešų GitHub issues importas per puslapį `/import` (`owner/repo` arba `https://github.com/owner/repo`, importo kiekis iki `GITHUB_IMPORT_LIMIT`). Pull request įrašai praleidžiami, pakartotinis importas nedubliuoja įrašų ir neperrašo žmogaus patvirtintų žymų. Duomenų bazė kuriama automatiškai pirmo importo arba pirmo klaidos pranešimo metu (`DATABASE_PATH`, pagal nutylėjimą `data/bakalauras.sqlite3`; failas nėra committinamas). Vieša klaidos pateikimo forma `/report` leidžia be paskyros pateikti pavadinimą (iki 200 simbolių) ir aprašymą (iki 10000 simbolių); validacija vyksta serverio pusėje, įrašas išsaugomas `bug_reports` lentelėje su būsena `new`, o naudotojui rodomas tik patvirtinimas (`/report/submitted`). Likę etapai kuriami pagal docs/IMPLEMENTATION_PLAN.md.
+Įgyvendinti 0–3 etapai:
+
+- **0 etapas:** FastAPI karkasas, `GET /health`, pagrindinis puslapis `GET /`.
+- **1 etapas:** SQLite schema (`bug_reports`, `github_issues`) ir viešų GitHub issues importas per `/import` (`owner/repo` arba `https://github.com/owner/repo`, kiekis iki `GITHUB_IMPORT_LIMIT`). Pull request įrašai praleidžiami, pakartotinis importas nedubliuoja įrašų ir neperrašo žmogaus patvirtintų žymų.
+- **2 etapas:** vieša klaidos pateikimo forma `/report` be paskyros (pavadinimas iki 200, aprašymas iki 10000 simbolių, validacija serverio pusėje); įrašas išsaugomas su būsena `new`, naudotojui rodomas tik patvirtinimas.
+- **3 etapas:** programuotojo prisijungimas (`/login`, `/logout`) ir vidinė aplinka: klaidų sąrašas `/dashboard` su paieška ir filtrais, detalių puslapis `/dashboard/reports/{id}`, būsenų keitimas `new` → `in_progress` → `resolved` (išspręsti įrašai lieka istorijoje, juos galima atidaryti iš naujo). `/import` taip pat pasiekiamas tik prisijungus.
+
+Duomenų bazė kuriama automatiškai (`DATABASE_PATH`, pagal nutylėjimą `data/bakalauras.sqlite3`; failas nėra committinamas). Kategorija, prioritetas ir sudėtingumas kol kas rodomi kaip „Dar nenustatyta“ – rankinis žymėjimas ir automatinis klasifikavimas bus 4–5 etapuose. Likę etapai kuriami pagal docs/IMPLEMENTATION_PLAN.md.
 
 ## Vietinis paleidimas
 
@@ -53,15 +60,50 @@ uvicorn app.main:app --reload
 
 Vietinis adresas: http://127.0.0.1:8000 (sveikatos patikrinimas: http://127.0.0.1:8000/health).
 
-Testai:
+Testai (naudoja laikiną duomenų bazę ir netikrą GitHub, todėl vietinio `data/` failo nekeičia):
 
 ```bash
 python -m pytest
 ```
 
+## Programuotojo prisijungimo konfigūravimas
+
+Vidinė aplinka turi vieną paskyrą. Numatytojo slaptažodžio nėra: kol nenustatyti žemiau esantys kintamieji, prisijungti neįmanoma (puslapis `/login` parodo pranešimą „Prisijungimas nesukonfigūruotas“).
+
+| Kintamasis | Paskirtis |
+|---|---|
+| `ADMIN_USERNAME` | Prisijungimo vardas, pvz., `admin`. |
+| `ADMIN_PASSWORD_HASH` | Slaptažodžio PBKDF2-SHA256 maišas (ne pats slaptažodis!). |
+| `SESSION_SECRET_KEY` | Atsitiktinis bent 32 simbolių raktas, kuriuo pasirašomas sesijos slapukas. |
+| `SESSION_COOKIE_SECURE` | `true` produkcinėje HTTPS aplinkoje. Lokaliai per HTTP palikti tuščią (per HTTPS atėjusioms užklausoms `Secure` įjungiamas automatiškai). |
+
+Žingsniai (Windows PowerShell, projekto kataloge, aktyvavus `.venv`):
+
+1. Sukurkite `.env` failą iš pavyzdžio:
+   ```powershell
+   Copy-Item .env.example .env
+   ```
+2. Sugeneruokite slaptažodžio maišą ir sesijos raktą. Komanda paprašys slaptažodžio du kartus (bent 10 simbolių; rašant jis nerodomas):
+   ```powershell
+   python -m app.auth
+   ```
+3. Atidarykite `.env` (pvz., `notepad .env`), įrašykite `ADMIN_USERNAME=admin` ir įklijuokite dvi komandos išvestas eilutes `ADMIN_PASSWORD_HASH=...` bei `SESSION_SECRET_KEY=...` vietoje tuščių. Išsaugokite failą.
+4. Paleiskite serverį `uvicorn app.main:app --reload` ir atidarykite http://127.0.0.1:8000/login.
+
+Programa `.env` failą nuskaito pati paleidimo metu; jei kintamasis jau nustatytas aplinkoje, jis turi pirmenybę. `.env` yra `.gitignore` sąraše, todėl į GitHub nepatenka. Niekada neįrašykite tikrų reikšmių į `.env.example`, kodą ar Git istoriją. Pakeitus slaptažodį (naujas maišas), visos senos sesijos nustoja galioti; pakeitus `SESSION_SECRET_KEY` – taip pat.
+
+## Vidinės aplinkos naudojimas
+
+- **Klaidų sąrašas** (`/dashboard`): visi pranešimai, įskaitant išspręstus, naujausi viršuje. Paieška ieško pavadinime ir aprašyme (didžiosios / mažosios raidės nesvarbu). Filtrai pagal būseną, kategoriją, prioritetą ir sudėtingumą; reikšmė „Dar nenustatyta“ randa įrašus be žymos.
+- **Klaidos detalės** (paspaudus pavadinimą): visas aprašymas, laikai (UTC) ir žymos. Čia keičiama būsena: Nauja (`new`), Taisoma (`in_progress`), Išspręsta (`resolved`). Perėjus į „Išspręsta“ užpildomas išsprendimo laikas; atidarius iš naujo jis išvalomas. Įrašai niekada netrinami.
+- **GitHub importas** (`/import`) ir **Atsijungti** – viršutinėje navigacijoje.
+- Sesija galioja 8 valandas. Visi būseną keičiantys veiksmai (būsenos keitimas, importas, atsijungimas) apsaugoti CSRF žetonu.
+
 ## Saugumas ir apribojimai
 
-- Pradinė versija skirta vietiniam akademiniam prototipui, o ne viešai diegiamai daugiavartotojų sistemai. Vieša forma priima pranešimus be paskyros, tačiau visi pranešimų sąrašo ir valdymo puslapiai turi būti apsaugoti programuotojo / koordinatoriaus prisijungimu.
+- Pradinė versija skirta vietiniam akademiniam prototipui, o ne viešai diegiamai daugiavartotojų sistemai. Vieša forma priima pranešimus be paskyros, o visi vidiniai puslapiai apsaugoti programuotojo / koordinatoriaus prisijungimu (automatinis testas tikrina, kad kiekvienas ne viešas maršrutas be prisijungimo nukreipiamas į `/login`).
+- Sesija saugoma pasirašytame (HMAC-SHA256) `HttpOnly`, `SameSite=Lax` slapuke be serverio pusės saugyklos: atsijungus slapukas ištrinamas naršyklėje, bet jei kas nors būtų jį pavogęs anksčiau, jis galiotų iki 8 val. pabaigos (arba kol nepakeistas slaptažodis / `SESSION_SECRET_KEY`).
+- Nėra apsaugos nuo daugkartinių slaptažodžio spėjimų (užrakinimo / ribojimo); prieš viešą diegimą ją reikėtų pridėti. Prototipas skirtas vietiniam naudojimui.
 - GitHub prieigos žetonas, jei reikalingas, pateikiamas per aplinkos kintamąjį GITHUB_TOKEN; jo negalima įrašyti į kodą, duomenų bazę, žurnalus ar Git istoriją.
 - Sistema nekeičia GitHub Issues, jų etikečių ar priskirtų programuotojų.
 - Kategorijos, prioritetas ir sudėtingumas yra rekomendacijos, o ne automatiškai patvirtinti faktai.
