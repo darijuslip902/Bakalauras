@@ -1,0 +1,49 @@
+{% extends "internal_base.html" %}
+{% import "_macros.html" as ui %}
+{% block title %}{% if report %}Klaida #{{ report.id }}{% else %}Pranešimas nerastas{% endif %}{% endblock %}
+{% block content %}
+<p><a href="/dashboard">&larr; Atgal į klaidų sąrašą</a></p>
+
+{% if not report %}
+<h1>Pranešimas nerastas</h1>
+<p class="error" role="alert">Tokio klaidos pranešimo nėra.</p>
+{% else %}
+<h1><span class="muted">#{{ report.id }}</span> {{ report.title }}</h1>
+
+{% if message %}<p class="success" role="status">{{ message }}</p>{% endif %}
+{% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+
+<div class="detail-grid">
+  <section class="card" aria-labelledby="description-heading">
+    <h2 id="description-heading">Aprašymas</h2>
+    <div class="description">{{ report.description }}</div>
+  </section>
+
+  <aside class="card" aria-labelledby="info-heading">
+    <h2 id="info-heading">Informacija</h2>
+    <dl class="meta">
+      <dt>Klaidos numeris</dt><dd>#{{ report.id }}</dd>
+      <dt>Būsena</dt><dd>{{ ui.status_badge(report.status, status_labels) }}</dd>
+      <dt>Sukurta</dt><dd>{{ report.created_at|datetime }}</dd>
+      <dt>Atnaujinta</dt><dd>{{ report.updated_at|datetime }}</dd>
+      <dt>Išspręsta</dt><dd>{% if report.resolved_at %}{{ report.resolved_at|datetime }}{% else %}<span class="muted">Neišspręsta</span>{% endif %}</dd>
+      <dt>Kategorija</dt><dd>{{ ui.label_value(report.category_label, category_labels) }}</dd>
+      <dt>Sudėtingumas</dt><dd>{{ ui.label_value(report.complexity_label, complexity_labels) }}</dd>
+      <dt>Prioritetas</dt><dd>{{ ui.label_value(report.priority_label, priority_labels) }}</dd>
+    </dl>
+
+    <form class="status-form" method="post" action="/dashboard/reports/{{ report.id }}/status">
+      <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+      <label for="new-status">Keisti būseną</label>
+      <select id="new-status" name="status">
+        {% for value in statuses %}
+        <option value="{{ value }}"{% if report.status == value %} selected{% endif %}>{{ status_labels[value] }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit">Išsaugoti būseną</button>
+    </form>
+    <p class="muted small">Išspręsti pranešimai lieka istorijoje ir gali būti atidaryti iš naujo.</p>
+  </aside>
+</div>
+{% endif %}
+{% endblock %}

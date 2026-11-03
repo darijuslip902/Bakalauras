@@ -1,0 +1,8 @@
+{# Bendri vidinės aplinkos elementai. #}
+{% macro status_badge(status, labels) -%}
+<span class="badge status-{{ status }}">{{ labels.get(status, status) }}</span>
+{%- endmacro %}
+
+{% macro label_value(value, labels) -%}
+{% if value %}{{ labels.get(value, value) }}{% else %}<span class="muted">Dar nenustatyta</span>{% endif %}
+{%- endmacro %}

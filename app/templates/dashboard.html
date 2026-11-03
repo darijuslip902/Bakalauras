@@ -1,0 +1,81 @@
+{% extends "internal_base.html" %}
+{% import "_macros.html" as ui %}
+{% block title %}Klaidų sąrašas{% endblock %}
+{% block content %}
+<h1>Klaidų pranešimai</h1>
+<p class="muted">Visi klientų pateikti pranešimai, įskaitant išspręstus. Kategoriją, prioritetą ir sudėtingumą automatiškai siūlys modelis vėlesniame etape.</p>
+
+<form class="filters" method="get" action="/dashboard" role="search">
+  <div class="filter-field search">
+    <label for="q">Paieška</label>
+    <input id="q" name="q" type="search" value="{{ filters.search }}" placeholder="Pavadinimas arba aprašymas">
+  </div>
+  <div class="filter-field">
+    <label for="status">Būsena</label>
+    <select id="status" name="status">
+      <option value="">Visos</option>
+      {% for value, name in status_labels.items() %}
+      <option value="{{ value }}"{% if filters.status == value %} selected{% endif %}>{{ name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  {% for field, column, labels, all_text in [
+      ("category", "category_label", category_labels, "Visos"),
+      ("priority", "priority_label", priority_labels, "Visi"),
+      ("complexity", "complexity_label", complexity_labels, "Visi")] %}
+  <div class="filter-field">
+    <label for="{{ field }}">{{ {"category": "Kategorija", "priority": "Prioritetas", "complexity": "Sudėtingumas"}[field] }}</label>
+    <select id="{{ field }}" name="{{ field }}">
+      <option value="">{{ all_text }}</option>
+      <option value="{{ unset }}"{% if filters[column] == unset %} selected{% endif %}>Dar nenustatyta</option>
+      {% for value, name in labels.items() %}
+      <option value="{{ value }}"{% if filters[column] == value %} selected{% endif %}>{{ name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  {% endfor %}
+  <div class="filter-actions">
+    <button type="submit">Filtruoti</button>
+    {% if filters_active %}<a class="button secondary" href="/dashboard">Išvalyti</a>{% endif %}
+  </div>
+</form>
+
+{% if invalid_filter %}
+<p class="error" role="alert">Neteisinga filtro reikšmė buvo ignoruota.</p>
+{% endif %}
+
+<p class="result-count" role="status">Rasta pranešimų: <strong>{{ reports|length }}</strong></p>
+
+{% if reports %}
+<div class="table-wrap">
+  <table class="reports">
+    <thead>
+      <tr>
+        <th scope="col">ID</th>
+        <th scope="col">Pavadinimas</th>
+        <th scope="col">Būsena</th>
+        <th scope="col">Sukurta</th>
+        <th scope="col">Kategorija</th>
+        <th scope="col">Prioritetas</th>
+        <th scope="col">Sudėtingumas</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for report in reports %}
+      <tr>
+        <td data-label="ID">#{{ report.id }}</td>
+        <td data-label="Pavadinimas"><a href="/dashboard/reports/{{ report.id }}">{{ report.title }}</a></td>
+        <td data-label="Būsena">{{ ui.status_badge(report.status, status_labels) }}</td>
+        <td data-label="Sukurta">{{ report.created_at|datetime }}</td>
+        <td data-label="Kategorija">{{ ui.label_value(report.category_label, category_labels) }}</td>
+        <td data-label="Prioritetas">{{ ui.label_value(report.priority_label, priority_labels) }}</td>
+        <td data-label="Sudėtingumas">{{ ui.label_value(report.complexity_label, complexity_labels) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<p class="empty">{% if filters_active %}Pagal pasirinktus filtrus pranešimų nerasta.{% else %}Pranešimų dar nėra.{% endif %}</p>
+{% endif %}
+{% endblock %}
