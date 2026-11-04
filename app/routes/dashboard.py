@@ -39,7 +39,7 @@ def format_datetime(value: str | None) -> str:
 templates.env.filters["datetime"] = format_datetime
 
 
-def _base_context(session: Session, active: str) -> dict[str, object]:
+def base_context(session: Session, active: str) -> dict[str, object]:
     return {
         "session": session,
         "active": active,
@@ -84,7 +84,7 @@ def dashboard(
         init_db(conn)
         reports = list_bug_reports(conn, filters)
 
-    context = _base_context(session, "dashboard")
+    context = base_context(session, "dashboard")
     context.update(
         reports=reports,
         filters=filters,
@@ -103,7 +103,7 @@ def _render_detail(
     error: str | None = None,
     status_code: int = 200,
 ) -> HTMLResponse:
-    context = _base_context(session, "dashboard")
+    context = base_context(session, "dashboard")
     context.update(report=report, statuses=STATUSES, message=message, error=error)
     return templates.TemplateResponse(
         request, "report_detail.html", context, status_code=status_code

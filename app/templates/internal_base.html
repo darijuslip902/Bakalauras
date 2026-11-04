@@ -12,6 +12,7 @@
       <a class="brand" href="/dashboard">Klaidų valdymas</a>
       <nav class="topnav" aria-label="Vidinė navigacija">
         <a href="/dashboard"{% if active == "dashboard" %} aria-current="page"{% endif %}>Klaidų sąrašas</a>
+        <a href="/dashboard/training-data"{% if active == "training" %} aria-current="page"{% endif %}>Mokymo duomenys</a>
         <a href="/import"{% if active == "import" %} aria-current="page"{% endif %}>GitHub importas</a>
         <a href="/report">Vieša forma</a>
       </nav>

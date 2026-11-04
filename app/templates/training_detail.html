@@ -1,0 +1,98 @@
+{% extends "internal_base.html" %}
+{% import "_macros.html" as ui %}
+{% block title %}{% if issue %}Mokymo įrašas #{{ issue.issue_number }}{% else %}Įrašas nerastas{% endif %}{% endblock %}
+{% block content %}
+<div class="page-header">
+  <a href="/dashboard/training-data">&larr; Atgal į mokymo duomenis</a>
+  {% if issue %}<a class="button secondary" href="/dashboard/training-data/next?after={{ issue.id }}">Kitas nepažymėtas &rarr;</a>{% endif %}
+</div>
+
+{% if not issue %}
+<h1>Įrašas nerastas</h1>
+<p class="error" role="alert">Tokio GitHub issue įrašo nėra.</p>
+{% else %}
+<h1><span class="muted">#{{ issue.issue_number }}</span> {{ issue.title }}</h1>
+<p class="muted">{{ issue.repository_full_name }} · {{ ui.annotation_badge(status, annotation_labels) }} {{ ui.suitability_badge(issue.training_suitability, suitability_labels) }}</p>
+
+{% if message %}<p class="success" role="status">{{ message }}</p>{% endif %}
+{% if errors %}
+<div class="error" role="alert">
+  <p>Žymos neišsaugotos. Pataisykite pažymėtus laukus:</p>
+  <ul>{% for message in errors.values() %}<li>{{ message }}</li>{% endfor %}</ul>
+</div>
+{% endif %}
+
+<div class="detail-grid">
+  <section class="card" aria-labelledby="body-heading">
+    <h2 id="body-heading">Aprašymas</h2>
+    {% if issue.body %}
+    <div class="description">{{ issue.body }}</div>
+    {% else %}
+    <p class="muted">Aprašymo nėra.</p>
+    {% endif %}
+  </section>
+
+  <aside>
+    <section class="card" aria-labelledby="annotation-heading">
+      <h2 id="annotation-heading">Žmogaus žymos</h2>
+      <form class="annotation-form" method="post" action="/dashboard/training-data/{{ issue.id }}/annotation">
+        <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+
+        <fieldset>
+          <legend>Tinkamumas mokymui</legend>
+          {% for value, name in suitability_labels.items() %}
+          <label class="radio"><input type="radio" name="training_suitability" value="{{ value }}"{% if values.training_suitability == value %} checked{% endif %}> {{ name }}</label>
+          {% endfor %}
+          {% if errors.training_suitability %}<span class="field-error">{{ errors.training_suitability }}</span>{% endif %}
+        </fieldset>
+
+        {% for field, title in [("category_label", "Kategorija"), ("complexity_label", "Sudėtingumas"), ("priority_label", "Prioritetas")] %}
+        <p>
+          <label for="{{ field }}">{{ title }}</label><br>
+          <select id="{{ field }}" name="{{ field }}" class="wide"{% if errors[field] %} aria-invalid="true"{% endif %}>
+            <option value="">— Nežinoma / nepažymėta —</option>
+            {% for value, name in label_fields[field].items() %}
+            <option value="{{ value }}"{% if values[field] == value %} selected{% endif %}>{{ name }} ({{ value }})</option>
+            {% endfor %}
+          </select>
+          {% if errors[field] %}<span class="field-error">{{ errors[field] }}</span>{% endif %}
+        </p>
+        {% endfor %}
+
+        <div class="form-actions">
+          <button type="submit" name="action" value="save">Išsaugoti</button>
+          <button type="submit" name="action" value="next" class="secondary">Išsaugoti ir kitas</button>
+        </div>
+      </form>
+      <p class="muted small">Neaiškų lauką palikite tuščią – jis bus saugomas kaip NULL. Žymos rašomos tik į šios sistemos DB, GitHub nekeičiamas.</p>
+      <details class="guidelines">
+        <summary>Žymėjimo gairės (docs/DATA_LABELING.md)</summary>
+        <ul>
+          <li><strong>Tinkamumas:</strong> „Netinka mokymui“ – ne klaida (funkcijos pasiūlymas, klausimas, diskusija).</li>
+          <li><strong>Kategorija:</strong> viena pagrindinė sritis pagal klaidos priežastį arba didžiausią poveikį.</li>
+          <li><strong>Sudėtingumas:</strong> pagal tikėtiną analizės, pakeitimų ir testavimo apimtį, ne pagal teksto ilgį.</li>
+          <li><strong>Prioritetas:</strong> pagal poveikį ir skubą; P0 nepriskirti vien dėl žodžio „critical“.</li>
+        </ul>
+      </details>
+    </section>
+
+    <section class="card" aria-labelledby="info-heading">
+      <h2 id="info-heading">GitHub informacija</h2>
+      <dl class="meta">
+        <dt>Repozitorija</dt><dd>{{ issue.repository_full_name }}</dd>
+        <dt>Issue numeris</dt><dd>#{{ issue.issue_number }}</dd>
+        <dt>Nuoroda</dt><dd><a href="{{ issue.html_url }}" target="_blank" rel="noopener noreferrer">Atidaryti GitHub</a></dd>
+        <dt>GitHub būsena</dt><dd>{{ issue.state }}</dd>
+        <dt>Sukurta GitHub</dt><dd>{{ issue.github_created_at|datetime }}</dd>
+        <dt>Importuota</dt><dd>{{ issue.imported_at|datetime }}</dd>
+        <dt>GitHub etiketės</dt>
+        <dd>{% if labels %}{% for label in labels %}<span class="chip">{{ label }}</span> {% endfor %}{% else %}<span class="muted">Nėra</span>{% endif %}</dd>
+        <dt>Žymėta</dt>
+        <dd>{% if issue.annotated_at %}{{ issue.annotated_at|datetime }} ({{ "rankiniu būdu" if issue.annotation_source == "manual" else issue.annotation_source }}){% else %}<span class="muted">Dar nežymėta</span>{% endif %}</dd>
+      </dl>
+      <p class="muted small">GitHub etiketės rodomos tik informacijai ir nėra automatiškai laikomos mokymo žymomis.</p>
+    </section>
+  </aside>
+</div>
+{% endif %}
+{% endblock %}

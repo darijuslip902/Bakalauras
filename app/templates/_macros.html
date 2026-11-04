@@ -6,3 +6,11 @@
 {% macro label_value(value, labels) -%}
 {% if value %}{{ labels.get(value, value) }}{% else %}<span class="muted">Dar nenustatyta</span>{% endif %}
 {%- endmacro %}
+
+{% macro annotation_badge(status, labels) -%}
+<span class="badge annotation-{{ status }}">{{ labels[status] }}</span>
+{%- endmacro %}
+
+{% macro suitability_badge(value, labels) -%}
+<span class="badge suitability-{{ value }}">{{ labels.get(value, value) }}</span>
+{%- endmacro %}

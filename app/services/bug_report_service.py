@@ -2,6 +2,8 @@ import sqlite3
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
+from app.db import add_casefold_function
+
 STATUSES = ("new", "in_progress", "resolved")
 TITLE_MAX_LENGTH = 200
 DESCRIPTION_MAX_LENGTH = 10000
@@ -67,15 +69,9 @@ class ReportFilters:
     complexity_label: str = ""
 
 
-def _casefold(value: str | None) -> str | None:
-    return value.casefold() if value is not None else None
-
-
 def list_bug_reports(conn: sqlite3.Connection, filters: ReportFilters) -> list[sqlite3.Row]:
     """Grąžina pranešimus (naujausi viršuje), įskaitant išspręstus, pagal filtrus."""
-    # SQLite LIKE/lower() nepalaiko lietuviškų raidžių didžiųjų/mažųjų lygybės,
-    # todėl paieškai naudojama Python casefold funkcija.
-    conn.create_function("py_casefold", 1, _casefold, deterministic=True)
+    add_casefold_function(conn)
     conditions: list[str] = []
     params: list[object] = []
     if filters.search:
