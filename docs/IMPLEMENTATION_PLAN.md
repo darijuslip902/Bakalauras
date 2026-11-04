@@ -44,7 +44,7 @@ Darbai:
 
 Priėmimas: neautentifikuoti prašymai į vidinius maršrutus nukreipiami į prisijungimą arba atmetami; prisijungęs naudotojas gali peržiūrėti ir keisti būsenas; išspręsti įrašai nedingsta iš istorijos. Testuoti autentifikavimą ir leidimus.
 
-## 4 etapas – rankinis GitHub įrašų žymėjimas
+## 4 etapas – rankinis GitHub įrašų žymėjimas (ATLIKTA)
 **Tikslas:** sukurti patikimą mokymo duomenų pagrindą.
 
 Darbai:

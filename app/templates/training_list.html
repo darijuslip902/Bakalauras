@@ -1,0 +1,131 @@
+{% extends "internal_base.html" %}
+{% import "_macros.html" as ui %}
+{% block title %}Mokymo duomenys{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Mokymo duomenys</h1>
+  <a class="button" href="/dashboard/training-data/next">Kitas nepažymėtas &rarr;</a>
+</div>
+<p class="muted">Iš GitHub importuoti issues, kuriuos žmogus rankiniu būdu žymi modelio mokymui. GitHub etiketės nelaikomos teisingomis žymomis. Klientų pranešimai čia nerodomi.</p>
+
+{% if message %}<p class="success" role="status">{{ message }}</p>{% endif %}
+
+<section class="stats" aria-label="Žymėjimo eiga">
+  <div class="stat"><span class="stat-value">{{ stats.total }}</span><span class="stat-label">Iš viso importuota</span></div>
+  <div class="stat"><span class="stat-value">{{ stats.complete }}</span><span class="stat-label">Visiškai pažymėta</span></div>
+  <div class="stat"><span class="stat-value">{{ stats.partial }}</span><span class="stat-label">Iš dalies pažymėta</span></div>
+  <div class="stat"><span class="stat-value">{{ stats.unlabeled }}</span><span class="stat-label">Nepažymėta</span></div>
+  <div class="stat highlight"><span class="stat-value">{{ stats.ready_for_training }}</span><span class="stat-label">Paruošta mokymui</span></div>
+</section>
+<p class="muted small">„Paruošta mokymui“ – pažymėta „Tinka mokymui“ ir turi visas tris reikšmes. Tinka mokymui: {{ stats.suitable }}, netinka: {{ stats.unsuitable }}.</p>
+
+<details class="class-counts">
+  <summary>Anotacijų skaičius pagal lauką ir klasę</summary>
+  <div class="class-grid">
+    {% for field, title in [("category_label", "Kategorija"), ("complexity_label", "Sudėtingumas"), ("priority_label", "Prioritetas")] %}
+    <table class="counts">
+      <caption>{{ title }}</caption>
+      <thead><tr><th scope="col">Klasė</th><th scope="col">Visi</th><th scope="col">Tinka mokymui</th></tr></thead>
+      <tbody>
+        {% for item in stats.class_counts[field] %}
+        <tr><td>{{ item.name }}</td><td>{{ item.all }}</td><td>{{ item.suitable }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% endfor %}
+  </div>
+</details>
+
+<form class="filters" method="get" action="/dashboard/training-data" role="search">
+  <div class="filter-field search">
+    <label for="q">Paieška</label>
+    <input id="q" name="q" type="search" value="{{ filters.search }}" placeholder="Pavadinimas arba aprašymas">
+  </div>
+  <div class="filter-field">
+    <label for="annotation">Žymėjimas</label>
+    <select id="annotation" name="annotation">
+      <option value="">Visi</option>
+      {% for value, name in annotation_labels.items() %}
+      <option value="{{ value }}"{% if filters.annotation == value %} selected{% endif %}>{{ name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="filter-field">
+    <label for="suitability">Tinkamumas mokymui</label>
+    <select id="suitability" name="suitability">
+      <option value="">Visi</option>
+      {% for value, name in suitability_labels.items() %}
+      <option value="{{ value }}"{% if filters.suitability == value %} selected{% endif %}>{{ name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="filter-field">
+    <label for="repository">Repozitorija</label>
+    <select id="repository" name="repository">
+      <option value="">Visos</option>
+      {% for name in repositories %}
+      <option value="{{ name }}"{% if filters.repository == name %} selected{% endif %}>{{ name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="filter-field">
+    <label for="sort">Rikiavimas</label>
+    <select id="sort" name="sort">
+      {% for value, name in sort_labels.items() %}
+      <option value="{{ value }}"{% if filters.sort == value %} selected{% endif %}>{{ name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="filter-actions">
+    <button type="submit">Filtruoti</button>
+    {% if filters_active %}<a class="button secondary" href="/dashboard/training-data">Išvalyti</a>{% endif %}
+  </div>
+</form>
+
+{% if invalid_filter %}
+<p class="error" role="alert">Neteisinga filtro reikšmė buvo ignoruota.</p>
+{% endif %}
+
+<p class="result-count" role="status">Rasta įrašų: <strong>{{ page.total }}</strong>{% if page.pages > 1 %} · puslapis {{ page.page }} iš {{ page.pages }}{% endif %}</p>
+
+{% if issues %}
+<div class="table-wrap">
+  <table class="reports">
+    <thead>
+      <tr>
+        <th scope="col">Issue</th>
+        <th scope="col">Pavadinimas</th>
+        <th scope="col">Repozitorija</th>
+        <th scope="col">Sukurta GitHub</th>
+        <th scope="col">Žymėjimas</th>
+        <th scope="col">Mokymui</th>
+        <th scope="col">GitHub</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for issue, status in issues %}
+      <tr>
+        <td data-label="Issue">#{{ issue.issue_number }}</td>
+        <td data-label="Pavadinimas"><a href="/dashboard/training-data/{{ issue.id }}">{{ issue.title }}</a></td>
+        <td data-label="Repozitorija">{{ issue.repository_full_name }}</td>
+        <td data-label="Sukurta GitHub">{{ issue.github_created_at|datetime }}</td>
+        <td data-label="Žymėjimas">{{ ui.annotation_badge(status, annotation_labels) }}</td>
+        <td data-label="Mokymui">{{ ui.suitability_badge(issue.training_suitability, suitability_labels) }}</td>
+        <td data-label="GitHub"><a href="{{ issue.html_url }}" target="_blank" rel="noopener noreferrer">Atidaryti</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if page.pages > 1 %}
+<nav class="pagination" aria-label="Puslapiai">
+  {% if page.page > 1 %}<a class="button secondary" href="{{ page_url(page.page - 1) }}">&larr; Ankstesnis</a>{% endif %}
+  <span>Puslapis {{ page.page }} iš {{ page.pages }}</span>
+  {% if page.page < page.pages %}<a class="button secondary" href="{{ page_url(page.page + 1) }}">Kitas &rarr;</a>{% endif %}
+</nav>
+{% endif %}
+{% else %}
+<p class="empty">{% if filters_active %}Pagal pasirinktus filtrus įrašų nerasta.{% else %}Importuotų GitHub issues dar nėra. Juos galima importuoti puslapyje <a href="/import">GitHub importas</a>.{% endif %}</p>
+{% endif %}
+{% endblock %}

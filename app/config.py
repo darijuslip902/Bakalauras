@@ -61,13 +61,25 @@ CATEGORY_LABELS = {
     "other": "Kita",
 }
 COMPLEXITY_LABELS = {
-    "low": "Žemas",
+    "low": "Mažas",
     "medium": "Vidutinis",
-    "high": "Aukštas",
+    "high": "Didelis",
 }
 PRIORITY_LABELS = {
     "P0_critical": "P0 – kritinis",
     "P1_high": "P1 – aukštas",
     "P2_medium": "P2 – vidutinis",
     "P3_low": "P3 – žemas",
+}
+
+# Mokymo duomenų žymėjimas (4 etapas).
+TRAINING_SUITABILITY_LABELS = {
+    "unreviewed": "Neįvertinta",
+    "suitable": "Tinka mokymui",
+    "unsuitable": "Netinka mokymui",
+}
+ANNOTATION_STATUS_LABELS = {
+    "unlabeled": "Nepažymėta",
+    "partial": "Iš dalies pažymėta",
+    "complete": "Pažymėta",
 }

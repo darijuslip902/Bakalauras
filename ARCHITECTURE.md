@@ -150,6 +150,7 @@ Viešai formai rinkti tik būtinus laukus: pavadinimą ir išsamų aprašymą; p
 | `complexity_label` | Patvirtintas sudėtingumas arba NULL |
 | `priority_label` | Patvirtintas prioritetas arba NULL |
 | `annotation_source`, `annotated_at` | Žymos kilmė ir laikas |
+| `training_suitability` | Žmogaus sprendimas: `unreviewed` (numatyta), `suitable` arba `unsuitable` mokymui |
 
 Unikalus apribojimas: `(repository_full_name, issue_number)`. Importuojant tą patį issue atnaujinti šaltinio metaduomenis, bet **neperrašyti žmogaus patvirtintų žymų**.
 

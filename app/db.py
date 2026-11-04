@@ -38,9 +38,20 @@ CREATE TABLE IF NOT EXISTS github_issues (
     priority_label TEXT,
     annotation_source TEXT,
     annotated_at TEXT,
+    training_suitability TEXT NOT NULL DEFAULT 'unreviewed'
+        CHECK (training_suitability IN ('unreviewed', 'suitable', 'unsuitable')),
     UNIQUE (repository_full_name, issue_number)
 );
 """
+
+# Stulpeliai, pridėti vėlesniuose etapuose. Senoms DB jie pridedami ALTER TABLE
+# komanda, todėl esami įrašai ir žymos išlieka.
+_ADDED_COLUMNS = {
+    ("github_issues", "training_suitability"): (
+        "TEXT NOT NULL DEFAULT 'unreviewed' "
+        "CHECK (training_suitability IN ('unreviewed', 'suitable', 'unsuitable'))"
+    ),
+}
 
 
 def connect(path: Path) -> sqlite3.Connection:
@@ -61,3 +72,16 @@ def get_connection(path: Path) -> Iterator[sqlite3.Connection]:
 
 def init_db(conn: sqlite3.Connection) -> None:
     conn.executescript(SCHEMA)
+    with conn:
+        for (table, column), definition in _ADDED_COLUMNS.items():
+            existing = {row[1] for row in conn.execute(f"PRAGMA table_info({table})")}
+            if column not in existing:
+                conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {definition}")
+
+
+def add_casefold_function(conn: sqlite3.Connection) -> None:
+    """SQL funkcija `py_casefold`: SQLite lower()/LIKE neveikia su lietuviškomis raidėmis."""
+    conn.create_function(
+        "py_casefold", 1, lambda value: value.casefold() if value is not None else None,
+        deterministic=True,
+    )

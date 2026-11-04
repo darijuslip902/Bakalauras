@@ -34,14 +34,15 @@ GitHub etiketės nėra automatiškai laikomos teisingomis kategorijos, prioritet
 
 ## Įgyvendinimo būsena
 
-Įgyvendinti 0–3 etapai:
+Įgyvendinti 0–4 etapai:
 
 - **0 etapas:** FastAPI karkasas, `GET /health`, pagrindinis puslapis `GET /`.
 - **1 etapas:** SQLite schema (`bug_reports`, `github_issues`) ir viešų GitHub issues importas per `/import` (`owner/repo` arba `https://github.com/owner/repo`, kiekis iki `GITHUB_IMPORT_LIMIT`). Pull request įrašai praleidžiami, pakartotinis importas nedubliuoja įrašų ir neperrašo žmogaus patvirtintų žymų.
 - **2 etapas:** vieša klaidos pateikimo forma `/report` be paskyros (pavadinimas iki 200, aprašymas iki 10000 simbolių, validacija serverio pusėje); įrašas išsaugomas su būsena `new`, naudotojui rodomas tik patvirtinimas.
 - **3 etapas:** programuotojo prisijungimas (`/login`, `/logout`) ir vidinė aplinka: klaidų sąrašas `/dashboard` su paieška ir filtrais, detalių puslapis `/dashboard/reports/{id}`, būsenų keitimas `new` → `in_progress` → `resolved` (išspręsti įrašai lieka istorijoje, juos galima atidaryti iš naujo). `/import` taip pat pasiekiamas tik prisijungus.
+- **4 etapas:** mokymo duomenų (importuotų GitHub issues) peržiūra ir rankinis žymėjimas `/dashboard/training-data`: kategorija, sudėtingumas, prioritetas ir tinkamumas mokymui, žymėjimo eigos statistika, „Kitas nepažymėtas“.
 
-Duomenų bazė kuriama automatiškai (`DATABASE_PATH`, pagal nutylėjimą `data/bakalauras.sqlite3`; failas nėra committinamas). Kategorija, prioritetas ir sudėtingumas kol kas rodomi kaip „Dar nenustatyta“ – rankinis žymėjimas ir automatinis klasifikavimas bus 4–5 etapuose. Likę etapai kuriami pagal docs/IMPLEMENTATION_PLAN.md.
+Duomenų bazė kuriama automatiškai (`DATABASE_PATH`, pagal nutylėjimą `data/bakalauras.sqlite3`; failas nėra committinamas). Klientų pranešimų (`/dashboard`) kategorija, prioritetas ir sudėtingumas kol kas rodomi kaip „Dar nenustatyta“ – automatinis klasifikavimas bus 5 etape. Senesnė DB paleidimo metu automatiškai papildoma nauju stulpeliu `github_issues.training_suitability` (esami įrašai ir žymos išlieka). Likę etapai kuriami pagal docs/IMPLEMENTATION_PLAN.md.
 
 ## Vietinis paleidimas
 
@@ -96,8 +97,22 @@ Programa `.env` failą nuskaito pati paleidimo metu; jei kintamasis jau nustatyt
 
 - **Klaidų sąrašas** (`/dashboard`): visi pranešimai, įskaitant išspręstus, naujausi viršuje. Paieška ieško pavadinime ir aprašyme (didžiosios / mažosios raidės nesvarbu). Filtrai pagal būseną, kategoriją, prioritetą ir sudėtingumą; reikšmė „Dar nenustatyta“ randa įrašus be žymos.
 - **Klaidos detalės** (paspaudus pavadinimą): visas aprašymas, laikai (UTC) ir žymos. Čia keičiama būsena: Nauja (`new`), Taisoma (`in_progress`), Išspręsta (`resolved`). Perėjus į „Išspręsta“ užpildomas išsprendimo laikas; atidarius iš naujo jis išvalomas. Įrašai niekada netrinami.
-- **GitHub importas** (`/import`) ir **Atsijungti** – viršutinėje navigacijoje.
+- **Mokymo duomenys**, **GitHub importas** (`/import`) ir **Atsijungti** – viršutinėje navigacijoje.
 - Sesija galioja 8 valandas. Visi būseną keičiantys veiksmai (būsenos keitimas, importas, atsijungimas) apsaugoti CSRF žetonu.
+
+## Mokymo duomenų žymėjimas
+
+GitHub issues savaime nėra patikimi mokymo duomenys: GitHub etiketės (`bug`, `priority: high` ir pan.) skirtingose repozitorijose reiškia skirtingus dalykus, o dalis issues yra ne klaidos, bet funkcijų pasiūlymai ar klausimai. Todėl modelio mokymui naudojamos tik **žmogaus rankiniu būdu priskirtos** žymos (gairės – [docs/DATA_LABELING.md](docs/DATA_LABELING.md)); GitHub etiketės rodomos tik informacijai.
+
+1. Importuokite issues puslapyje **GitHub importas** (`/import`).
+2. Atidarykite **Mokymo duomenys** (`/dashboard/training-data`). Viršuje matyti eiga: iš viso importuota, visiškai pažymėta (visi trys laukai), iš dalies pažymėta (1–2 laukai), nepažymėta, paruošta mokymui. Išskleidus „Anotacijų skaičius pagal lauką ir klasę“ matyti kiekvienos klasės pavyzdžių skaičius.
+3. Sąrašą galima filtruoti pagal žymėjimo būseną, tinkamumą mokymui ir repozitoriją, ieškoti pavadinime / aprašyme, rikiuoti nuo naujausių arba seniausių (pagal GitHub sukūrimo datą); rodoma po 25 įrašus puslapyje.
+4. Spauskite **Kitas nepažymėtas** arba įrašo pavadinimą. Detaliame puslapyje perskaitykite aprašymą ir pasirinkite:
+   - **Tinkamumas mokymui:** Neįvertinta (numatyta) / Tinka mokymui / Netinka mokymui (pvz., funkcijos pasiūlymas ar klausimas);
+   - **Kategoriją**, **Sudėtingumą**, **Prioritetą** – neaiškų lauką palikite „Nežinoma / nepažymėta“ (saugoma kaip `NULL`).
+5. **Išsaugoti** – lieka tame pačiame įraše; **Išsaugoti ir kitas** – pereina prie kito nepažymėto įrašo. „Kitas nepažymėtas“ praleidžia visiškai pažymėtus ir „Netinka mokymui“ įrašus.
+
+Žymos saugomos tik šios sistemos `github_issues` lentelėje kartu su šaltiniu (`annotation_source = manual`) ir laiku (`annotated_at`); GitHub nekeičiamas. Pakartotinis importas atnaujina tik GitHub duomenis (pavadinimą, aprašymą, etiketes), bet ne žmogaus žymas. 5 etape mokymui bus naudojami tik įrašai, pažymėti „Tinka mokymui“ ir turintys visas tris reikšmes (statistikoje – „Paruošta mokymui“). Klientų pranešimai (`bug_reports`) į mokymo duomenis nepatenka.
 
 ## Saugumas ir apribojimai
 

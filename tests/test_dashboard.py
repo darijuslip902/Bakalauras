@@ -188,7 +188,7 @@ def test_report_detail_shows_all_fields(dash: DashboardApp) -> None:
     assert "Pirma eilutė\nAntra eilutė" in html
     assert 'class="badge status-new">Nauja' in html
     assert "Serveris / API" in html  # kategorija
-    assert "Žemas" in html  # sudėtingumas
+    assert "Mažas" in html  # sudėtingumas
     assert "Dar nenustatyta" in html  # prioritetas
     assert "Neišspręsta" in html
     for label in ("Sukurta", "Atnaujinta", "Išspręsta", "Kategorija", "Sudėtingumas", "Prioritetas"):
