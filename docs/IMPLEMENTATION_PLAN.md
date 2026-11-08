@@ -56,13 +56,27 @@ Darbai:
 
 Priėmimas: galima išsaugoti ir vėl atverti žymas; vieno lauko redagavimas netrina kitų; sistemos klientų pateikti pranešimai netampa mokymo duomenimis be patvirtinimo.
 
-## 5 etapas – mokymas ir automatinis klasifikavimas
+## 5A etapas – mokymo duomenų paruošimas, DI žymėjimas ir mokymo infrastruktūra (ATLIKTA)
+**Tikslas:** paruošti 2 000–3 000 kokybiškų GitHub issues mokymo rinkinį ir mokymo / vertinimo CLI, nekeičiant svetainės veikimo. Sprendimą mokymo duomenis žymėti išoriniu DI API patvirtino darbo vadovas.
+
+Atlikta:
+- masinis importas iš kelių repozitorijų su GitHub etikečių filtru (`python -m tools.import_issues`);
+- kokybės patikra (per trumpas aprašymas, dublikatai) ir ataskaita (`python -m tools.check_data`);
+- žmogaus testavimo rinkinio atsitiktinė atranka (`python -m tools.select_test_set`, `github_issues.is_test_set`); svetainėje – filtras ir „Kitas nepažymėtas“ šiuos įrašus siūlo pirmus;
+- DI žymėjimas (`python -m tools.ai_label`): `claude-haiku-5-5`, JSON schema, `effort: low`, prompt caching, dry-run pagal nutylėjimą, `--limit`, paleidimo ir bendras biudžetas, kaina iš `usage`, pakartotinis paleidimas be dublikatų, žymos atskiroje `ai_annotations` lentelėje;
+- trijų TF-IDF + LogisticRegression modelių mokymas, išsaugojimas (`models/*.joblib`) ir vertinimas su baseline, DI validacijos dalimi ir žmogaus testavimo rinkiniu (`python -m tools.train_models`);
+- testai be tikrų API užklausų.
+
+Realus mokamas žymėjimas ir modelių mokymas – 5B etape, tik naudotojui leidus.
+
+## 5B etapas – realus žymėjimas, mokymas ir automatinis klasifikavimas
 **Tikslas:** sistema automatiškai pasiūlo kategoriją, prioritetą ir, jei duomenų pakanka, sudėtingumą.
 
 Darbai:
+- naudotojui leidus, atlikti bandomąjį ir masinį DI žymėjimą, pažymėti žmogaus testavimo rinkinį ir išmokyti modelius 5A įrankiais;
 - sujungti pavadinimą ir aprašymą į deterministinį tekstą;
 - sukurti atskirą scikit-learn Pipeline kiekvienam laukui: TF-IDF + LogisticRegression;
-- naudoti tik žmogaus patvirtintas konkretaus lauko žymas;
+- mokymui naudoti žmogaus žymas, o jų nesant – DI žymas (`ai_annotations`); žmogaus testavimo rinkinio įrašų nenaudoti mokymui;
 - prieš mokymą patikrinti įrašų skaičių ir klasių pakankamumą; kitu atveju grąžinti insufficient_data;
 - po naujo viešo pranešimo išsaugojimo paleisti paruošto modelio prognozę ir išsaugoti ją atskirai nuo žmogaus patvirtintų žymų;
 - kiekvienai prognozei išsaugoti modelio pateiktą pasitikėjimo įvertį, aiškiai atskiriant jį nuo patvirtinto tikslumo; jei įvertis nėra kalibruotas, sąsajoje jo nepateikti kaip garantuotos teisingumo tikimybės;
@@ -104,7 +118,7 @@ Priėmimas: visi automatiniai testai praeina; dokumentai atitinka kodą; nėra i
 ## Bendros taisyklės
 - Vienu metu įgyvendinti tik nurodytą etapą.
 - Nenaudoti naujų priklausomybių, jei funkciją galima paprastai įgyvendinti esamu rinkiniu arba standartine biblioteka.
-- Nenaudoti React/Vue, Node, Docker, ORM, Redis, task queue, mokamos LLM API ar mikroservisų.
+- Nenaudoti React/Vue, Node, Docker, ORM, Redis, task queue, mokamos LLM API ar mikroservisų. Išimtis: vienkartinis mokymo duomenų žymėjimas Claude API per `tools/` (5A), ne svetainėje.
 - GitHub integracija lieka tik skaitymo režimu.
 - Automatiniuose testuose nenaudoti tikro tinklo.
 - Kiekvieno etapo pabaigoje aiškiai atskirti paleistus testus nuo tų, kurie tik numatyti.

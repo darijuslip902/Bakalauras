@@ -25,6 +25,7 @@ Automatiškai pasiūlyti klaidos **kategoriją**, **sudėtingumo lygį** ir **pr
 - scikit-learn – TF-IDF teksto požymiai ir atskiras prižiūrimo klasifikavimo modelis kiekvienam laukui.
 - GitHub REST API – tik skaitymo režimu importuojami viešos repozitorijos issues; pull request įrašai atmetami.
 - pytest – vienetiniai ir integraciniai testai.
+- Anthropic Claude API (`anthropic` SDK) – **tik** vienkartiniam mokymo duomenų žymėjimui atskiru scenarijumi `tools/ai_label.py`; svetainė DI API nenaudoja.
 
 Pilnas pagrindimas ir komponentų sąveika aprašyti [ARCHITECTURE.md](ARCHITECTURE.md). Claude Code veikimo taisyklės pateiktos [CLAUDE.md](CLAUDE.md), pirmoji ir vėlesnės užklausos – [docs/CLAUDE_PROMPT.md](docs/CLAUDE_PROMPT.md), darbų etapai – [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md), anotavimo gairės – [docs/DATA_LABELING.md](docs/DATA_LABELING.md), o vertinimo metodika – [docs/EVALUATION_PLAN.md](docs/EVALUATION_PLAN.md).
 
@@ -34,13 +35,14 @@ GitHub etiketės nėra automatiškai laikomos teisingomis kategorijos, prioritet
 
 ## Įgyvendinimo būsena
 
-Įgyvendinti 0–4 etapai:
+Įgyvendinti 0–4 ir 5A etapai:
 
 - **0 etapas:** FastAPI karkasas, `GET /health`, pagrindinis puslapis `GET /`.
 - **1 etapas:** SQLite schema (`bug_reports`, `github_issues`) ir viešų GitHub issues importas per `/import` (`owner/repo` arba `https://github.com/owner/repo`, kiekis iki `GITHUB_IMPORT_LIMIT`). Pull request įrašai praleidžiami, pakartotinis importas nedubliuoja įrašų ir neperrašo žmogaus patvirtintų žymų.
 - **2 etapas:** vieša klaidos pateikimo forma `/report` be paskyros (pavadinimas iki 200, aprašymas iki 10000 simbolių, validacija serverio pusėje); įrašas išsaugomas su būsena `new`, naudotojui rodomas tik patvirtinimas.
 - **3 etapas:** programuotojo prisijungimas (`/login`, `/logout`) ir vidinė aplinka: klaidų sąrašas `/dashboard` su paieška ir filtrais, detalių puslapis `/dashboard/reports/{id}`, būsenų keitimas `new` → `in_progress` → `resolved` (išspręsti įrašai lieka istorijoje, juos galima atidaryti iš naujo). `/import` taip pat pasiekiamas tik prisijungus.
 - **4 etapas:** mokymo duomenų (importuotų GitHub issues) peržiūra ir rankinis žymėjimas `/dashboard/training-data`: kategorija, sudėtingumas, prioritetas ir tinkamumas mokymui, žymėjimo eigos statistika, „Kitas nepažymėtas“.
+- **5A etapas:** mokymo duomenų paruošimo ir ML mokymo įrankiai komandinėje eilutėje (`tools/`): masinis importas, kokybės patikra, žmogaus testavimo rinkinys, DI žymėjimas su biudžeto kontrole, trijų modelių mokymas ir vertinimas. Svetainė jų nenaudoja; realus žymėjimas ir mokymas – 5B etape.
 
 Duomenų bazė kuriama automatiškai (`DATABASE_PATH`, pagal nutylėjimą `data/bakalauras.sqlite3`; failas nėra committinamas). Klientų pranešimų (`/dashboard`) kategorija, prioritetas ir sudėtingumas kol kas rodomi kaip „Dar nenustatyta“ – automatinis klasifikavimas bus 5 etape. Senesnė DB paleidimo metu automatiškai papildoma nauju stulpeliu `github_issues.training_suitability` (esami įrašai ir žymos išlieka). Likę etapai kuriami pagal docs/IMPLEMENTATION_PLAN.md.
 
@@ -113,6 +115,54 @@ GitHub issues savaime nėra patikimi mokymo duomenys: GitHub etiketės (`bug`, `
 5. **Išsaugoti** – lieka tame pačiame įraše; **Išsaugoti ir kitas** – pereina prie kito nepažymėto įrašo. „Kitas nepažymėtas“ praleidžia visiškai pažymėtus ir „Netinka mokymui“ įrašus.
 
 Žymos saugomos tik šios sistemos `github_issues` lentelėje kartu su šaltiniu (`annotation_source = manual`) ir laiku (`annotated_at`); GitHub nekeičiamas. Pakartotinis importas atnaujina tik GitHub duomenis (pavadinimą, aprašymą, etiketes), bet ne žmogaus žymas. 5 etape mokymui bus naudojami tik įrašai, pažymėti „Tinka mokymui“ ir turintys visas tris reikšmes (statistikoje – „Paruošta mokymui“). Klientų pranešimai (`bug_reports`) į mokymo duomenis nepatenka.
+
+## Mokymo duomenų paruošimas ir modelių mokymas (5A)
+
+Šie įrankiai paleidžiami komandinėje eilutėje, ne svetainėje. Visos komandos – **Windows CMD**, projekto kataloge, aktyvavus aplinką (`.venv\Scripts\activate.bat`).
+
+**Kodėl DI žymėjimas.** Rankiniu būdu pažymėti 2 000–3 000 issues per daug laiko, todėl (darbo vadovui pritarus) žymas vieną kartą sugeneruoja pigiausias dabartinis Claude modelis `claude-haiku-5-5`. GitHub etiketės nėra patikimos žymos, o DI žymos taip pat gali klysti – todėl jų kokybė tikrinama atskiru, žmogaus pažymėtu testavimo rinkiniu, o žmogaus žyma visada turi pirmenybę.
+
+**1. Importuoti issues iš kelių projektų** (rekomenduojama filtruoti klaidas etikete, pvz. `bug`; vienai repozitorijai iki 1000):
+
+```bat
+python -m tools.import_issues --repo pallets/flask --repo psf/requests --limit 500 --label bug
+```
+
+Neautentifikuotai GitHub leidžia 60 užklausų per valandą (100 issues vienai užklausai). Didesniam kiekiui `.env` faile nustatykite `GITHUB_TOKEN`.
+
+**2. Patikrinti duomenų kokybę** (kiek tinka, kiek per trumpų, kiek dublikatų, žymėjimo eiga ir DI išlaidos):
+
+```bat
+python -m tools.check_data
+```
+
+**3. Atrinkti žmogaus testavimo rinkinį** (pvz. 200 atsitiktinių įrašų; juos pažymite patys svetainėje „Mokymo duomenys“ – „Kitas nepažymėtas“ pasiūlo juos pirmus):
+
+```bat
+python -m tools.select_test_set --size 200
+```
+
+**4. DI žymėjimas.** `.env` faile nustatykite `ANTHROPIC_API_KEY` (raktą sukuria console.anthropic.com; Claude Pro prenumerata nėra API kreditas) ir `AI_TOTAL_BUDGET_USD` (bendras limitas, numatyta 10 USD). Pirmiausia visada **dry-run** – API nekviečiamas, tik parodoma, kiek įrašų ir kiek kainuotų:
+
+```bat
+python -m tools.ai_label --limit 3000
+```
+
+Tikras (mokamas) žymėjimas – tik su `--execute`; programa dar paklaus patvirtinimo („taip“). `--max-cost-usd` – šio paleidimo išlaidų riba:
+
+```bat
+python -m tools.ai_label --limit 50 --max-cost-usd 0.20 --execute
+```
+
+Saugikliai: prieš kiekvieną užklausą tikrinama blogiausio atvejo kaina ir abu limitai; faktinė kaina pagal API `usage` saugoma DB; pakartotinis paleidimas tęsia nuo nepažymėtų (jau pažymėti neapmokami dar kartą); netinkamas atsakymas kartojamas daugiausia 1 kartą; po API klaidos paleidimas sustoja. Apytikslė kaina 2 500 issues (vidutiniškai ~2 000 simbolių aprašymas): `claude-haiku-5-5` ~0,6 USD (blogiausiu atveju ~1,9 USD); `--model claude-sonnet-5-5` ~12 USD (blogiausiu ~38 USD).
+
+**5. Modelių mokymas ir vertinimas:**
+
+```bat
+python -m tools.train_models
+```
+
+Sukuriami `models\category_label.joblib`, `models\complexity_label.joblib`, `models\priority_label.joblib` ir `models\training_report.json` (duomenų kiekiai, klasių pasiskirstymas, seed, precision / recall / F1 / macro-F1 / confusion matrix modeliui ir daugumos klasės baseline: DI validacijos daliai, žmogaus testavimo rinkiniui ir DI bei žmogaus žymų sutapimui). Jei duomenų per mažai, laukas pažymimas `insufficient_data` ir modelis nesukuriamas. Modelių failai ir DB į GitHub nekeliami.
 
 ## Saugumas ir apribojimai
 

@@ -53,6 +53,10 @@ Nepriskirti P0 vien todėl, kad issue aprašyme yra žodis „critical“. Jei n
 
 Atskirai nuo trijų klasifikavimo laukų žmogus pažymi, ar įrašas tinka mokymui: „Neįvertinta“ (numatyta), „Tinka mokymui“ arba „Netinka mokymui“. „Netinka“ žymimi funkcijų pasiūlymai, klausimai, diskusijos ir kiti ne klaidų įrašai. Mokymui naudojami tik „Tinka mokymui“ įrašai su visomis trimis reikšmėmis. Tinkamumas automatiškai nenustatomas.
 
+## DI žymėjimas (5A etapas)
+
+Didžioji mokymo rinkinio dalis žymima DI modeliu pagal tas pačias taisykles (jos perkeltos į `app/ml/ai_labeling.py` sisteminį promptą, versija `v1`; pakeitus taisykles reikia didinti versiją). DI papildomai pateikia trumpą pagrindimą (`reason`). DI žymos saugomos atskirai ir nekeičia žmogaus žymų. Žmogaus testavimo rinkinio įrašus žymėti savarankiškai, nesiremiant DI atsakymu (svetainė jo nerodo).
+
 ## Pradinė duomenų atranka
 
 Pirmiausia rinkti aiškiai klaidoms skirtas issues. Jei duomenų šaltinio repo naudoja issues ir funkcijų prašymams, išfiltruoti feature requests, klausimus ir diskusijas pagal dokumentuotą atrankos politiką. Filtravimą daryti pagal peržiūrimą kriterijų rinkinį, o ne tyliai išmesti nepatogius pavyzdžius.

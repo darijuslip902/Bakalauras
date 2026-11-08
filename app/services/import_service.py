@@ -49,9 +49,10 @@ def run_import(
     limit: int,
     token: str | None = None,
     transport: httpx.BaseTransport | None = None,
+    labels: str | None = None,
 ) -> ImportResult:
     full_name = parse_repository(repository)
-    fetched = fetch_issues(full_name, limit, token=token, transport=transport)
+    fetched = fetch_issues(full_name, limit, token=token, transport=transport, labels=labels)
     return save_issues(conn, full_name, fetched.issues, fetched.skipped_pull_requests)
 
 

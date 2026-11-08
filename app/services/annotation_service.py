@@ -46,6 +46,7 @@ class TrainingDataFilters:
     annotation: str = ""
     suitability: str = ""
     repository: str = ""
+    test_set: str = ""  # "", "yes" (tik testavimo rinkinys) arba "no"
     sort: str = "newest"
 
 
@@ -95,6 +96,9 @@ def list_training_issues(
     if filters.suitability:
         conditions.append("training_suitability = ?")
         params.append(filters.suitability)
+    if filters.test_set in ("yes", "no"):
+        conditions.append("is_test_set = ?")
+        params.append(1 if filters.test_set == "yes" else 0)
     if filters.repository:
         conditions.append("repository_full_name = ?")
         params.append(filters.repository)
@@ -207,16 +211,20 @@ def save_annotation(
 def next_unlabeled_id(conn: sqlite3.Connection, after_id: int = 0) -> int | None:
     """Kitas dar ne visiškai pažymėtas įrašas, kurio žmogus nepažymėjo „Netinka mokymui“.
 
+    Pirmiausia siūlomi testavimo rinkinio įrašai (juos žymi žmogus), tada visi kiti.
     Ieškoma pagal ID po `after_id`; pasiekus pabaigą pradedama iš pradžių.
     """
-    condition = f"{_FILLED_SQL} < 3 AND training_suitability != 'unsuitable'"
-    row = conn.execute(
-        f"SELECT id FROM github_issues WHERE {condition} AND id > ? ORDER BY id LIMIT 1",
-        (after_id,),
-    ).fetchone()
-    if row is None:
+    base = f"{_FILLED_SQL} < 3 AND training_suitability != 'unsuitable'"
+    for condition in (f"{base} AND is_test_set = 1", base):
         row = conn.execute(
-            f"SELECT id FROM github_issues WHERE {condition} AND id != ? ORDER BY id LIMIT 1",
+            f"SELECT id FROM github_issues WHERE {condition} AND id > ? ORDER BY id LIMIT 1",
             (after_id,),
         ).fetchone()
-    return row[0] if row else None
+        if row is None:
+            row = conn.execute(
+                f"SELECT id FROM github_issues WHERE {condition} AND id != ? ORDER BY id LIMIT 1",
+                (after_id,),
+            ).fetchone()
+        if row is not None:
+            return row[0]
+    return None

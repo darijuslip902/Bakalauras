@@ -13,7 +13,9 @@ Vertinti tris laukus atskirai. Galima turėti skirtingą pavyzdžių skaičių k
 - Pull request įrašus išmesti.
 - Dublikatus šalinti / identifikuoti prieš dalijant duomenis.
 - Automatiškai neinterpretuoti visų GitHub label kaip ground truth: jos gali būti repo specifinės, prieštaringos arba nesusijusios su užduoties klasėmis.
-- Mokyti tik iš žmogaus peržiūrėtų žymų su aiškia žymos kilme.
+- Mokyti iš žymų su aiškia kilme. Darbo vadovui pritarus, didžioji mokymo rinkinio dalis žymima išoriniu DI modeliu (`claude-haiku-5-5`, prompt versija `v1`, taisyklės iš `docs/DATA_LABELING.md`); kiekvienos DI žymos modelis, prompt versija, tokenai ir kaina saugomi `ai_annotations` lentelėje. Žmogaus žyma visada turi pirmenybę prieš DI žymą.
+- Atskiras žmogaus testavimo rinkinys (`python -m tools.select_test_set`, atsitiktinė atranka su seed) žymimas rankiniu būdu nematant DI atsakymo ir niekada nenaudojamas mokymui. Juo vertinamas ir modelis, ir DI žymų sutapimas su žmogaus žymomis (accuracy, macro-F1, confusion matrix).
+- DI validacijos dalies metrikos (stratifikuotas 80/20 dalijimas iš DI žymų) rodo, kaip modelis atkartoja DI žymas; galutinė kokybės išvada daroma pagal žmogaus testavimo rinkinį.
 - Nežymėtus laukus ignoruoti konkretaus lauko mokyme; nenumanomas klases palikti NULL.
 - Dokumentuoti repozitoriją, importo datą, atrankos kriterijus, bendrą eilučių kiekį, išmestas eilutes ir kiekvieno lauko klasių pasiskirstymą.
 - Jei įmanoma, anotacijas antru peržiūrėjimu validuoti bent daliai duomenų; pažymėti nesutarimus ir kaip jie išspręsti.

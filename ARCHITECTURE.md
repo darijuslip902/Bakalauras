@@ -18,7 +18,7 @@ Pirmoji versija:
 - pateikia modelio vertinimo ataskaitą;
 - saugo duomenis lokaliai SQLite faile.
 
-Pirmoji versija sąmoningai **nepriskiria atsakingo programuotojo**, nekeičia GitHub issues, nerašo į GitHub API, nenaudoja mokamos LLM API, netreniruoja milžiniško neuroninio tinklo ir neturi mikroservisų ar atskiro JavaScript SPA.
+Pirmoji versija sąmoningai **nepriskiria atsakingo programuotojo**, nekeičia GitHub issues, nerašo į GitHub API, svetainėje nenaudoja mokamos LLM API (ji naudojama tik vienkartiniam mokymo duomenų žymėjimui atskirais scenarijais, žr. 5 skyriaus `ai_annotations`), netreniruoja milžiniško neuroninio tinklo ir neturi mikroservisų ar atskiro JavaScript SPA.
 
 ## 2. Siūlomas technologijų rinkinys
 
@@ -30,6 +30,7 @@ Pirmoji versija sąmoningai **nepriskiria atsakingo programuotojo**, nekeičia G
 | Duomenų bazė | SQLite, Python `sqlite3` | Be serverio ir atskiros DB instaliavimo |
 | ML | scikit-learn: `TfidfVectorizer` + `LogisticRegression` | Aiškus, lengvai atkuriamas teksto klasifikavimo pradinis modelis |
 | GitHub integracija | GitHub REST API per `httpx` | Viešų issue importas, laiko limitai ir klaidų tvarkymas |
+| Mokymo duomenų žymėjimas (vienkartinis, ne svetainėje) | Anthropic Claude API (`claude-haiku-5-5`) per oficialų `anthropic` SDK, `python -m tools.ai_label` | Rankiniu būdu pažymėti 2 000–3 000 issues neįmanoma; DI žymos atskirtos nuo žmogaus žymų, kokybė tikrinama žmogaus testavimo rinkiniu |
 | Testai | pytest + FastAPI TestClient | Vienetiniai ir integraciniai testai |
 | Konfigūracija | Aplinkos kintamieji ir vienas konfigūracijos modulis | Nėra slaptažodžių kode |
 
@@ -151,8 +152,13 @@ Viešai formai rinkti tik būtinus laukus: pavadinimą ir išsamų aprašymą; p
 | `priority_label` | Patvirtintas prioritetas arba NULL |
 | `annotation_source`, `annotated_at` | Žymos kilmė ir laikas |
 | `training_suitability` | Žmogaus sprendimas: `unreviewed` (numatyta), `suitable` arba `unsuitable` mokymui |
+| `is_test_set` | 1 – įrašas priklauso žmogaus patikrintam testavimo rinkiniui ir niekada nenaudojamas mokymui |
 
 Unikalus apribojimas: `(repository_full_name, issue_number)`. Importuojant tą patį issue atnaujinti šaltinio metaduomenis, bet **neperrašyti žmogaus patvirtintų žymų**.
+
+### `ai_annotations`
+
+DI (Claude API) sugeneruotos mokymo žymos, viena eilutė vienam `(github_issue_id, model, prompt_version)`: `status` (`ok` / `invalid`), `training_suitability`, `category_label`, `complexity_label`, `priority_label`, trumpas `reason`, klaidos aprašymas, bandymų skaičius, sunaudoti tokenai ir kaina USD. Žmogaus žymos `github_issues` lentelėje niekada neperrašomos. Mokymo žyma = žmogaus žyma, jei ji yra, kitaip DI žyma. Svetainė šios lentelės nerodo (žmogus žymi testavimo rinkinį nematydamas DI atsakymo).
 
 ### `prediction_runs`
 
@@ -235,7 +241,9 @@ Pradinis modelis: `Pipeline(TfidfVectorizer(...), LogisticRegression(...))`. Tek
 | Klasių disbalansas | Rodyti pasiskirstymą, naudoti macro-F1 ir confusion matrix |
 | Duomenų nutekėjimas | Duomenų split prieš modelio fit; pipeline tik mokymo split'e |
 | API rate limits | Paginacija, ribotas importas, aiškūs klaidų pranešimai, pasirenkamas tokenas |
-| Per didelė darbų apimtis | Nėra assignee rekomendavimo ir išorinių LLM pirmoje versijoje |
+| Per didelė darbų apimtis | Nėra assignee rekomendavimo; išorinis LLM tik vienkartiniam mokymo duomenų žymėjimui, ne svetainėje |
+| DI žymos klaidingos ar šališkos | Žmogaus patikrintas testavimo rinkinys, DI ir žmogaus sutapimo metrikos, žmogaus žyma visada turi pirmenybę |
+| Viršytos DI API išlaidos | Dry-run pagal nutylėjimą, paleidimo ir bendras biudžetas, blogiausio atvejo kainos patikra prieš kiekvieną užklausą |
 | Netiksliai interpretuojamas confidence | Aiškiai žymėti kaip score; kalibruoti tik atskirai įvertinus |
 
 ## 12. Architektūros priėmimo kriterijai

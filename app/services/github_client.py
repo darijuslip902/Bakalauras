@@ -16,6 +16,7 @@ REQUEST_TIMEOUT = 10.0
 
 _OWNER_RE = re.compile(r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?")
 _REPO_RE = re.compile(r"[A-Za-z0-9._-]{1,100}")
+_LABELS_RE = re.compile(r"[^\x00-\x1f]{1,200}")
 _INVALID_REPOSITORY_MESSAGE = (
     "Neteisingas repozitorijos formatas. Naudokite owner/repo arba "
     "https://github.com/owner/repo."
@@ -80,10 +81,17 @@ def fetch_issues(
     limit: int,
     token: str | None = None,
     transport: httpx.BaseTransport | None = None,
+    labels: str | None = None,
 ) -> FetchedIssues:
-    """Paima iki `limit` issues (be pull request) iš viešos repozitorijos."""
+    """Paima iki `limit` issues (be pull request) iš viešos repozitorijos.
+
+    `labels` – neprivalomas GitHub etikečių filtras (pvz. "bug"), perduodamas
+    kaip užklausos parametras; naudojamas tik masinio importo CLI.
+    """
     if limit < 1:
         raise ValueError("limit turi būti teigiamas")
+    if labels is not None and not _LABELS_RE.fullmatch(labels):
+        raise ValueError("neteisingas etikečių filtras")
     full_name = parse_repository(repository)  # pakartotinis patikrinimas
 
     headers = {
@@ -104,7 +112,7 @@ def fetch_issues(
         follow_redirects=False,
     ) as client:
         for page in range(1, MAX_PAGES + 1):
-            items = _get_page(client, url, page)
+            items = _get_page(client, url, page, labels)
             for item in items:
                 if isinstance(item, dict) and "pull_request" in item:
                     skipped += 1
@@ -117,14 +125,18 @@ def fetch_issues(
     return FetchedIssues(issues, skipped)
 
 
-def _get_page(client: httpx.Client, url: str, page: int) -> list[object]:
-    params = {
+def _get_page(
+    client: httpx.Client, url: str, page: int, labels: str | None = None
+) -> list[object]:
+    params: dict[str, object] = {
         "state": "all",
         "sort": "created",
         "direction": "desc",
         "per_page": PER_PAGE,
         "page": page,
     }
+    if labels:
+        params["labels"] = labels
     try:
         response = client.get(url, params=params)
     except httpx.TimeoutException:

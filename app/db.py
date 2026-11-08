@@ -40,7 +40,33 @@ CREATE TABLE IF NOT EXISTS github_issues (
     annotated_at TEXT,
     training_suitability TEXT NOT NULL DEFAULT 'unreviewed'
         CHECK (training_suitability IN ('unreviewed', 'suitable', 'unsuitable')),
+    is_test_set INTEGER NOT NULL DEFAULT 0 CHECK (is_test_set IN (0, 1)),
     UNIQUE (repository_full_name, issue_number)
+);
+
+-- DI (išorinio API) sugeneruotos žymos mokymo duomenims (5A etapas). Laikomos
+-- atskirai nuo žmogaus žymų github_issues lentelėje ir jų niekada neperrašo.
+CREATE TABLE IF NOT EXISTS ai_annotations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    github_issue_id INTEGER NOT NULL REFERENCES github_issues(id) ON DELETE CASCADE,
+    model TEXT NOT NULL,
+    prompt_version TEXT NOT NULL,
+    status TEXT NOT NULL CHECK (status IN ('ok', 'invalid')),
+    training_suitability TEXT CHECK (training_suitability IN ('suitable', 'unsuitable')),
+    category_label TEXT,
+    complexity_label TEXT,
+    priority_label TEXT,
+    reason TEXT,
+    error TEXT,
+    attempts INTEGER NOT NULL DEFAULT 1,
+    input_tokens INTEGER NOT NULL DEFAULT 0,
+    output_tokens INTEGER NOT NULL DEFAULT 0,
+    cache_creation_input_tokens INTEGER NOT NULL DEFAULT 0,
+    cache_read_input_tokens INTEGER NOT NULL DEFAULT 0,
+    cost_usd REAL NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    UNIQUE (github_issue_id, model, prompt_version)
 );
 """
 
@@ -50,6 +76,10 @@ _ADDED_COLUMNS = {
     ("github_issues", "training_suitability"): (
         "TEXT NOT NULL DEFAULT 'unreviewed' "
         "CHECK (training_suitability IN ('unreviewed', 'suitable', 'unsuitable'))"
+    ),
+    # Žmogaus patikrinto testavimo rinkinio narystė (5A etapas).
+    ("github_issues", "is_test_set"): (
+        "INTEGER NOT NULL DEFAULT 0 CHECK (is_test_set IN (0, 1))"
     ),
 }
 

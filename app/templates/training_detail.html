@@ -12,7 +12,8 @@
 <p class="error" role="alert">Tokio GitHub issue įrašo nėra.</p>
 {% else %}
 <h1><span class="muted">#{{ issue.issue_number }}</span> {{ issue.title }}</h1>
-<p class="muted">{{ issue.repository_full_name }} · {{ ui.annotation_badge(status, annotation_labels) }} {{ ui.suitability_badge(issue.training_suitability, suitability_labels) }}</p>
+<p class="muted">{{ issue.repository_full_name }} · {{ ui.annotation_badge(status, annotation_labels) }} {{ ui.suitability_badge(issue.training_suitability, suitability_labels) }}{% if issue.is_test_set %} <span class="badge test-set">Žmogaus testavimo rinkinys</span>{% endif %}</p>
+{% if issue.is_test_set %}<p class="muted small">Šis įrašas atrinktas žmogaus testavimo rinkiniui: pažymėkite jį patys, nesiremdami DI. Mokymui jis nenaudojamas.</p>{% endif %}
 
 {% if message %}<p class="success" role="status">{{ message }}</p>{% endif %}
 {% if errors %}

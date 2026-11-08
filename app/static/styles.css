@@ -547,3 +547,11 @@ aside > .card + .card {
   margin-top: 0.5rem;
   font-size: 0.9rem;
 }
+
+/* --- Žmogaus testavimo rinkinys (5A etapas) --- */
+
+.test-set {
+  background: #f3e8fd;
+  color: #5b2a86;
+  border-color: #c9a6ea;
+}

@@ -60,6 +60,14 @@
     </select>
   </div>
   <div class="filter-field">
+    <label for="test_set">Žmogaus testas</label>
+    <select id="test_set" name="test_set">
+      {% for value, name in test_set_labels.items() %}
+      <option value="{{ value }}"{% if filters.test_set == value %} selected{% endif %}>{{ name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="filter-field">
     <label for="repository">Repozitorija</label>
     <select id="repository" name="repository">
       <option value="">Visos</option>
@@ -106,7 +114,7 @@
       {% for issue, status in issues %}
       <tr>
         <td data-label="Issue">#{{ issue.issue_number }}</td>
-        <td data-label="Pavadinimas"><a href="/dashboard/training-data/{{ issue.id }}">{{ issue.title }}</a></td>
+        <td data-label="Pavadinimas"><a href="/dashboard/training-data/{{ issue.id }}">{{ issue.title }}</a>{% if issue.is_test_set %} <span class="badge test-set" title="Žmogaus testavimo rinkinys – nenaudojamas mokymui">Testas</span>{% endif %}</td>
         <td data-label="Repozitorija">{{ issue.repository_full_name }}</td>
         <td data-label="Sukurta GitHub">{{ issue.github_created_at|datetime }}</td>
         <td data-label="Žymėjimas">{{ ui.annotation_badge(status, annotation_labels) }}</td>

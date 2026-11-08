@@ -35,6 +35,7 @@ _MESSAGES = {
     "all_done": "Nepažymėtų įrašų nebeliko (neskaičiuojant pažymėtų „Netinka mokymui“).",
 }
 _SORT_LABELS = {"newest": "Naujausi viršuje", "oldest": "Seniausi viršuje"}
+_TEST_SET_LABELS = {"": "Visi", "yes": "Tik testavimo rinkinys", "no": "Be testavimo rinkinio"}
 
 
 def _context(session: Session) -> dict[str, object]:
@@ -54,6 +55,7 @@ def training_data_list(
     annotation: str = Query(""),
     suitability: str = Query(""),
     repository: str = Query(""),
+    test_set: str = Query(""),
     sort: str = Query("newest"),
     page: str = Query("1"),
     message: str = Query(""),
@@ -69,6 +71,8 @@ def training_data_list(
             annotation, invalid = "", True
         if suitability not in ("", *config.TRAINING_SUITABILITY_LABELS):
             suitability, invalid = "", True
+        if test_set not in _TEST_SET_LABELS:
+            test_set, invalid = "", True
         if repository not in ("", *repositories):
             repository, invalid = "", True
         if sort not in _SORT_LABELS:
@@ -79,6 +83,7 @@ def training_data_list(
             annotation=annotation,
             suitability=suitability,
             repository=repository,
+            test_set=test_set,
             sort=sort,
         )
         result = list_training_issues(conn, filters, page_number)
@@ -90,6 +95,7 @@ def training_data_list(
         "annotation": filters.annotation,
         "suitability": filters.suitability,
         "repository": filters.repository,
+        "test_set": filters.test_set,
         "sort": "" if filters.sort == "newest" else filters.sort,
     }
     base_query = {key: value for key, value in query.items() if value}
@@ -102,6 +108,7 @@ def training_data_list(
         filters=filters,
         repositories=repositories,
         sort_labels=_SORT_LABELS,
+        test_set_labels=_TEST_SET_LABELS,
         filters_active=bool(base_query),
         invalid_filter=invalid,
         message=_MESSAGES.get(message),
