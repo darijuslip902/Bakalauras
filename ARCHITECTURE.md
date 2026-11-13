@@ -1,5 +1,15 @@
 # Sistemos architektūra
 
+## Dabartinė būklė (2026-11-13, po 5D)
+
+0–5D etapai baigti, PR #11 sujungtas į main. Modelių versija `20261113-125330`. 6 etapas nepradėtas: laukiama darbo vadovo pastabų; statistikos puslapis nėra patvirtintas reikalavimas. P0 paliekamas, nors jo atpažinimas silpnas.
+
+- 40 024 importuoti GitHub įrašai; 23 884 sėkmingos DI anotacijos (19 412 tinkamų, 4 472 netinkamų).
+- 18 267 mokymo ir validacijos pavyzdžiai; 1 120 atrinktų testo įrašų, iš jų 901 tinkamas (visi 901 su DI etalonu); 30 pilotinių įrašų.
+- 243 artimi testo dublikatai pašalinti iš mokymo. Bendra DI žymėjimo kaina 4,5948 USD.
+- Trys apmokyti modeliai ir jų ataskaitos saugomi GitHub; SQLite DB, jos kopijos, .env ir .venv – tik lokaliai.
+- Testo accuracy / macro-F1: kategorija 64,26 % / 62,22 %; sudėtingumas 69,70 % / 69,14 %; prioritetas 65,93 % / 48,20 %. P0 F1 = 0. Metrikos rodo atitikimą Claude žymoms, ne nepriklausomai žmogaus patvirtintai tiesai. Ankstesnio ir naujo modelio metrikos iš skirtingų testų nėra tiesiogiai palyginamos.
+
 ## 1. Architektūros tikslas ir ribos
 
 Projektas yra individualaus bakalauro darbo prototipas – nedidelė internetinė programinės įrangos klaidų registravimo ir valdymo sistema su automatiniu teksto klasifikavimo moduliu. Ji turi dvi sąsajos dalis: viešą klaidos pranešimo formą klientui / testuotojui ir vidinę, prisijungimu apsaugotą programuotojo / klaidų koordinatoriaus aplinką. ML tyrimui atskirai importuojami vieši GitHub Issues įrašai.
@@ -20,7 +30,7 @@ Pirmoji versija:
 
 Pirmoji versija sąmoningai **nepriskiria atsakingo programuotojo**, nekeičia GitHub issues, nerašo į GitHub API, svetainėje nenaudoja mokamos LLM API (ji naudojama tik vienkartiniam mokymo duomenų žymėjimui atskirais scenarijais, žr. 5 skyriaus `ai_annotations`), netreniruoja milžiniško neuroninio tinklo ir neturi mikroservisų ar atskiro JavaScript SPA.
 
-## 2. Siūlomas technologijų rinkinys
+## 2. Naudojamas technologijų rinkinys
 
 | Sritis | Pasirinkimas | Kodėl |
 |---|---|---|
@@ -30,7 +40,7 @@ Pirmoji versija sąmoningai **nepriskiria atsakingo programuotojo**, nekeičia G
 | Duomenų bazė | SQLite, Python `sqlite3` | Be serverio ir atskiros DB instaliavimo |
 | ML | scikit-learn: `TfidfVectorizer` + `LogisticRegression` | Aiškus, lengvai atkuriamas teksto klasifikavimo pradinis modelis |
 | GitHub integracija | GitHub REST API per `httpx` | Viešų issue importas, laiko limitai ir klaidų tvarkymas |
-| Mokymo duomenų žymėjimas (vienkartinis, ne svetainėje) | Anthropic Claude API (`claude-haiku-5-5`) per oficialų `anthropic` SDK, `python -m tools.ai_label` | Rankiniu būdu pažymėti 2 000–3 000 issues neįmanoma; DI žymos atskirtos nuo žmogaus žymų, kokybė tikrinama žmogaus testavimo rinkiniu |
+| Mokymo duomenų žymėjimas (vienkartinis, ne svetainėje) | Anthropic Claude API (`claude-haiku-5-5`) per oficialų `anthropic` SDK, `python -m tools.ai_label` | Masinis žymėjimas; DI žymos atskirtos nuo žmogaus žymų, sutapimas tikrintas pilotiniame rinkinyje |
 | Testai | pytest + FastAPI TestClient | Vienetiniai ir integraciniai testai |
 | Konfigūracija | Aplinkos kintamieji ir vienas konfigūracijos modulis | Nėra slaptažodžių kode |
 
@@ -49,9 +59,9 @@ flowchart TD
   M --> S
   D --> DB[(SQLite)]
   G --> GH[GitHub REST API]
-  S --> E[Vertinimo modulis]
+  CLI[Mokymo CLI] --> E[Vertinimo modulis]
   E --> R[Vertinimo ataskaita]
-  R --> W
+  R --> F[Markdown ir JSON failai]
 ```
 
 ### Atsakomybės
@@ -60,63 +70,33 @@ flowchart TD
 2. **GitHub importo paslauga** – gauna issues puslapiais, apdoroja HTTP klaidas, laiko limitus ir rate limit situacijas, ignoruoja pull request įrašus.
 3. **Teksto paruošimas** – saugiai sujungia pavadinimą ir aprašymą, normalizuoja trūkstamą tekstą, nekeičia originalaus įrašo; mokymo/testavimo duomenų skirstymas atliekamas prieš mokymo metu išmokstamą požymių transformaciją.
 4. **Anotavimo paslauga** – leidžia žmogui parinkti kategoriją, sudėtingumą bei prioritetą. Vien etiketės pavadinimas automatiškai nelaikomas patikima žyma, nebent yra aiški naudotojo patvirtinta etikečių žemėlapių konfigūracija.
-5. **Klasifikavimo paslauga** – atskirai treniruoja ir vykdo prognozę kiekvienam laukui. Modelis mokomas tik iš žmogaus patvirtintų, atitinkamą žymą turinčių įrašų.
+5. **Klasifikavimo paslauga** – atskirai treniruoja ir vykdo prognozę kiekvienam laukui. Modelis mokomas iš tinkamų žmogaus arba DI pažymėtų įrašų; žmogaus žyma turi pirmenybę.
 6. **Duomenų saugykla** – atlieka SQLite įterpimus, atnaujinimus ir užklausas, bet neturi sprendimų dėl verslo logikos.
 7. **Vertinimo modulis** – generuoja mokymo/vertinimo ataskaitas neįtraukdamas testinių žymų į mokymą ir pateikia klasifikavimo metrikas.
 8. **Konfigūracija** – saugo DB kelią, GitHub tokeno aplinkos kintamojo pavadinimą ir ML slenksčius; paslaptys neišsaugomos repo.
 
-## 4. Siūloma katalogų struktūra
+## 4. Faktinė katalogų struktūra
 
 ```text
-Bakalauras/
-├── app/
-│   ├── main.py                  # FastAPI programos kūrimas
-│   ├── config.py                # Konfigūracija ir aplinkos kintamieji
-│   ├── db.py                    # SQLite prisijungimai, schema ir transakcijos
-│   ├── routes/
-│   │   ├── dashboard.py         # Pradinis puslapis ir statistika
-│   │   ├── issues.py            # Importas, sąrašas ir detalės
-│   │   ├── annotations.py       # Žymų tvirtinimas
-│   │   ├── predictions.py       # Prognozavimas ir rezultatai
-│   │   └── evaluation.py        # Vertinimo ataskaitos
-│   ├── services/
-│   │   ├── github_client.py     # Tik skaitymo GitHub REST klientas
-│   │   ├── import_service.py    # Importo ir dublikatų logika
-│   │   ├── annotation_service.py
-│   │   ├── text_preprocessing.py
-│   │   ├── training_service.py
-│   │   ├── prediction_service.py
-│   │   └── evaluation_service.py
-│   ├── ml/
-│   │   ├── classifier.py        # Pipeline kūrimas, treniravimas, prognozės
-│   │   └── model_registry.py    # Vietinių modelių versijos / metaduomenys
-│   ├── templates/               # Jinja2 HTML
-│   └── static/
-│       └── styles.css
-├── tests/
-│   ├── test_preprocessing.py
-│   ├── test_github_client.py
-│   ├── test_import_service.py
-│   ├── test_annotations.py
-│   ├── test_classifier.py
-│   ├── test_evaluation.py
-│   └── test_routes.py
-├── data/
-│   └── .gitkeep                 # DB ir eksportuoti duomenys nėra committinami
-├── models/
-│   └── .gitkeep                 # Modelio failai nėra committinami pagal nutylėjimą
-├── docs/
-│   ├── IMPLEMENTATION_PLAN.md
-│   ├── EVALUATION_PLAN.md
-│   └── DATA_LABELING.md
-├── .env.example
-├── .gitignore
-├── CLAUDE.md
-├── README.md
-└── requirements.txt
+app/
+  main.py, config.py, db.py, auth.py
+  routes/       auth, reports, dashboard, issues, annotations
+  services/     github_client, import_service, annotation_service,
+                bug_report_service, classification_service,
+                prediction_service, lt_translation
+  ml/           ai_labeling, class_analysis, collection, data_quality,
+                leakage, reporting, training
+  templates/    Jinja2 HTML
+  static/       styles.css
+tools/          import_issues, collect, check_data, pipeline,
+                select_test_set, ai_label, class_report, train_models
+tests/          vienetiniai ir integraciniai testai
+data/           vietinė SQLite DB ir atsarginės kopijos (ne Git)
+models/         trys .joblib modeliai ir training_report.md/.json (Git)
+docs/           projekto dokumentacija
 ```
 
-Tai loginė struktūra, ne reikalavimas nuo pirmos dienos sukurti kiekvieną modulį. Kurti katalogus ir failus tik tame etape, kuriam jie reikalingi. Nevertėtų failų skaidyti smulkiau be naudos.
+Vidinė dalis turi vieną konfigūruojamą paskyrą; atskiros testuotojų paskyros, naudotojų lentelė ir modelių statistikos puslapis neįgyvendinti. Šešios DB lentelės: bug_reports, github_issues, ai_annotations, collection_progress, prediction_runs, classification_confirmations. collection_progress saugo importo pažangą pagal šaltinį (repozitorija ir etiketė).
 
 ## 5. Duomenų modelis
 
@@ -146,7 +126,7 @@ Viešai formai rinkti tik būtinus laukus: pavadinimą ir išsamų aprašymą; p
 | `labels_json` | Originalios GitHub etiketės JSON formatu |
 | `github_created_at`, `github_updated_at` | GitHub datos |
 | `is_pull_request` | PR indikacija; PR neįtraukiamas į klaidų datasetą |
-| `imported_at` | Paskutinio importo laikas |
+| `imported_at` | Pirmojo importo laikas |
 | `category_label` | Patvirtinta kategorija arba NULL |
 | `complexity_label` | Patvirtintas sudėtingumas arba NULL |
 | `priority_label` | Patvirtintas prioritetas arba NULL |

@@ -1,10 +1,20 @@
-# Pirmoji užklausa Claude Code
+# Claude Code darbo užklausos
+
+0–5D etapai baigti, PR #11 sujungtas į main. 6 etapas atidėtas iki darbo vadovo rekomendacijų. Toliau pateikta aktuali užklausos forma, o ankstesnės užklausos išsaugotos kaip istorija.
+
+## Aktualus darbo principas
+
+Dirbk tik pagal naują naudotojo užduotį. Perskaityk CLAUDE.md, ARCHITECTURE.md ir aktualią docs/IMPLEMENTATION_PLAN.md dalį. Patikrink git status, pradėk nuo naujausios main versijos ir naudok atskirą šaką. Nekeisk apmokytų modelių, vietinės DB, autentifikacijos ar svetainės be aiškaus reikalavimo. Mokamų API užklausų nevykdyk be leidimo. Testų rezultatus pateik tik faktiškai juos paleidęs. Jei užduotis tik dokumentacinė, keisk tik esamus dokumentus.
+
+## Istorinės užklausos (nebevykdyti)
+
+### Pirmoji užklausa Claude Code
 
 Įklijuok šį tekstą Claude Code, atsidaręs šią repozitoriją. Architektūros specifikacijos jau yra repozitorijoje, todėl nekopijuok jų visų į pokalbį.
 
 ---
 
-Dirbk tiesiogiai šiame projekte. Pirmiausia perskaityk `CLAUDE.md` ir tik aktualias `ARCHITECTURE.md bei `docs/IMPLEMENTATION_PLAN.md` dalis. Patikrink `git status --short` ir išsaugok visus esamus pakeitimus.
+Dirbk tiesiogiai šiame projekte. Pirmiausia perskaityk `CLAUDE.md` ir tik aktualias `ARCHITECTURE.md` bei `docs/IMPLEMENTATION_PLAN.md` dalis. Patikrink `git status --short` ir išsaugok visus esamus pakeitimus.
 
 Įgyvendink tik **0 etapą** iš `docs/IMPLEMENTATION_PLAN.md`: minimalų FastAPI karkasą, paleidimo / sveikatos patikrinimo maršrutą, minimalų Jinja2 puslapį ir testą(-us), kad būtų galima patikrinti priėmimo kriterijus. Kai kurie konfigūracijos failai jau sukurti – juos peržiūrėk ir papildyk tik jei būtina, neperrašyk be reikalo.
 

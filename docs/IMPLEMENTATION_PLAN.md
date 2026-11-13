@@ -2,6 +2,16 @@
 
 Laikytis etapų eilės. Vienoje Claude Code sesijoje įgyvendinti tik vieną etapą, paleisti su juo susijusius testus ir užrašyti faktinius rezultatus. Neperrašyti jau veikiančio 0 etapo karkaso.
 
+## Dabartinė būklė (2026-11-13, po 5D)
+
+0–5D etapai baigti, PR #11 sujungtas į main. Modelių versija `20261113-125330`. 6 etapas nepradėtas: laukiama darbo vadovo pastabų; statistikos puslapis nėra patvirtintas reikalavimas. P0 paliekamas, nors jo atpažinimas silpnas.
+
+- 40 024 importuoti GitHub įrašai; 23 884 sėkmingos DI anotacijos (19 412 tinkamų, 4 472 netinkamų).
+- 18 267 mokymo ir validacijos pavyzdžiai; 1 120 atrinktų testo įrašų, iš jų 901 tinkamas (visi 901 su DI etalonu); 30 pilotinių įrašų.
+- 243 artimi testo dublikatai pašalinti iš mokymo. Bendra DI žymėjimo kaina 4,5948 USD.
+- Trys apmokyti modeliai ir jų ataskaitos saugomi GitHub; SQLite DB, jos kopijos, .env ir .venv – tik lokaliai.
+- Testo accuracy / macro-F1: kategorija 64,26 % / 62,22 %; sudėtingumas 69,70 % / 69,14 %; prioritetas 65,93 % / 48,20 %. P0 F1 = 0. Metrikos rodo atitikimą Claude žymoms, ne nepriklausomai žmogaus patvirtintai tiesai. Ankstesnio ir naujo modelio metrikos iš skirtingų testų nėra tiesiogiai palyginamos.
+
 ## 0 etapas – minimalus projekto pagrindas (ATLIKTA)
 **Tikslas:** pakartojama aplinka ir paleidžiamas FastAPI karkasas.
 
@@ -69,7 +79,7 @@ Atlikta:
 
 Realus mokamas žymėjimas ir modelių mokymas – 5B etape, tik naudotojui leidus.
 
-## 5B etapas – automatizuotas duomenų paruošimas, DI žymėjimas ir modelių mokymas (PROGRAMINĖ DALIS ATLIKTA)
+## 5B etapas – automatizuotas duomenų paruošimas, DI žymėjimas ir modelių mokymas (ATLIKTA)
 **Tikslas:** kuo mažiau rankinio darbo surinkti 2 000–3 000 kokybiškų GitHub issues, juos pažymėti DI, išmokyti ir įvertinti tris modelius.
 
 Atlikta (programinė dalis):
@@ -81,11 +91,11 @@ Atlikta (programinė dalis):
 - `python -m tools.collect --augment` – tikslinis papildymas tik trūkstamoms klasėms (`source_kind = augmentation`, į bandomąjį / testavimo rinkinius nepatenka); klasės dirbtinai nepriskiriamos;
 - `models/training_report.md` – duomenų kilmė, DI metodika ir kaina, metrikos su bootstrap 95 % intervalais, klaidų matricos, baseline, automatiniai apribojimai.
 
-Atlikta naudotojo kompiuteryje: pagrindinis rinkimas (13 `base` šaltinių, 2 906 įrašai; 25 šaltiniai `sources.json` = 13 `base` + 12 `augment`, o `augment` naudojamas tik su `--augment`). Duomenų analizė (2026-11-09, žr. [DATA_QUALITY_REPORT.md](DATA_QUALITY_REPORT.md)): 2 774 įrašai praėjo kokybės patikrą; žmogaus žymų, DI žymų ir testavimo / bandomojo rinkinių dar nėra; DI žymėjimas visam rinkiniui su `claude-haiku-5-5` įvertintas ~$0.7–1.4.
+Istorinė 5B būklė prieš žymėjimą: pagrindinis rinkimas (13 `base` šaltinių, 2 906 įrašai; 25 šaltiniai `sources.json` = 13 `base` + 12 `augment`, o `augment` naudojamas tik su `--augment`). Duomenų analizė (2026-11-09, žr. [DATA_QUALITY_REPORT.md](DATA_QUALITY_REPORT.md)): 2 774 įrašai praėjo kokybės patikrą; žmogaus žymų, DI žymų ir testavimo / bandomojo rinkinių dar nėra; DI žymėjimas visam rinkiniui su `claude-haiku-5-5` įvertintas ~$0.7–1.4.
 
-Etikečių filtro pataisa atlikta (2026-11-09): komponentų etiketės `feature: ...`, `Needs Discussion` / `under-discussion` ir `*-unsupported` nebelaikomos ne klaidos požymiu; tinkamų įrašų dabar 2 884 (buvo 2 774). Likę žingsniai (nepradėti): patikrinti pataisą naudotojo kompiuteryje, tada atrinkti testavimo / bandomąjį rinkinį ir tik po to pradėti DI žymėjimą.
+Etikečių filtro pataisa atlikta (2026-11-09): komponentų etiketės `feature: ...`, `Needs Discussion` / `under-discussion` ir `*-unsupported` nebelaikomos ne klaidos požymiu; tinkamų įrašų dabar 2 884 (buvo 2 774). Tuomet likę žingsniai (dabar atlikti): patikrinti pataisą naudotojo kompiuteryje, tada atrinkti testavimo / bandomąjį rinkinį ir tik po to pradėti DI žymėjimą.
 
-Liko (naudotojo kompiuteryje, mokami žingsniai – tik naudotojui leidus): filtro peržiūra, testavimo (~120) ir bandomojo (~30) rinkinių atranka (`python -m tools.pipeline --skip-import`), jų žymėjimas, bandomasis ir masinis DI žymėjimas, tikslinis `--augment` (tik po DI žymėjimo ir tik trūkstamoms klasėms), mokymas ir ataskaitos įvertinimas.
+Istoriniai 5B žingsniai (atlikti): filtro peržiūra, testavimo (~120) ir bandomojo (~30) rinkinių atranka (`python -m tools.pipeline --skip-import`), jų žymėjimas, bandomasis ir masinis DI žymėjimas, tikslinis `--augment` (tik po DI žymėjimo ir tik trūkstamoms klasėms), mokymas ir ataskaitos įvertinimas.
 
 ### 5B papildymas – DI žymėjimo paruošimas (užsakovo „5C“, 2026-11-10)
 Pavadinimų pastaba: šiame plane „5C“ yra modelių integracija į svetainę (žemiau, nekeičiama); čia aprašytas DI žymėjimo paruošimas, kurį užsakovas vadino „5C“. Rankinio žymėjimo atsisakyta: mokymo ir testavimo žymas kuria Claude (`claude-haiku-5-5`, prompt `v1`). Būklė DB: 2 906 issues, 2 884 praėjo kokybės patikrą, pilot 30 (visi pažymėti DI ir, anksčiau, žmogaus), test 120 (dar nežymėti), mokymui 2 734.
@@ -99,9 +109,9 @@ Atlikta (kodas + testai; mokamų užklausų nebuvo):
 - Testavimo rinkinys: etalonas – žmogaus žymos, kai jų nėra – DI žymos (`label_source`); ataskaita aiškiai nurodo, kad metrikos rodo atitikimą DI žymoms. Test įrašai į mokymą nepatenka (patikra `load_datasets`, išimtis jei pažeista).
 - Mokymas gali naudoti vien Claude žymas (testas „issue → DI žymos → mokymas“ su imituotu klientu).
 
-Liko (naudotojo kompiuteryje, MOKAMA): `ai_label --subset test`, `--subset training`, tada `class_report` ir `train_models`.
+Atlikta vėliau naudotojo kompiuteryje: `ai_label --subset test`, `--subset training`, tada `class_report` ir `train_models`.
 
-## 5C etapas – modelių integracija į svetainę
+## 5C etapas – modelių integracija į svetainę (ATLIKTA)
 **Tikslas:** sistema automatiškai pasiūlo kategoriją, prioritetą ir, jei duomenų pakanka, sudėtingumą naujiems klientų pranešimams, naudodama tik lokaliai išmokytus modelius (be DI API).
 
 Darbai:
@@ -113,13 +123,13 @@ Darbai:
 - programuotojui leisti pataisyti prognozę, išsaugant prognozę ir patvirtintą reikšmę atskirai;
 - fiksuoti modelio versiją ir prognozės metodą.
 
-**Būsena (2026-11-10):** įgyvendinta – modelių įkėlimas (`app/services/prediction_service.py`, katalogas `MODELS_DIR`), automatinė klasifikacija po viešo pranešimo išsaugojimo, lentelė `prediction_runs` (atskirai nuo patvirtintų žymų), pasitikėjimo įvertis su įspėjimu, kad tai ne kalibruota tikimybė, lauko slenksčiai ir „Rekomenduojama peržiūra“, modelio versija ir metodas, aiškus pranešimas be modelių / su sugadintais modeliais (svetainė veikia), prognozės sąraše (filtrai) ir detalėse, mygtukas „Klasifikuoti iš naujo“. **Dar neįgyvendinta (6 etapas):** slenksčių pagrindimas nepriklausomais duomenimis, modelio būsenos puslapis.
+**Būsena (2026-11-10):** įgyvendinta – modelių įkėlimas (`app/services/prediction_service.py`, katalogas `MODELS_DIR`), automatinė klasifikacija po viešo pranešimo išsaugojimo, lentelė `prediction_runs` (atskirai nuo patvirtintų žymų), pasitikėjimo įvertis su įspėjimu, kad tai ne kalibruota tikimybė, lauko slenksčiai ir „Rekomenduojama peržiūra“, modelio versija ir metodas, aiškus pranešimas be modelių / su sugadintais modeliais (svetainė veikia), prognozės sąraše (filtrai) ir detalėse, mygtukas „Klasifikuoti iš naujo“. **Neįgyvendinta (galimi 6 etapo darbai, nepatvirtinti):** slenksčių pagrindimas nepriklausomais duomenimis, modelio būsenos puslapis.
 
 **5C užbaigimas (2026-11-10):** įgyvendinta (1) programuotojo klasifikacijos patvirtinimo forma „Patvirtinti klasifikaciją“ (`POST /dashboard/reports/{id}/classification`, lentelė `classification_confirmations`, patvirtintos žymos turi pirmenybę sąrašuose / filtruose, perklasifikavimas jų nekeičia); (2) lietuvių kalbos palaikymas – aptikimas ir vertimas vietiniu žodynu tik modelio įvesčiai, originalas DB nekeičiamas, nepatikimas vertimas žymimas; (3) modelio įverčiai pašalinti iš pagrindinio vaizdo (lieka DB ir sutraukiamoje techninėje skiltyje), aiškiai atskirta „Laukia patvirtinimo“ / „Patvirtinta“; (4) tvarkingesnis `/dashboard` (viena klasifikacijos būsenos žyma vietoje trijų „auto“) ir detalių išdėstymas; (5) pataisytas `test_report_detail_shows_all_fields` pagal naują struktūrą (patvirtintos žymos `<dt>` dabar klasifikacijos kortelėje; patikros papildytos, ne sumažintos). **Dokumentų suderinimas:** 6 etapo punktas apie pasitikėjimo įverčio rodymą sąrašuose / detalėse pakeistas sprendimu įverčių pagrindiniame vaizde nerodyti.
 
 Priėmimas: testai patikrina prognozės formatą, automatinį naujo pranešimo klasifikavimą, modelio nebuvimo atvejį, prognozės ir anotacijos atskyrimą bei žemo pasitikėjimo žymos nustatymą. Neteigiama, kad score yra kalibruota tikimybė, jei kalibracija nepatikrinta.
 
-## 5D etapas – mokymo duomenų išplėtimas ir modelių kokybės gerinimas
+## 5D etapas – mokymo duomenų išplėtimas ir modelių kokybės gerinimas (ATLIKTA)
 **Tikslas:** padidinti mokymo duomenų kiekį ir subalansuoti kategorijas; tuos pačius tris TF-IDF + LogisticRegression klasifikatorius apmokyti iš naujo (metodas ir parametrai nekeičiami, kad būtų matoma duomenų kiekio įtaka). Svetainė, autentifikavimas, klasifikacijos patvirtinimas ir lietuvių kalbos apdorojimas nekeičiami.
 
 **Pradinė būklė (užsakovo duomenys, 5C-final):** 2 906 importuoti, 2 608 tinkami mokymui, pilotas 30, testas 120 (112 tinkami). Kategorijos: backend_api 1 442, ui 436, database_data 217, build_deployment 160, security 119, performance 109, other 106, documentation 19. Macro-F1 (etalonas – Claude žymos): kategorija 0.4924, sudėtingumas 0.6094, prioritetas 0.5896. Prioriteto klasės `P0_critical` mokymo duomenyse praktiškai nėra.
@@ -146,26 +156,15 @@ Visų limitų suma 40 161 (sąmoningai su atsarga: dalis etikečių turės maži
 
 **Infrastruktūros pakeitimai (minimalūs, naujo įrankio nekurta):** šaltinio limitas iki 3 000 (30 puslapių), `collect --check --counts` (Search API, `count_issues`), automatinė DB atsarginė kopija prieš importą (`tools/_common.backup_database`, `--no-backup`), artimų dublikatų (kosinuso panašumas ≥ 0,9, `HashingVectorizer` be žodyno) pašalinimas iš mokymo vs. testas (`app/ml/leakage.py`, `training.load_datasets`). Jau buvo: tęstinis rinkimas (`collection_progress`), tikslių dublikatų, PR, trumpų ir ne klaidų įrašų filtravimas, `ON CONFLICT` įrašymas (esami įrašai ir anotacijos nekeičiami), testo / pilotinių rinkinių atskyrimas.
 
-**Eiga:** (1) importo paruošimas – **atlikta** (programinė dalis, testai); (2) naudotojas paleidžia `--check --counts`, taisome šaltinius; (3) importas; (4) testo rinkinio papildymas ir kainos dry-run; (5) mokamas žymėjimas – tik su naudotojo patvirtinimu; (6) `class_report`, prireikus tikslinis papildymas; (7) `train_models` su tais pačiais parametrais, naujų modelių failai ir ataskaitos saugomi atskirai (nekeičiant `models/` iki palyginimo), palyginimas senų ir naujų tame pačiame testo rinkinyje (accuracy, macro-F1, weighted-F1, klasių precision / recall / F1, confusion matrix).
+**Istorinė eiga (užbaigta):** (1) importo paruošimas – **atlikta** (programinė dalis, testai); (2) naudotojas paleidžia `--check --counts`, taisome šaltinius; (3) importas; (4) testo rinkinio papildymas ir kainos dry-run; (5) mokamas žymėjimas – tik su naudotojo patvirtinimu; (6) `class_report`, prireikus tikslinis papildymas; (7) `train_models` su tais pačiais parametrais, naujų modelių failai ir ataskaitos saugomi atskirai (nekeičiant `models/` iki palyginimo), palyginimas senų ir naujų tame pačiame testo rinkinyje (accuracy, macro-F1, weighted-F1, klasių precision / recall / F1, confusion matrix).
 
 **Priėmimas:** testai patvirtina limitų, `--counts`, atsarginės kopijos ir artimų dublikatų elgesį; testo įrašai niekada nepatenka į mokymą; esama DB ir anotacijos nekeičiamos. Rezultatų (kokybės pagerėjimo) neteigiama, kol nėra naujo mokymo.
 
-## 6 etapas – vertinimas ir sąsajos užbaigimas
-**Tikslas:** parengti atkuriamą, bakalauro darbui tinkamą modelio vertinimą.
+## 6 etapas – vertinimas ir sąsajos užbaigimas (ATIDĖTA)
 
-Darbai:
-- palyginti daugumos klasės baseline su TF-IDF + LogisticRegression tuo pačiu duomenų split;
-- pateikti per lauką duomenų kiekį, klasių pasiskirstymą, precision, recall, F1, macro-F1 ir confusion matrix, kai imtis leidžia;
-- vidiniame puslapyje pateikti modelio būseną, prognozės metodą, vertinimo ataskaitą ir aiškius duomenų nepakankamumo pranešimus;
-- klaidų sąraše ir detalėse rodyti aiškią klasifikacijos būseną („Laukia patvirtinimo“ / „Patvirtinta“); skaitinių įverčių vartotojui nerodyti (5C sprendimas), jie lieka techninėje analizėje;
-- patikrinti, ar peržiūros slenkstis pagrįstai parinktas vertinimo duomenimis; ataskaitoje nurodyti, kiek prognozių pažymima peržiūrai ir kokia jų faktinė klasifikavimo kokybė, jei duomenų imtis leidžia;
-- parodyti aktyvių ir išspręstų pranešimų skaičius;
-- CSV eksportą įgyvendinti tik jei tai naudinga realiam vertinimui ir nepadidina apimties neproporcingai;
-- README suderinti su faktiškai įgyvendintu funkcionalumu.
+Laukiama darbo vadovo rekomendacijų. Nepradėti naujų funkcijų be naudotojo nurodymo. Galimi darbai: galutinis funkcinis testavimas, dizaino peržiūra, papildomos rolės ar modelių statistikos puslapis, jei bus reikalingas. P0 išlieka. Modelių keitimas ar naujas mokamas žymėjimas neplanuojamas. Slenksčių kalibravimas nėra atliktas.
 
-Priėmimas: testai įrodo, kad mokymo ir testavimo duomenys nesimaišo; esant mažai imčiai rodomas įspėjimas, o ne išgalvotos metrikos; peržiūros žyma veikia pagal nustatytą slenkstį ir sąsaja nevadina nepatikrinto score tikslumo garantija.
-
-## 7 etapas – užbaigimas
+## 7 etapas – užbaigimas (NEPRADĖTA)
 **Tikslas:** kokybinė patikra, ne naujos funkcijos.
 
 Darbai:
