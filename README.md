@@ -1,54 +1,18 @@
 # Programinės įrangos klaidų automatinio klasifikavimo ir prioritizavimo sistema
 
-Bakalauro darbo prototipas – klaidų registravimo ir valdymo svetainė su automatiniu teksto klasifikavimu. Klientas / testuotojas be paskyros pateikia klaidą viešoje formoje. Sistema bando automatiškai nustatyti jos kategoriją, prioritetą ir sudėtingumą. Programuotojas / koordinatorius prisijungęs peržiūri, filtruoja ir tvarko pranešimus, keičia jų būsenas ir mato išspręstų klaidų istoriją. Vieši GitHub Issues importuojami atskirai modelio mokymui ir vertinimui.
+Internetinis prototipas: klientas arba testuotojas be paskyros pateikia klaidą, sistema vietiniais ML modeliais pasiūlo kategoriją, sudėtingumą ir prioritetą, o prisijungęs programuotojas peržiūri, patvirtina arba pataiso klasifikaciją ir valdo būseną. GitHub Issues naudojami atskirai mokymo duomenims; GitHub įrašai nekeičiami.
 
-## Tikslas
+Technologijos: Python, FastAPI, Jinja2, HTML/CSS, SQLite, scikit-learn (TF-IDF + Logistic Regression), pytest. Claude API naudojamas tik atskirame mokymo duomenų žymėjimo CLI, ne svetainėje.
 
-Automatiškai pasiūlyti klaidos **kategoriją**, **sudėtingumo lygį** ir **prioritetą**. Sistema turi parodyti, kokiu būdu gautas rezultatas, jo pasitikėjimo įvertį ir aiškiai pažymėti atvejus, kai patikimų prognozių dar negalima teikti. Atsakingo programuotojo parinkimas sąmoningai neįtrauktas į pirmąją versiją.
+## Dabartinė būklė (2026-11-13, po 5D)
 
-## Pagrindinis funkcionalumas
+0–5D etapai baigti, PR #11 sujungtas į main. Modelių versija `20261113-125330`. 6 etapas nepradėtas: laukiama darbo vadovo pastabų; statistikos puslapis nėra patvirtintas reikalavimas. P0 paliekamas, nors jo atpažinimas silpnas.
 
-- Vieša klaidos pateikimo forma be kliento paskyros; klientas mato tik pateikimo patvirtinimą.
-- Vidinė, prisijungimu apsaugota programuotojo / koordinatoriaus aplinka.
-- Visų pranešimų sąrašas, paieška ir filtravimas pagal būseną, kategoriją, prioritetą bei sudėtingumą.
-- Būsenos new, in_progress, resolved; išspręstos klaidos lieka istorijoje.
-- Automatinė klasifikacija veikia tik kai yra tinkamas apmokytas modelis; kitu atveju sistema vis tiek išsaugo pranešimą ir aiškiai parodo, kad prognozės nėra.
-- Programuotojas gali pataisyti prognozę; modelio prognozė ir žmogaus patvirtinta žyma saugomos atskirai.
-- Vieši GitHub Issues naudojami kaip atskiras mokymo duomenų šaltinis, o GitHub pusėje sistema nieko nekeičia.
-
-## Architektūros sprendimai
-
-- Python 3.12+
-- FastAPI – HTTP API ir serverio pusėje generuojama HTML sąsaja.
-- Jinja2 – HTML šablonai; atskiro React/Vue projekto nėra.
-- SQLite – lokali duomenų bazė, valdoma standartiniu Python sqlite3 moduliu.
-- scikit-learn – TF-IDF teksto požymiai ir atskiras prižiūrimo klasifikavimo modelis kiekvienam laukui.
-- GitHub REST API – tik skaitymo režimu importuojami viešos repozitorijos issues; pull request įrašai atmetami.
-- pytest – vienetiniai ir integraciniai testai.
-- Anthropic Claude API (`anthropic` SDK) – **tik** vienkartiniam mokymo duomenų žymėjimui atskiru scenarijumi `tools/ai_label.py`; svetainė DI API nenaudoja.
-
-Pilnas pagrindimas ir komponentų sąveika aprašyti [ARCHITECTURE.md](ARCHITECTURE.md). Claude Code veikimo taisyklės pateiktos [CLAUDE.md](CLAUDE.md), pirmoji ir vėlesnės užklausos – [docs/CLAUDE_PROMPT.md](docs/CLAUDE_PROMPT.md), darbų etapai – [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md), anotavimo gairės – [docs/DATA_LABELING.md](docs/DATA_LABELING.md), o vertinimo metodika – [docs/EVALUATION_PLAN.md](docs/EVALUATION_PLAN.md).
-
-## Duomenų kokybės principas
-
-GitHub etiketės nėra automatiškai laikomos teisingomis kategorijos, prioriteto ar sudėtingumo žymomis. Naudotojas turi galėti patvirtinti žymas sistemoje. Kiekvienam laukui modelis mokomas tik tada, kai duomenų kiekis ir klasių pasiskirstymas atitinka iš anksto aprašytas sąlygas. Kitu atveju sistema rodo, kad duomenų nepakanka, arba atskirai pažymėtą taisyklių pasiūlymą. Nežymėtos ir sintetiniu būdu sukurtos demonstracinės eilutės negali būti pateikiamos kaip realaus modelio vertinimo duomenys.
-
-## Įgyvendinimo būsena
-
-Įgyvendinti 0–4, 5A, 5B (programinė dalis) ir 5C etapai:
-
-- **0 etapas:** FastAPI karkasas, `GET /health`, pagrindinis puslapis `GET /`.
-- **1 etapas:** SQLite schema (`bug_reports`, `github_issues`) ir viešų GitHub issues importas per `/import` (`owner/repo` arba `https://github.com/owner/repo`, kiekis iki `GITHUB_IMPORT_LIMIT`). Pull request įrašai praleidžiami, pakartotinis importas nedubliuoja įrašų ir neperrašo žmogaus patvirtintų žymų.
-- **2 etapas:** vieša klaidos pateikimo forma `/report` be paskyros (pavadinimas iki 200, aprašymas iki 10000 simbolių, validacija serverio pusėje); įrašas išsaugomas su būsena `new`, naudotojui rodomas tik patvirtinimas.
-- **3 etapas:** programuotojo prisijungimas (`/login`, `/logout`) ir vidinė aplinka: klaidų sąrašas `/dashboard` su paieška ir filtrais, detalių puslapis `/dashboard/reports/{id}`, būsenų keitimas `new` → `in_progress` → `resolved` (išspręsti įrašai lieka istorijoje, juos galima atidaryti iš naujo). `/import` taip pat pasiekiamas tik prisijungus.
-- **4 etapas:** mokymo duomenų (importuotų GitHub issues) peržiūra ir rankinis žymėjimas `/dashboard/training-data`: kategorija, sudėtingumas, prioritetas ir tinkamumas mokymui, žymėjimo eigos statistika, „Kitas nepažymėtas“.
-- **5A etapas:** mokymo duomenų paruošimo ir ML mokymo įrankiai komandinėje eilutėje (`tools/`): masinis importas, kokybės patikra, žmogaus testavimo rinkinys, DI žymėjimas su biudžeto kontrole, trijų modelių mokymas ir vertinimas. Svetainė jų nenaudoja.
-- **5C etapas:** apmokyti vietiniai ML modeliai integruoti į svetainę – pateikus naują klaidą automatiškai prognozuojama kategorija, sudėtingumas ir prioritetas (žr. skyrių „Automatinė klasifikacija svetainėje“). Be DI API ir be tinklo.
-- **5B etapas (programinė dalis):** visa duomenų paruošimo eiga – projektų šaltinių failas ir jo patikra, rinkimas viena komanda, filtras pagal ne klaidų etiketes, atskiri bandomasis ir galutinis testavimo rinkiniai, klasių analizė visoms trims užduotims su tiksliniu papildymu, galutinė Markdown ataskaita su pasikliautinaisiais intervalais. Realus rinkimas, DI žymėjimas ir mokymas vykdomi naudotojo kompiuteryje; modelių prijungimas prie svetainės – 5C etape.
-
-**Duomenų būklė (2026-11-09):** surinkta 2 906 GitHub issues iš 13 `base` šaltinių (`sources.json` 25 šaltiniai = 13 `base` + 12 `augment`; `augment` naudojamas tik su `--augment`, kai jau yra žymų). 2 884 įrašai praėjo kokybės patikrą (po etikečių filtro pataisos; anksčiau 2 774); žmogaus žymų, DI žymų ir testavimo / bandomojo rinkinių dar nėra. Išsami analizė, kainos įvertis ir rekomendacijos – [docs/DATA_QUALITY_REPORT.md](docs/DATA_QUALITY_REPORT.md).
-
-Duomenų bazė kuriama automatiškai (`DATABASE_PATH`, pagal nutylėjimą `data/bakalauras.sqlite3`; failas nėra committinamas). Klientų pranešimų (`/dashboard`) kategorija, prioritetas ir sudėtingumas rodomi iš programuotojo patvirtintų žymų, o jei jų nėra – iš automatinės prognozės (pilkesniu kursyvu, kol nepatvirtinta); jei modelių nėra, rodoma „Dar nenustatyta“. Senesnė DB paleidimo metu automatiškai papildoma nauju stulpeliu `github_issues.training_suitability` (esami įrašai ir žymos išlieka). Likę etapai kuriami pagal docs/IMPLEMENTATION_PLAN.md.
+- 40 024 importuoti GitHub įrašai; 23 884 sėkmingos DI anotacijos (19 412 tinkamų, 4 472 netinkamų).
+- 18 267 mokymo ir validacijos pavyzdžiai; 1 120 atrinktų testo įrašų, iš jų 901 tinkamas (visi 901 su DI etalonu); 30 pilotinių įrašų.
+- 243 artimi testo dublikatai pašalinti iš mokymo. Bendra DI žymėjimo kaina 4,5948 USD.
+- Trys apmokyti modeliai ir jų ataskaitos saugomi GitHub; SQLite DB, jos kopijos, .env ir .venv – tik lokaliai.
+- Testo accuracy / macro-F1: kategorija 64,26 % / 62,22 %; sudėtingumas 69,70 % / 69,14 %; prioritetas 65,93 % / 48,20 %. P0 F1 = 0. Metrikos rodo atitikimą Claude žymoms, ne nepriklausomai žmogaus patvirtintai tiesai. Ankstesnio ir naujo modelio metrikos iš skirtingų testų nėra tiesiogiai palyginamos.
 
 ## Vietinis paleidimas
 
@@ -60,6 +24,8 @@ python -m venv .venv
 source .venv/bin/activate
 # Windows PowerShell:
 # .venv\Scripts\Activate.ps1
+# Windows CMD:
+# .venv\Scripts\activate.bat
 
 python -m pip install -r requirements.txt
 uvicorn app.main:app --reload
@@ -108,7 +74,7 @@ Programa `.env` failą nuskaito pati paleidimo metu; jei kintamasis jau nustatyt
 
 ## Mokymo duomenų žymėjimas
 
-GitHub issues savaime nėra patikimi mokymo duomenys: GitHub etiketės (`bug`, `priority: high` ir pan.) skirtingose repozitorijose reiškia skirtingus dalykus, o dalis issues yra ne klaidos, bet funkcijų pasiūlymai ar klausimai. Todėl modelio mokymui naudojamos tik **žmogaus rankiniu būdu priskirtos** žymos (gairės – [docs/DATA_LABELING.md](docs/DATA_LABELING.md)); GitHub etiketės rodomos tik informacijai.
+GitHub issues savaime nėra patikimi mokymo duomenys: GitHub etiketės (`bug`, `priority: high` ir pan.) skirtingose repozitorijose reiškia skirtingus dalykus, o dalis issues yra ne klaidos, bet funkcijų pasiūlymai ar klausimai. Todėl modelio mokymui naudojamos žmogaus žymos (jei yra) arba Claude DI žymos (gairės – [docs/DATA_LABELING.md](docs/DATA_LABELING.md)); GitHub etiketės rodomos tik informacijai.
 
 1. Importuokite issues puslapyje **GitHub importas** (`/import`).
 2. Atidarykite **Mokymo duomenys** (`/dashboard/training-data`). Viršuje matyti eiga: iš viso importuota, visiškai pažymėta (visi trys laukai), iš dalies pažymėta (1–2 laukai), nepažymėta, paruošta mokymui. Išskleidus „Anotacijų skaičius pagal lauką ir klasę“ matyti kiekvienos klasės pavyzdžių skaičius.
@@ -118,13 +84,13 @@ GitHub issues savaime nėra patikimi mokymo duomenys: GitHub etiketės (`bug`, `
    - **Kategoriją**, **Sudėtingumą**, **Prioritetą** – neaiškų lauką palikite „Nežinoma / nepažymėta“ (saugoma kaip `NULL`).
 5. **Išsaugoti** – lieka tame pačiame įraše; **Išsaugoti ir kitas** – pereina prie kito nepažymėto įrašo. „Kitas nepažymėtas“ praleidžia visiškai pažymėtus ir „Netinka mokymui“ įrašus.
 
-Žymos saugomos tik šios sistemos `github_issues` lentelėje kartu su šaltiniu (`annotation_source = manual`) ir laiku (`annotated_at`); GitHub nekeičiamas. Pakartotinis importas atnaujina tik GitHub duomenis (pavadinimą, aprašymą, etiketes), bet ne žmogaus žymas. 5 etape mokymui bus naudojami tik įrašai, pažymėti „Tinka mokymui“ ir turintys visas tris reikšmes (statistikoje – „Paruošta mokymui“). Klientų pranešimai (`bug_reports`) į mokymo duomenis nepatenka.
+Žymos saugomos tik šios sistemos `github_issues` lentelėje kartu su šaltiniu (`annotation_source = manual`) ir laiku (`annotated_at`); GitHub nekeičiamas. Pakartotinis importas atnaujina tik GitHub duomenis (pavadinimą, aprašymą, etiketes), bet ne žmogaus žymas. Mokymui naudojami tik įrašai, pažymėti „Tinka mokymui“ ir turintys visas tris reikšmes (statistikoje – „Paruošta mokymui“). Klientų pranešimai (`bug_reports`) į mokymo duomenis nepatenka.
 
 ## Mokymo duomenų paruošimas ir modelių mokymas (5A–5B)
 
 Šie įrankiai paleidžiami komandinėje eilutėje, ne svetainėje. Visos komandos – **Windows CMD**, projekto kataloge, aktyvavus aplinką (`.venv\Scripts\activate.bat`). Pažymėtos **MOKAMA** – siunčia užklausas į Claude API (tik su `--execute` ir patvirtinimu „taip“); visos kitos nemokamos.
 
-**Kodėl DI žymėjimas.** Rankiniu būdu pažymėti 2 000–3 000 issues per daug laiko, todėl (darbo vadovui pritarus) žymas vieną kartą sugeneruoja Claude modelis (numatytasis – pigiausias `claude-haiku-5-5`). GitHub etiketės nėra patikimos žymos, o DI žymos taip pat gali klysti – todėl:
+**Kodėl DI žymėjimas.** Rankiniu būdu pažymėti tūkstančius issues per daug laiko, todėl (darbo vadovui pritarus) žymas vieną kartą sugeneruoja Claude modelis (numatytasis – pigiausias `claude-haiku-5-5`). GitHub etiketės nėra patikimos žymos, o DI žymos taip pat gali klysti – todėl:
 - **bandomasis rinkinys** (~30 įrašų) – žmogus pažymi, DI pažymi, palyginama → pasirenkamas DI modelis ir matoma faktinė kaina. Šie įrašai **nenaudojami galutiniam vertinimui** (jie panaudoti sprendimui);
 - **galutinis testavimo rinkinys** (~120 įrašų, atrenkamas prieš DI žymėjimą, proporcingai pagal projektus) – **niekada nenaudojamas mokymui**. Rankinio žymėjimo atsisakyta, todėl jo etalonas yra Claude žymos (žmogaus žyma, jei yra, turi pirmenybę). Metrikos tada rodo atitikimą DI žymoms, ne žmogaus patvirtintai tiesai; ataskaita tai nurodo. Pilot rinkinyje DI ir žmogaus žymų sutapimas (2026-11-10, 29 įrašai): kategorija 62 %, sudėtingumas 55 %, prioritetas 72 %;
 - žmogaus žyma visada turi pirmenybę prieš DI žymą; klasės niekada nepriskiriamos dirbtinai.
@@ -232,13 +198,13 @@ python -m tools.class_report
 python -m tools.train_models
 ```
 
-Sukuriami `models\category_label.joblib`, `models\complexity_label.joblib`, `models\priority_label.joblib`, `models\training_report.md` (skaitoma ataskaita: duomenų kilmė, DI metodika ir kaina, klasių pasiskirstymas, accuracy, macro-F1 su 95 % intervalais, kiekvienos klasės precision / recall / F1, klaidų matricos, daugumos klasės baseline, apribojimai) ir `models\training_report.json`. Jei duomenų per mažai, laukas pažymimas `insufficient_data`. Bet kada eigą galima peržiūrėti `python -m tools.check_data`. Modelių failai ir DB į GitHub nekeliami.
+Sukuriami `models\category_label.joblib`, `models\complexity_label.joblib`, `models\priority_label.joblib`, `models\training_report.md` (skaitoma ataskaita: duomenų kilmė, DI metodika ir kaina, klasių pasiskirstymas, accuracy, macro-F1 su 95 % intervalais, kiekvienos klasės precision / recall / F1, klaidų matricos, daugumos klasės baseline, apribojimai) ir `models\training_report.json`. Jei duomenų per mažai, laukas pažymimas `insufficient_data`. Bet kada eigą galima peržiūrėti `python -m tools.check_data`. Apmokyti modeliai ir ataskaitos saugomi GitHub; DB nekeliama.
 
 **DI sąnaudų saugikliai:** dry-run pagal nutylėjimą; `--limit`; šio paleidimo riba `--max-cost-usd`; bendras `AI_TOTAL_BUDGET_USD` (skaičiuojamas iš DB); prieš kiekvieną užklausą tikrinama blogiausio atvejo kaina; faktinė kaina iš API `usage`; netinkamas atsakymas kartojamas daugiausia kartą; po API klaidos sustojama. Kainos įverčiai nėra garantija – patikimiausias yra faktinis bandomojo paleidimo rezultatas.
 
-## Papildomas duomenų importas (5D – paruošimas)
+## Papildomas duomenų importas (5D – atlikto eksperimento atkūrimas)
 
-5D tikslas – gerokai padidinti mokymo rinkinį (≥ 15 000 tinkamų pavyzdžių, ≥ 1 000 kiekvienai kategorijai) ir iš naujo apmokyti **tuos pačius** TF-IDF + LogisticRegression modelius. Šiame žingsnyje paruoštas tik importas; **mokamas žymėjimas ir mokymas dar nepradėti**. Esami `models/*` lieka kaip atskaitos taškas (modelio versija `20261110-143223`, Git žyma ar šaka `main`).
+5D tikslas – gerokai padidinti mokymo rinkinį (≥ 15 000 tinkamų pavyzdžių, ≥ 1 000 kiekvienai kategorijai) ir iš naujo apmokyti **tuos pačius** TF-IDF + LogisticRegression modelius. 5D importas, žymėjimas ir mokymas baigti. Toliau pateikiamos istorinio eksperimento atkūrimo komandos, kurių nereikia vykdyti norint paleisti svetainę. Ankstesnė modelių versija `20261110-143223` yra Git istorijoje.
 
 Kas pakeista infrastruktūroje (naujo įrankio nekurta):
 - `tools\sources_5d.json` – 54 šaltiniai (repozitorija + etiketė), suskirstyti pagal kategorijas ir P0 (laukas `hint` tik planavimui; galutinę klasę nustato Claude žymėjimas). Visi patikrinti `collect --check --counts` (2026-11-13); 10 probleminių pašalinta, limitai neviršija faktinio kiekio (limitų suma 40 161);
@@ -253,7 +219,7 @@ Ką paleisti (Windows CMD, projekto kataloge, aktyvavus `.venv`):
 
 ```bat
 git fetch origin
-git checkout claude/phase-5d-dataset-expansion
+git checkout main
 git pull
 copy data\bakalauras.sqlite3 data\bakalauras.backup.sqlite3
 ```
@@ -265,7 +231,7 @@ copy data\bakalauras.sqlite3 data\bakalauras.backup.sqlite3
 python -m tools.collect --sources tools\sources_5d.json --check --counts --use-token
 ```
 
-Eilutės su `!!` – etiketė neteisinga arba šaltinis nepasiekiamas: pataisykite `tools\sources_5d.json` (`notepad tools\sources_5d.json`) arba pašalinkite šaltinį ir kartokite. Atsiųskite man šią išvestį – pagal ją sutvarkysiu šaltinių sąrašą.
+Eilutės su `!!` – etiketė neteisinga arba šaltinis nepasiekiamas: pataisykite `tools\sources_5d.json` (`notepad tools\sources_5d.json`) arba pašalinkite šaltinį ir kartokite. Šaltinių sąrašas jau patikrintas 5D metu.
 3. Importas (nemokama, tęstinis – nutrūkus paleiskite tą pačią komandą):
 
 ```bat
@@ -279,9 +245,9 @@ python -m tools.check_data
 python -m tools.pipeline --skip-import --test-size 1120 --test-new-since 2026-11-13
 ```
 
-(`2026-11-13` – diena, kurią pradėtas 5D importas; naudokite pirmo importo datą.) Testo rinkinys papildomas ~1 000 įrašų, atrenkamų atsitiktinai (su seed, proporcingai pagal repozitorijas) **tik iš nuo tos datos importuotų, dar nepažymėtų** įrašų – seni mokymui naudoti įrašai į testą nepatenka. Senieji 120 testo ir 30 bandomojo įrašų nekeičiami. Be `--test-new-since` esamo testo rinkinio didinti atsisakoma. Dėl to retų kategorijų (dokumentacija, saugumas) teste gali būti per mažai pavyzdžių; pažymėjus DI žymas pasiūlysiu, ar atrinkti papildomą kategorijų balansuotą testo dalį.
+(`2026-11-13` – diena, kurią pradėtas 5D importas; naudokite pirmo importo datą.) Testo rinkinys papildomas ~1 000 įrašų, atrenkamų atsitiktinai (su seed, proporcingai pagal repozitorijas) **tik iš nuo tos datos importuotų, dar nepažymėtų** įrašų – seni mokymui naudoti įrašai į testą nepatenka. Senieji 120 testo ir 30 bandomojo įrašų nekeičiami. Be `--test-new-since` esamo testo rinkinio didinti atsisakoma. Dėl to retų kategorijų (dokumentacija, saugumas) teste gali būti per mažai pavyzdžių; papildomas balansuotas testas nėra įgyvendintas.
 
-Tolesni žingsniai (mokami / mokymas) – tik gavus Jūsų patvirtinimą po 4 žingsnio rezultatų.
+5D žymėjimas ir mokymas atlikti. Kartojant eksperimentą mokamas žymėjimas leidžiamas tik naudotojui patvirtinus biudžetą.
 
 ## Automatinė klasifikacija svetainėje (5C)
 
