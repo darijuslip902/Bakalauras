@@ -1,0 +1,44 @@
+{
+  "_info": "GitHub issues šaltiniai (5B). Etikečių pavadinimai skiriasi kiekviename projekte – prieš importą patikrinkite: python -m tools.collect --check. 'base' – pagrindinis rinkimas; 'augment' – tik trūkstamų klasių paieškos užuominos (klasę vis tiek nustato DI / žmogus).",
+  "base": [
+    {"repo": "microsoft/vscode", "label": "bug", "limit": 300},
+    {"repo": "facebook/react", "label": "Type: Bug", "limit": 200},
+    {"repo": "pandas-dev/pandas", "label": "Bug", "limit": 300},
+    {"repo": "sqlalchemy/sqlalchemy", "label": "bug", "limit": 200},
+    {"repo": "grafana/grafana", "label": "type/bug", "limit": 250},
+    {"repo": "kubernetes/kubernetes", "label": "kind/bug", "limit": 250},
+    {"repo": "hashicorp/terraform", "label": "bug", "limit": 200},
+    {"repo": "ansible/ansible", "label": "bug", "limit": 200},
+    {"repo": "python/cpython", "label": "type-bug", "limit": 300},
+    {"repo": "nextcloud/server", "label": "bug", "limit": 250},
+    {"repo": "elastic/elasticsearch", "label": ">bug", "limit": 200},
+    {"repo": "metabase/metabase", "label": "Type:Bug", "limit": 200},
+    {"repo": "prometheus/prometheus", "label": "kind/bug", "limit": 150}
+  ],
+  "augment": {
+    "category_label:security": [
+      {"repo": "python/cpython", "label": "type-security", "limit": 100},
+      {"repo": "nextcloud/server", "label": "security", "limit": 100}
+    ],
+    "category_label:performance": [
+      {"repo": "pandas-dev/pandas", "label": "Performance", "limit": 150},
+      {"repo": "python/cpython", "label": "performance", "limit": 100},
+      {"repo": "microsoft/vscode", "label": "perf", "limit": 100}
+    ],
+    "category_label:documentation": [
+      {"repo": "python/cpython", "label": "docs", "limit": 150},
+      {"repo": "pandas-dev/pandas", "label": "Docs", "limit": 150}
+    ],
+    "category_label:build_deployment": [
+      {"repo": "python/cpython", "label": "build", "limit": 100},
+      {"repo": "pandas-dev/pandas", "label": "Build", "limit": 100}
+    ],
+    "category_label:database_data": [
+      {"repo": "sqlalchemy/sqlalchemy", "label": "bug", "limit": 500},
+      {"repo": "metabase/metabase", "label": "Type:Bug", "limit": 400}
+    ],
+    "priority_label:P0_critical": [
+      {"repo": "kubernetes/kubernetes", "label": "priority/critical-urgent", "limit": 100}
+    ]
+  }
+}

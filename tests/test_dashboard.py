@@ -191,8 +191,13 @@ def test_report_detail_shows_all_fields(dash: DashboardApp) -> None:
     assert "Mažas" in html  # sudėtingumas
     assert "Dar nenustatyta" in html  # prioritetas
     assert "Neišspręsta" in html
+    # 5C: patvirtintos žymos dabar rodomos klasifikacijos kortelėje (ta pati <dt>/<dd> struktūra).
     for label in ("Sukurta", "Atnaujinta", "Išspręsta", "Kategorija", "Sudėtingumas", "Prioritetas"):
         assert f"<dt>{label}</dt>" in html
+    assert "Patvirtinta klasifikacija" in html and "Laukia patvirtinimo" in html
+    assert "<dt>Kategorija</dt><dd>Serveris / API</dd>" in html
+    assert "<dt>Sudėtingumas</dt><dd>Mažas</dd>" in html
+    assert '<dt>Prioritetas</dt><dd><span class="muted nowrap">Dar nenustatyta</span></dd>' in html
     assert 'name="csrf_token"' in html
 
 

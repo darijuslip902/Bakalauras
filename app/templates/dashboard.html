@@ -3,7 +3,7 @@
 {% block title %}Klaidų sąrašas{% endblock %}
 {% block content %}
 <h1>Klaidų pranešimai</h1>
-<p class="muted">Visi klientų pateikti pranešimai, įskaitant išspręstus. Kategoriją, prioritetą ir sudėtingumą automatiškai siūlys modelis vėlesniame etape.</p>
+<p class="muted">Visi klientų pateikti pranešimai, įskaitant išspręstus. Kategoriją, prioritetą ir sudėtingumą automatiškai siūlo vietiniai ML modeliai (rodoma pilkesniu kursyvu, kol nepatvirtinta); programuotojo patvirtinta klasifikacija turi pirmenybę.</p>
 
 <form class="filters" method="get" action="/dashboard" role="search">
   <div class="filter-field search">
@@ -58,6 +58,7 @@
         <th scope="col">Kategorija</th>
         <th scope="col">Prioritetas</th>
         <th scope="col">Sudėtingumas</th>
+        <th scope="col">Klasifikacija</th>
       </tr>
     </thead>
     <tbody>
@@ -66,10 +67,11 @@
         <td data-label="ID">#{{ report.id }}</td>
         <td data-label="Pavadinimas"><a href="/dashboard/reports/{{ report.id }}">{{ report.title }}</a></td>
         <td data-label="Būsena">{{ ui.status_badge(report.status, status_labels) }}</td>
-        <td data-label="Sukurta">{{ report.created_at|datetime }}</td>
-        <td data-label="Kategorija">{{ ui.label_value(report.category_label, category_labels) }}</td>
-        <td data-label="Prioritetas">{{ ui.label_value(report.priority_label, priority_labels) }}</td>
-        <td data-label="Sudėtingumas">{{ ui.label_value(report.complexity_label, complexity_labels) }}</td>
+        <td data-label="Sukurta" class="nowrap">{{ report.created_at|datetime }}</td>
+        <td data-label="Kategorija">{{ ui.shown_label(report.category_label, report.auto_category_label, category_labels) }}</td>
+        <td data-label="Prioritetas">{{ ui.shown_label(report.priority_label, report.auto_priority_label, priority_labels) }}</td>
+        <td data-label="Sudėtingumas">{{ ui.shown_label(report.complexity_label, report.auto_complexity_label, complexity_labels) }}</td>
+        <td data-label="Klasifikacija">{{ ui.classification_state(report) }}</td>
       </tr>
       {% endfor %}
     </tbody>

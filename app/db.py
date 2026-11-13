@@ -40,16 +40,113 @@ CREATE TABLE IF NOT EXISTS github_issues (
     annotated_at TEXT,
     training_suitability TEXT NOT NULL DEFAULT 'unreviewed'
         CHECK (training_suitability IN ('unreviewed', 'suitable', 'unsuitable')),
+    is_test_set INTEGER NOT NULL DEFAULT 0 CHECK (is_test_set IN (0, 1)),
+    is_pilot_set INTEGER NOT NULL DEFAULT 0 CHECK (is_pilot_set IN (0, 1)),
+    source_kind TEXT NOT NULL DEFAULT 'base' CHECK (source_kind IN ('base', 'augmentation')),
     UNIQUE (repository_full_name, issue_number)
 );
+
+-- DI (išorinio API) sugeneruotos žymos mokymo duomenims (5A etapas). Laikomos
+-- atskirai nuo žmogaus žymų github_issues lentelėje ir jų niekada neperrašo.
+CREATE TABLE IF NOT EXISTS ai_annotations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    github_issue_id INTEGER NOT NULL REFERENCES github_issues(id) ON DELETE CASCADE,
+    model TEXT NOT NULL,
+    prompt_version TEXT NOT NULL,
+    status TEXT NOT NULL CHECK (status IN ('ok', 'invalid')),
+    training_suitability TEXT CHECK (training_suitability IN ('suitable', 'unsuitable')),
+    category_label TEXT,
+    complexity_label TEXT,
+    priority_label TEXT,
+    reason TEXT,
+    error TEXT,
+    attempts INTEGER NOT NULL DEFAULT 1,
+    input_tokens INTEGER NOT NULL DEFAULT 0,
+    output_tokens INTEGER NOT NULL DEFAULT 0,
+    cache_creation_input_tokens INTEGER NOT NULL DEFAULT 0,
+    cache_read_input_tokens INTEGER NOT NULL DEFAULT 0,
+    cost_usd REAL NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    UNIQUE (github_issue_id, model, prompt_version)
+);
+
+-- Tęstinis rinkimas (5B): visiškai apdoroti šaltiniai (repozitorija + etiketės filtras).
+-- Ta pati repozitorija su skirtingomis etiketėmis turi atskirus įrašus. Šaltinis įrašomas
+-- tik po sėkmingo viso importo, todėl nutrūkęs (pvz. dėl API limito) šaltinis kitą kartą
+-- renkamas iš naujo, o baigti praleidžiami.
+CREATE TABLE IF NOT EXISTS collection_progress (
+    repository_full_name TEXT NOT NULL COLLATE NOCASE,
+    label TEXT NOT NULL DEFAULT '',
+    completed_limit INTEGER NOT NULL,
+    completed_at TEXT NOT NULL,
+    PRIMARY KEY (repository_full_name, label)
+);
+
+-- Automatinės ML prognozės (5C): istorija, viena eilutė vienam laukui per klasifikavimo
+-- paleidimą. Žmogaus patvirtintos žymos lieka bug_reports stulpeliuose ir niekada
+-- neperrašomos. status: ok | model_unavailable (nėra / neįkeliamas modelis) | error.
+CREATE TABLE IF NOT EXISTS prediction_runs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    bug_report_id INTEGER NOT NULL REFERENCES bug_reports(id) ON DELETE CASCADE,
+    field TEXT NOT NULL CHECK (field IN ('category_label', 'complexity_label', 'priority_label')),
+    status TEXT NOT NULL CHECK (status IN ('ok', 'model_unavailable', 'error')),
+    predicted_label TEXT,
+    score REAL,
+    needs_review INTEGER NOT NULL DEFAULT 0 CHECK (needs_review IN (0, 1)),
+    method TEXT,
+    model_version TEXT,
+    message TEXT,
+    created_at TEXT NOT NULL,
+    input_language TEXT,
+    translation_method TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_prediction_runs_report
+    ON prediction_runs (bug_report_id, field, id);
+
+-- Programuotojo klasifikacijos patvirtinimai / pataisymai (5C): kas, kada ir kokias reikšmes
+-- nustatė (istorija nekeičiama). Galiojančios reikšmės yra bug_reports stulpeliuose;
+-- čia dar saugoma ankstesnė patvirtinta reikšmė ir tuo metu buvusi ML prognozė.
+CREATE TABLE IF NOT EXISTS classification_confirmations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    bug_report_id INTEGER NOT NULL REFERENCES bug_reports(id) ON DELETE CASCADE,
+    confirmed_by TEXT NOT NULL,
+    confirmed_at TEXT NOT NULL,
+    category_label TEXT NOT NULL,
+    complexity_label TEXT NOT NULL,
+    priority_label TEXT NOT NULL,
+    previous_category TEXT,
+    previous_complexity TEXT,
+    previous_priority TEXT,
+    predicted_category TEXT,
+    predicted_complexity TEXT,
+    predicted_priority TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_classification_confirmations_report
+    ON classification_confirmations (bug_report_id, id);
 """
 
 # Stulpeliai, pridėti vėlesniuose etapuose. Senoms DB jie pridedami ALTER TABLE
 # komanda, todėl esami įrašai ir žymos išlieka.
 _ADDED_COLUMNS = {
+    # 5C: lietuviško teksto apdorojimas prieš klasifikavimą (kalba ir vertimo būdas).
+    ("prediction_runs", "input_language"): "TEXT",
+    ("prediction_runs", "translation_method"): "TEXT",
     ("github_issues", "training_suitability"): (
         "TEXT NOT NULL DEFAULT 'unreviewed' "
         "CHECK (training_suitability IN ('unreviewed', 'suitable', 'unsuitable'))"
+    ),
+    # Žmogaus patikrinto testavimo rinkinio narystė (5A etapas).
+    ("github_issues", "is_test_set"): (
+        "INTEGER NOT NULL DEFAULT 0 CHECK (is_test_set IN (0, 1))"
+    ),
+    # 5B: bandomasis DI kokybės / kainos rinkinys (atskiras nuo galutinio testo) ir
+    # įrašo kilmė: pagrindinis rinkimas ar tikslinis klasių papildymas.
+    ("github_issues", "is_pilot_set"): (
+        "INTEGER NOT NULL DEFAULT 0 CHECK (is_pilot_set IN (0, 1))"
+    ),
+    ("github_issues", "source_kind"): (
+        "TEXT NOT NULL DEFAULT 'base' CHECK (source_kind IN ('base', 'augmentation'))"
     ),
 }
 

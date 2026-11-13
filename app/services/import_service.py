@@ -14,10 +14,10 @@ _UPSERT_SQL = """
 INSERT INTO github_issues (
     repository_full_name, issue_number, title, body, state, html_url,
     labels_json, github_created_at, github_updated_at, is_pull_request,
-    imported_at
+    imported_at, source_kind
 ) VALUES (
     :repository, :number, :title, :body, :state, :html_url,
-    :labels_json, :created_at, :updated_at, 0, :imported_at
+    :labels_json, :created_at, :updated_at, 0, :imported_at, :source_kind
 )
 ON CONFLICT (repository_full_name, issue_number) DO UPDATE SET
     title = excluded.title,
@@ -49,10 +49,12 @@ def run_import(
     limit: int,
     token: str | None = None,
     transport: httpx.BaseTransport | None = None,
+    labels: str | None = None,
+    source_kind: str = "base",
 ) -> ImportResult:
     full_name = parse_repository(repository)
-    fetched = fetch_issues(full_name, limit, token=token, transport=transport)
-    return save_issues(conn, full_name, fetched.issues, fetched.skipped_pull_requests)
+    fetched = fetch_issues(full_name, limit, token=token, transport=transport, labels=labels)
+    return save_issues(conn, full_name, fetched.issues, fetched.skipped_pull_requests, source_kind)
 
 
 def save_issues(
@@ -60,7 +62,11 @@ def save_issues(
     repository: str,
     issues: list[object],
     skipped_pull_requests: int = 0,
+    source_kind: str = "base",
 ) -> ImportResult:
+    """`source_kind` įrašomas tik naujiems įrašams; esamų kilmė nekeičiama."""
+    if source_kind not in ("base", "augmentation"):
+        raise ValueError("neteisinga source_kind reikšmė")
     result = ImportResult(skipped_pull_requests=skipped_pull_requests)
     imported_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
     with conn:  # viena transakcija: commit sėkmės atveju, kitaip rollback
@@ -70,7 +76,7 @@ def save_issues(
             except ValueError:
                 result.failed += 1
                 continue
-            row.update(repository=repository, imported_at=imported_at)
+            row.update(repository=repository, imported_at=imported_at, source_kind=source_kind)
             exists = conn.execute(_EXISTS_SQL, (repository, row["number"])).fetchone()
             conn.execute(_UPSERT_SQL, row)
             if exists:

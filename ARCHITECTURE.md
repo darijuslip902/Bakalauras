@@ -18,7 +18,7 @@ Pirmoji versija:
 - pateikia modelio vertinimo ataskaitą;
 - saugo duomenis lokaliai SQLite faile.
 
-Pirmoji versija sąmoningai **nepriskiria atsakingo programuotojo**, nekeičia GitHub issues, nerašo į GitHub API, nenaudoja mokamos LLM API, netreniruoja milžiniško neuroninio tinklo ir neturi mikroservisų ar atskiro JavaScript SPA.
+Pirmoji versija sąmoningai **nepriskiria atsakingo programuotojo**, nekeičia GitHub issues, nerašo į GitHub API, svetainėje nenaudoja mokamos LLM API (ji naudojama tik vienkartiniam mokymo duomenų žymėjimui atskirais scenarijais, žr. 5 skyriaus `ai_annotations`), netreniruoja milžiniško neuroninio tinklo ir neturi mikroservisų ar atskiro JavaScript SPA.
 
 ## 2. Siūlomas technologijų rinkinys
 
@@ -30,6 +30,7 @@ Pirmoji versija sąmoningai **nepriskiria atsakingo programuotojo**, nekeičia G
 | Duomenų bazė | SQLite, Python `sqlite3` | Be serverio ir atskiros DB instaliavimo |
 | ML | scikit-learn: `TfidfVectorizer` + `LogisticRegression` | Aiškus, lengvai atkuriamas teksto klasifikavimo pradinis modelis |
 | GitHub integracija | GitHub REST API per `httpx` | Viešų issue importas, laiko limitai ir klaidų tvarkymas |
+| Mokymo duomenų žymėjimas (vienkartinis, ne svetainėje) | Anthropic Claude API (`claude-haiku-5-5`) per oficialų `anthropic` SDK, `python -m tools.ai_label` | Rankiniu būdu pažymėti 2 000–3 000 issues neįmanoma; DI žymos atskirtos nuo žmogaus žymų, kokybė tikrinama žmogaus testavimo rinkiniu |
 | Testai | pytest + FastAPI TestClient | Vienetiniai ir integraciniai testai |
 | Konfigūracija | Aplinkos kintamieji ir vienas konfigūracijos modulis | Nėra slaptažodžių kode |
 
@@ -151,16 +152,31 @@ Viešai formai rinkti tik būtinus laukus: pavadinimą ir išsamų aprašymą; p
 | `priority_label` | Patvirtintas prioritetas arba NULL |
 | `annotation_source`, `annotated_at` | Žymos kilmė ir laikas |
 | `training_suitability` | Žmogaus sprendimas: `unreviewed` (numatyta), `suitable` arba `unsuitable` mokymui |
+| `is_test_set` | 1 – įrašas priklauso testavimo rinkiniui (etalonas: žmogaus žyma, jei yra, kitaip DI žyma) ir niekada nenaudojamas mokymui |
+| `is_pilot_set` | 1 – bandomasis DI kokybės / kainos rinkinys; nenaudojamas galutiniam vertinimui |
+| `source_kind` | `base` – pagrindinis rinkimas, `augmentation` – tikslinis klasių papildymas (į rinkinius nepatenka) |
 
 Unikalus apribojimas: `(repository_full_name, issue_number)`. Importuojant tą patį issue atnaujinti šaltinio metaduomenis, bet **neperrašyti žmogaus patvirtintų žymų**.
+
+### `ai_annotations`
+
+DI (Claude API) sugeneruotos mokymo žymos, viena eilutė vienam `(github_issue_id, model, prompt_version)`: `status` (`ok` / `invalid`), `training_suitability`, `category_label`, `complexity_label`, `priority_label`, trumpas `reason`, klaidos aprašymas, bandymų skaičius, sunaudoti tokenai ir kaina USD. Žmogaus žymos `github_issues` lentelėje niekada neperrašomos. Mokymo žyma = žmogaus žyma, jei ji yra, kitaip DI žyma. Svetainė šios lentelės nerodo (žmogus žymi testavimo rinkinį nematydamas DI atsakymo).
 
 ### `prediction_runs`
 
 Saugoti prognozės istoriją (įrašo tipas ir ID, laukas, prognozuota reikšmė, score jei prieinamas, metodas, modelio versija, sukūrimo laikas ir statusas). Prognozė niekada neperrašo žmogaus patvirtintos žymos.
 
+**Įgyvendinta (5C):** lentelė `prediction_runs` turi stulpelius `bug_report_id`, `field`, `status` (`ok` / `model_unavailable` / `error`), `predicted_label`, `score`, `needs_review`, `method`, `model_version`, `message`, `created_at`; viena eilutė vienam laukui per klasifikavimo paleidimą, istorija nekeičiama, rodoma naujausia. Prognozavimo logika – `app/services/prediction_service.py` (`Predictor` įkelia `models/<laukas>.joblib` pagal poreikį, talpina atmintyje ir neišmeta klaidos, jei failo nėra ar jis sugadintas). Svetainės kodas neimportuoja `app.ml` (mokymo / DI modulių), todėl modelio įvesties tekstą (`pavadinimas + aprašymas`) formuoja pats, o testas tikrina, kad jis sutampa su mokymo tekstu. Kategorijos / prioriteto / sudėtingumo filtras ir sąrašas naudoja patvirtintą žymą, o jos nesant – naujausią sėkmingą prognozę.
+
+**Įgyvendinta (5C užbaigimas):** `prediction_runs` papildyta stulpeliais `input_language` (`lt` / `en`) ir `translation_method` (`none` / `glossary` / `unavailable`). Lietuviško teksto paruošimą atlieka `app/services/lt_translation.py` (`prepare_model_text`: kalbos aptikimas + vertimas žodynu, niekada nemeta klaidos; jei vertimas nepavyksta ar atpažinta < 3 terminų, prognozė žymima nepatikima ir `needs_review = 1`). Originalus tekstas `bug_reports` lentelėje nekeičiamas.
+
+### `classification_confirmations`
+
+Programuotojo klasifikacijos patvirtinimų / pataisymų istorija (nekeičiama): `bug_report_id`, `confirmed_by`, `confirmed_at`, naujos reikšmės (`category_label`, `complexity_label`, `priority_label`), ankstesnės patvirtintos (`previous_*`) ir tuo metu buvusios ML prognozės (`predicted_*`). Galiojančios žmogaus žymos lieka `bug_reports` stulpeliuose (jos turi pirmenybę prieš prognozes). Logika – `app/services/classification_service.py`; maršrutas `POST /dashboard/reports/{id}/classification` (prisijungimas + CSRF + serverio validacija). Naujos lentelės / stulpeliai sukuriami `init_db`, esamos DB nepaliečiamos ir neperrašomos.
+
 ### `model_versions`
 
-Saugoti lauką, modelio versijos identifikatorių, treniravimo datą, treniravimo įrašų skaičių, klasių pasiskirstymą ir metrikų santrauką. Nelaikyti testinių žymų kaip modelio mokymo duomenų.
+(5C: atskira lentelė neįgyvendinta – versija saugoma kiekvienoje `prediction_runs` eilutėje ir `models/training_report.json`.) Saugoti lauką, modelio versijos identifikatorių, treniravimo datą, treniravimo įrašų skaičių, klasių pasiskirstymą ir metrikų santrauką. Nelaikyti testinių žymų kaip modelio mokymo duomenų.
 
 SQLite schema turi būti aiški ir paprasta. Visi SQL parametrai turi būti bind'inami; neįterpti naudotojo teksto į SQL eilutes. Kiekvienas DB veiksmas užtikrina transakcijos užbaigimą arba rollback.
 
@@ -235,7 +251,9 @@ Pradinis modelis: `Pipeline(TfidfVectorizer(...), LogisticRegression(...))`. Tek
 | Klasių disbalansas | Rodyti pasiskirstymą, naudoti macro-F1 ir confusion matrix |
 | Duomenų nutekėjimas | Duomenų split prieš modelio fit; pipeline tik mokymo split'e |
 | API rate limits | Paginacija, ribotas importas, aiškūs klaidų pranešimai, pasirenkamas tokenas |
-| Per didelė darbų apimtis | Nėra assignee rekomendavimo ir išorinių LLM pirmoje versijoje |
+| Per didelė darbų apimtis | Nėra assignee rekomendavimo; išorinis LLM tik vienkartiniam mokymo duomenų žymėjimui, ne svetainėje |
+| DI žymos klaidingos ar šališkos | Atskiras testavimo rinkinys (etalonas nurodomas ataskaitoje), DI ir žmogaus sutapimo metrikos bandomajame rinkinyje, žmogaus žyma visada turi pirmenybę; likutinis pavojus: etalonas ir mokymo žymos gaunamos tuo pačiu DI modeliu |
+| Viršytos DI API išlaidos | Dry-run pagal nutylėjimą, paleidimo ir bendras biudžetas, blogiausio atvejo kainos patikra prieš kiekvieną užklausą |
 | Netiksliai interpretuojamas confidence | Aiškiai žymėti kaip score; kalibruoti tik atskirai įvertinus |
 
 ## 12. Architektūros priėmimo kriterijai

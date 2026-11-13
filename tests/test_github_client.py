@@ -198,3 +198,129 @@ def test_unexpected_response_body() -> None:
     transport = httpx.MockTransport(lambda request: httpx.Response(200, json={"message": "x"}))
     with pytest.raises(GitHubError):
         fetch_issues("o/r", 1, transport=transport)
+
+
+# --- Peradresavimai (pvz. facebook/react -> /repositories/10270250) -------------------
+
+REDIRECT_TARGET = "https://api.github.com/repositories/10270250/issues"
+
+
+def redirecting_transport(
+    location: str | None,
+    requests: list[httpx.Request],
+    status: int = 301,
+    pages: dict[int, list] | None = None,
+) -> httpx.MockTransport:
+    """/repos/... visada nukreipia; /repositories/... grąžina issues puslapius."""
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        requests.append(request)
+        if request.url.path.startswith("/repos/"):
+            headers = {"location": location} if location is not None else {}
+            return httpx.Response(status, headers=headers)
+        page = int(request.url.params.get("page", "1"))
+        return httpx.Response(200, json=(pages or {1: [make_issue(1)]}).get(page, []))
+
+    return httpx.MockTransport(handler)
+
+
+@pytest.mark.parametrize("status", [301, 302, 307, 308])
+def test_https_redirect_to_api_github_com_is_followed(status: int) -> None:
+    requests: list[httpx.Request] = []
+
+    result = fetch_issues(
+        "o/r", 5, labels="Type: Bug", transport=redirecting_transport(REDIRECT_TARGET, requests, status)
+    )
+
+    assert [issue["number"] for issue in result.issues] == [1]
+    assert [(r.url.host, r.url.path) for r in requests] == [
+        ("api.github.com", "/repos/o/r/issues"),
+        ("api.github.com", "/repositories/10270250/issues"),
+    ]
+    # Parametrai (etiketė, puslapis) išlieka po peradresavimo.
+    assert requests[1].url.params["labels"] == "Type: Bug"
+    assert requests[1].url.params["page"] == "1"
+
+
+def test_relative_redirect_location_is_resolved_against_api_host() -> None:
+    requests: list[httpx.Request] = []
+
+    result = fetch_issues(
+        "o/r", 5, transport=redirecting_transport("/repositories/10270250/issues", requests)
+    )
+
+    assert len(result.issues) == 1
+    assert requests[1].url.host == "api.github.com"
+
+
+def test_redirect_location_with_own_query_is_kept() -> None:
+    requests: list[httpx.Request] = []
+    location = REDIRECT_TARGET + "?state=all&page=1"
+
+    fetch_issues("o/r", 5, transport=redirecting_transport(location, requests))
+
+    assert requests[1].url.params["state"] == "all"
+    assert "labels" not in requests[1].url.params
+
+
+def test_pagination_after_redirect_does_not_redirect_again(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(github_client, "PER_PAGE", 2)
+    pages = {1: [make_issue(1), make_issue(2)], 2: [make_issue(3)]}
+    requests: list[httpx.Request] = []
+
+    result = fetch_issues(
+        "o/r", 10, transport=redirecting_transport(REDIRECT_TARGET, requests, pages=pages)
+    )
+
+    assert [issue["number"] for issue in result.issues] == [1, 2, 3]
+    assert [r.url.path for r in requests] == [
+        "/repos/o/r/issues",
+        "/repositories/10270250/issues",
+        "/repositories/10270250/issues",
+    ]
+    assert [r.url.params["page"] for r in requests[1:]] == ["1", "2"]
+
+
+@pytest.mark.parametrize(
+    "location",
+    [
+        None,
+        "",
+        "http://api.github.com/repositories/1/issues",
+        "https://evil.example/repositories/1/issues",
+        "https://api.github.com.evil.example/repositories/1/issues",
+        "https://api.github.com@evil.example/repositories/1/issues",
+        "https://user@api.github.com/repositories/1/issues",
+        "https://api.github.com:8443/repositories/1/issues",
+        "//evil.example/repositories/1/issues",
+        "https://github.com/o/r/issues",
+        "https://api.github.com/user",
+        "file:///etc/passwd",
+    ],
+)
+def test_unsafe_redirects_are_rejected_without_contacting_target(location: str | None) -> None:
+    requests: list[httpx.Request] = []
+
+    with pytest.raises(GitHubError) as exc_info:
+        fetch_issues(
+            "o/r", 5, token="secret-token", transport=redirecting_transport(location, requests)
+        )
+
+    assert exc_info.value.status_code == 502
+    assert "peradresavim" in exc_info.value.message
+    assert len(requests) == 1  # tik pradinė užklausa; tikslas nekontaktuotas
+    assert "secret-token" not in exc_info.value.message
+
+
+def test_redirect_loop_is_stopped() -> None:
+    requests: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        requests.append(request)
+        return httpx.Response(301, headers={"location": REDIRECT_TARGET})
+
+    with pytest.raises(GitHubError) as exc_info:
+        fetch_issues("o/r", 5, transport=httpx.MockTransport(handler))
+
+    assert "per daug peradresavimų" in exc_info.value.message
+    assert len(requests) == github_client.MAX_REDIRECTS + 1

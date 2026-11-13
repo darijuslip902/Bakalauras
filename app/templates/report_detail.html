@@ -14,10 +14,120 @@
 {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
 
 <div class="detail-grid">
+  <div class="stack">
   <section class="card" aria-labelledby="description-heading">
     <h2 id="description-heading">Aprašymas</h2>
     <div class="description">{{ report.description }}</div>
   </section>
+
+  <section class="card" aria-labelledby="classification-heading">
+    <div class="card-head">
+      <h2 id="classification-heading">Klasifikacija</h2>
+      {% if confirmed %}<span class="badge state-confirmed">Patvirtinta</span>{% else %}<span class="badge state-pending">Laukia patvirtinimo</span>{% endif %}
+    </div>
+
+    <h3>Patvirtinta klasifikacija</h3>
+    <dl class="meta">
+      <dt>Kategorija</dt><dd>{{ ui.label_value(report.category_label, category_labels) }}</dd>
+      <dt>Sudėtingumas</dt><dd>{{ ui.label_value(report.complexity_label, complexity_labels) }}</dd>
+      <dt>Prioritetas</dt><dd>{{ ui.label_value(report.priority_label, priority_labels) }}</dd>
+    </dl>
+    {% if confirmed and last_confirmation %}
+    <p class="muted small">Patvirtino: {{ last_confirmation.confirmed_by }}, {{ last_confirmation.confirmed_at|datetime }}.</p>
+    {% elif not confirmed %}
+    <p class="muted small">Klasifikacija dar nepatvirtinta programuotojo.</p>
+    {% endif %}
+
+    <h3>Automatinė prognozė</h3>
+    {% set ok = predictions.values()|selectattr("status", "equalto", "ok")|list %}
+    {% if not predictions %}
+    <p class="muted">Automatinė klasifikacija dar nebuvo paleista.</p>
+    {% else %}
+    <dl class="meta predicted">
+      {% for field, title, labels in [
+          ("category_label", "Kategorija", category_labels),
+          ("complexity_label", "Sudėtingumas", complexity_labels),
+          ("priority_label", "Prioritetas", priority_labels)] %}
+      {% set p = predictions.get(field) %}
+      <dt>{{ title }}</dt>
+      <dd>{% if p and p.status == "ok" %}{{ labels.get(p.predicted_label, p.predicted_label) }}{% else %}<span class="muted">Prognozės nėra</span>{% endif %}</dd>
+      {% endfor %}
+    </dl>
+    {% if not ok %}
+    <p class="notice warning" role="status">Automatinė prognozė nepasiekiama{% for p in predictions.values() %}{% if loop.first and p.message %}: {{ p.message }}{% endif %}{% endfor %}. Klasifikaciją galite nustatyti ranka.</p>
+    {% elif not confirmed and ok|selectattr("needs_review")|list %}
+    <p class="notice warning" role="status">Prognozė apytikslė – ją reikia peržiūrėti prieš patvirtinant.</p>
+    {% endif %}
+    {% for p in ok[:1] %}{% if p.message %}<p class="notice" role="status">{{ p.message }}</p>{% endif %}{% endfor %}
+    {% endif %}
+
+    <form class="confirm-form" method="post" action="/dashboard/reports/{{ report.id }}/classification">
+      <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+      <h3>{% if confirmed %}Keisti klasifikaciją{% else %}Patvirtinti klasifikaciją{% endif %}</h3>
+      <p class="muted small">{% if confirmed %}Rodomos patvirtintos reikšmės.{% else %}Forma užpildyta automatine prognoze (jei ji yra); patikrinkite ir, jei reikia, pakeiskite.{% endif %}</p>
+      <div class="form-grid">
+        {% for field, title, labels in [
+            ("category_label", "Kategorija", category_labels),
+            ("complexity_label", "Sudėtingumas", complexity_labels),
+            ("priority_label", "Prioritetas", priority_labels)] %}
+        <div class="form-field">
+          <label for="f-{{ field }}">{{ title }}</label>
+          <select id="f-{{ field }}" name="{{ field }}" required{% if field_errors.get(field) %} aria-invalid="true"{% endif %}>
+            <option value=""{% if not form.get(field) %} selected{% endif %} disabled>Pasirinkite…</option>
+            {% for value, name in labels.items() %}
+            <option value="{{ value }}"{% if form.get(field) == value %} selected{% endif %}>{{ name }}</option>
+            {% endfor %}
+          </select>
+          {% if field_errors.get(field) %}<span class="field-error">{{ field_errors[field] }}</span>{% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      <button type="submit">{% if confirmed %}Išsaugoti pakeitimus{% else %}Patvirtinti klasifikaciją{% endif %}</button>
+    </form>
+
+    {% if history %}
+    <details class="tech">
+      <summary>Patvirtinimų istorija ({{ history|length }})</summary>
+      <ul class="history">
+        {% for h in history %}
+        <li>{{ h.confirmed_at|datetime }} · {{ h.confirmed_by }}:
+          {{ category_labels.get(h.category_label, h.category_label) }},
+          {{ complexity_labels.get(h.complexity_label, h.complexity_label) }},
+          {{ priority_labels.get(h.priority_label, h.priority_label) }}</li>
+        {% endfor %}
+      </ul>
+    </details>
+    {% endif %}
+
+    <details class="tech">
+      <summary>Techninė informacija apie prognozę</summary>
+      {% if ok %}
+      <table class="predictions">
+        <thead><tr><th scope="col">Laukas</th><th scope="col">Prognozė</th><th scope="col">Modelio įvertis</th><th scope="col">Slenkstis</th><th scope="col">Peržiūra</th></tr></thead>
+        <tbody>
+          {% for field, title, labels in [
+              ("category_label", "Kategorija", category_labels),
+              ("complexity_label", "Sudėtingumas", complexity_labels),
+              ("priority_label", "Prioritetas", priority_labels)] %}
+          {% set p = predictions.get(field) %}
+          {% if p and p.status == "ok" %}
+          <tr><th scope="row">{{ title }}</th><td>{{ labels.get(p.predicted_label, p.predicted_label) }}</td><td>{{ "%.2f"|format(p.score) }}</td><td>{{ "%.2f"|format(review_thresholds[field]) }}</td><td>{% if p.needs_review %}rekomenduojama{% else %}–{% endif %}</td></tr>
+          {% endif %}
+          {% endfor %}
+        </tbody>
+      </table>
+      <p class="muted small">Metodas: {{ prediction_method }}. Modelio versija: {{ ok[0].model_version }}. Prognozė sukurta: {{ ok[0].created_at|datetime }}. Teksto kalba: {{ ok[0].input_language or "nežinoma" }}; vertimas: {{ ok[0].translation_method or "nenaudotas" }}.</p>
+      {% else %}
+      <p class="muted small">Prognozių įverčių nėra.</p>
+      {% endif %}
+      <p class="muted small">Modelio įvertis nėra kalibruota tikimybė ir negarantuoja tikslumo. Prognozė yra tik rekomendacija; ji niekada nekeičia programuotojo patvirtintų žymų.</p>
+      <form class="inline-form" method="post" action="/dashboard/reports/{{ report.id }}/classify">
+        <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+        <button type="submit" class="secondary">Klasifikuoti iš naujo</button>
+      </form>
+    </details>
+  </section>
+  </div>
 
   <aside class="card" aria-labelledby="info-heading">
     <h2 id="info-heading">Informacija</h2>
@@ -27,9 +137,6 @@
       <dt>Sukurta</dt><dd>{{ report.created_at|datetime }}</dd>
       <dt>Atnaujinta</dt><dd>{{ report.updated_at|datetime }}</dd>
       <dt>Išspręsta</dt><dd>{% if report.resolved_at %}{{ report.resolved_at|datetime }}{% else %}<span class="muted">Neišspręsta</span>{% endif %}</dd>
-      <dt>Kategorija</dt><dd>{{ ui.label_value(report.category_label, category_labels) }}</dd>
-      <dt>Sudėtingumas</dt><dd>{{ ui.label_value(report.complexity_label, complexity_labels) }}</dd>
-      <dt>Prioritetas</dt><dd>{{ ui.label_value(report.priority_label, priority_labels) }}</dd>
     </dl>
 
     <form class="status-form" method="post" action="/dashboard/reports/{{ report.id }}/status">
