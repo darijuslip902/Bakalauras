@@ -1,5 +1,15 @@
 # Claude Code taisyklės
 
+## Dabartinė būklė (2026-11-13, po 5D)
+
+0–5D etapai baigti, PR #11 sujungtas į main. Modelių versija `20261113-125330`. 6 etapas nepradėtas: laukiama darbo vadovo pastabų; statistikos puslapis nėra patvirtintas reikalavimas. P0 paliekamas, nors jo atpažinimas silpnas.
+
+- 40 024 importuoti GitHub įrašai; 23 884 sėkmingos DI anotacijos (19 412 tinkamų, 4 472 netinkamų).
+- 18 267 mokymo ir validacijos pavyzdžiai; 1 120 atrinktų testo įrašų, iš jų 901 tinkamas (visi 901 su DI etalonu); 30 pilotinių įrašų.
+- 243 artimi testo dublikatai pašalinti iš mokymo. Bendra DI žymėjimo kaina 4,5948 USD.
+- Trys apmokyti modeliai ir jų ataskaitos saugomi GitHub; SQLite DB, jos kopijos, .env ir .venv – tik lokaliai.
+- Testo accuracy / macro-F1: kategorija 64,26 % / 62,22 %; sudėtingumas 69,70 % / 69,14 %; prioritetas 65,93 % / 48,20 %. P0 F1 = 0. Metrikos rodo atitikimą Claude žymoms, ne nepriklausomai žmogaus patvirtintai tiesai. Ankstesnio ir naujo modelio metrikos iš skirtingų testų nėra tiesiogiai palyginamos.
+
 ## Projekto tikslas
 Įgyvendinti šioje repozitorijoje aprašytą bakalauro darbo prototipą. Reikalavimų šaltiniai pagal prioritetą:
 1. `ARCHITECTURE.md` – privaloma architektūra ir duomenų ribos.
@@ -10,14 +20,14 @@
 
 Jei dokumentai prieštarauja vienas kitam, nekurk naujų prielaidų: pažymėk prieštaravimą, pasiūlyk mažiausią sprendimą ir atnaujink atitinkamą dokumentą tik jei dabartinė užduotis tai leidžia.
 
-## Galutinis produkto funkcionalumas
+## Įgyvendintas produkto funkcionalumas
 - Vieša forma leidžia klientui / testuotojui be paskyros pateikti klaidos pavadinimą ir aprašymą.
 - Programuotojas / koordinatorius prisijungia prie vidinės aplinkos, mato visus pranešimus, filtruoja / ieško, keičia būsenas new, in_progress, resolved ir peržiūri išspręstų klaidų istoriją.
 - Naujas pranešimas automatiškai klasifikuojamas tik jei paruoštas tinkamas modelis. Jei duomenų nepakanka, pranešimas vis tiek išsaugomas, o prognozės trūkumas aiškiai rodomas.
 - Prognozė ir žmogaus pataisyta / patvirtinta žyma visada saugomos atskirai.
 - Vieši GitHub Issues naudojami atskirai mokymo duomenims; integracija nekeičia GitHub pusėje esančių issues.
 - Klientui nereikia paskyros ir jis negali peržiūrėti kitų pranešimų. Atsakingo programuotojo automatinis parinkimas neįtrauktas.
-- Įgyvendinimo etapus ir jų eilę skaityti iš docs/IMPLEMENTATION_PLAN.md; nekeisti kodo visai sistemai vienu kartu.
+- Įgyvendinimo etapus skaityti iš docs/IMPLEMENTATION_PLAN.md. 0–5D baigti; 6 etapą pradėti tik gavus naują naudotojo užduotį. Viena vidinė paskyra, atskirų testuotojų paskyrų nėra. Modelių statistikos puslapis neprivalomas. Nekeisti modelių, DB ar funkcionalumo atliekant vien dokumentacijos darbus.
 
 ## Taupūs darbo principai
 - Prieš keičiant kodą vykdyk `git status --short` ir patikrink tik su dabartine užduotimi susijusius failus.
