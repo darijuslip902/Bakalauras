@@ -6,7 +6,7 @@ Metodas: TF-IDF (1-2 gramos) + LogisticRegression (class_weight=balanced). Duome
 
 ## Duomenų kilmė
 
-Vieši GitHub issues, importuoti tik skaitymo režimu be autentifikacijos. Pull request įrašai, dublikatai, ne klaidų etiketės (enhancement, question, duplicate ir pan.) ir per trumpi aprašymai atmesti prieš DI žymėjimą.
+Vieši GitHub issues, importuoti tik skaitymo režimu (5B be autentifikacijos, 5D su GitHub žetonu). Pull request įrašai, dublikatai, ne klaidų etiketės (enhancement, question, duplicate ir pan.) ir per trumpi aprašymai atmesti prieš DI žymėjimą.
 
 | Repozitorija | Importuota | Iš jų papildymas | Tinkami | Trumpi | Dublikatai | Ne klaidų etiketės | Bandomasis | Testas | Mokymui (pagr.) | Mokymui (papild.) |
 |---|---|---|---|---|---|---|---|---|---|---|
