@@ -16,7 +16,9 @@ from app import config
 from app.ml import ai_labeling
 from app.ml.class_analysis import DEFAULT_TARGET_PER_CLASS, augmentation_plan, class_overview, deficits
 from app.ml.collection import SourcesError, check_sources, import_sources, load_sources
-from tools._common import open_database, parser
+import time
+
+from tools._common import backup_database, open_database, parser
 
 DEFAULT_SOURCES = config.PROJECT_DIR / "tools" / "sources.json"
 
@@ -36,6 +38,10 @@ def main(argv: list[str] | None = None, transport: object = None) -> int:
                              help="norimas mokymo pavyzdžių skaičius kiekvienai klasei (--augment)")
     args_parser.add_argument("--refresh", action="store_true",
                              help="nepraleisti jau surinktų šaltinių, o surinkti juos iš naujo")
+    args_parser.add_argument("--counts", action="store_true",
+                             help="su --check: parodyti ir bendrą issues skaičių (Search API, lėčiau)")
+    args_parser.add_argument("--no-backup", action="store_true",
+                             help="nekurti DB atsarginės kopijos prieš importą (nerekomenduojama)")
     args_parser.add_argument("--ai-model", default=ai_labeling.DEFAULT_MODEL)
     args_parser.add_argument("--use-token", action="store_true",
                              help="naudoti GITHUB_TOKEN iš .env (pagal nutylėjimą – ne)")
@@ -52,7 +58,8 @@ def main(argv: list[str] | None = None, transport: object = None) -> int:
         unique = list(dict.fromkeys(all_sources))
         print(f"Tikrinama šaltinių: {len(unique)} (GitHub be autentifikacijos leidžia ~60 užklausų per valandą)")
         problems = 0
-        for item in check_sources(unique, token, transport):
+        pause = (lambda: time.sleep(2.2 if token else 6.5)) if args.counts and transport is None else None
+        for item in check_sources(unique, token, transport, with_counts=args.counts, pause=pause):
             source = item["source"]
             mark = "OK " if item["status"] == "ok" else "!! "
             problems += item["status"] != "ok"
@@ -61,6 +68,10 @@ def main(argv: list[str] | None = None, transport: object = None) -> int:
               f"Probleminių šaltinių: {problems}. Pataisykite etiketes tools/sources.json arba juos pašalinkite.")
         return 1 if problems else 0
 
+    if not args.no_backup:
+        backup = backup_database(args.db)
+        if backup:
+            print(f"DB atsarginė kopija: {backup}")
     conn = open_database(args.db)
     if args.augment:
         overview = class_overview(conn, args.ai_model, ai_labeling.PROMPT_VERSION, args.target)

@@ -236,6 +236,51 @@ Sukuriami `models\category_label.joblib`, `models\complexity_label.joblib`, `mod
 
 **DI sąnaudų saugikliai:** dry-run pagal nutylėjimą; `--limit`; šio paleidimo riba `--max-cost-usd`; bendras `AI_TOTAL_BUDGET_USD` (skaičiuojamas iš DB); prieš kiekvieną užklausą tikrinama blogiausio atvejo kaina; faktinė kaina iš API `usage`; netinkamas atsakymas kartojamas daugiausia kartą; po API klaidos sustojama. Kainos įverčiai nėra garantija – patikimiausias yra faktinis bandomojo paleidimo rezultatas.
 
+## Papildomas duomenų importas (5D – paruošimas)
+
+5D tikslas – gerokai padidinti mokymo rinkinį (≥ 15 000 tinkamų pavyzdžių, ≥ 1 000 kiekvienai kategorijai) ir iš naujo apmokyti **tuos pačius** TF-IDF + LogisticRegression modelius. Šiame žingsnyje paruoštas tik importas; **mokamas žymėjimas ir mokymas dar nepradėti**. Esami `models/*` lieka kaip atskaitos taškas (modelio versija `20261110-143223`, Git žyma ar šaka `main`).
+
+Kas pakeista infrastruktūroje (naujo įrankio nekurta):
+- `tools\sources_5d.json` – 64 šaltiniai (repozitorija + etiketė), suskirstyti pagal kategorijas ir P0 (laukas `hint` tik planavimui; galutinę klasę nustato Claude žymėjimas). Etiketės **nepatikrintos gyvai** (mano aplinka negali kviesti GitHub API kitoms repozitorijoms) – patikrinkite `--check`;
+- vieno šaltinio limitas padidintas nuo 1 000 iki 3 000 (30 puslapių po 100);
+- `--check --counts` papildomai parodo bendrą issues skaičių (Search API) ir įspėja, jei jo mažiau nei `limit`;
+- prieš importą automatiškai kuriama DB kopija `data\backups\bakalauras-<laikas>.sqlite3` (esamas failas nekeičiamas; išjungti: `--no-backup`);
+- mokymo tekstai, beveik vienodi (kosinuso panašumas ≥ 0,9) testo tekstams, pašalinami iš mokymo (`excluded_test_near_duplicates` ataskaitoje); testo rinkinys nekeičiamas.
+
+Ką paleisti (Windows CMD, projekto kataloge, aktyvavus `.venv`):
+
+```bat
+git fetch origin
+git checkout claude/phase-5d-dataset-expansion
+git pull
+copy data\bakalauras.sqlite3 data\bakalauras.backup.sqlite3
+```
+
+1. Sukurkite **tik skaitymo** GitHub žetoną be jokių teisių (github.com → Settings → Developer settings → Personal access tokens → Tokens (classic) → nepažymėkite jokių „scopes“) ir įrašykite į `.env`: `GITHUB_TOKEN=ghp_...`. Be žetono limitas ~60 užklausų per valandą, todėl 15 000 issues užtruktų daug valandų; su žetonu – 5 000 per valandą (visam importui reikia ~400 užklausų). Žetonas niekada nerodomas žurnaluose.
+2. Patikra (nemokama, nieko neįrašo į DB, ~5 min.):
+
+```bat
+python -m tools.collect --sources tools\sources_5d.json --check --counts --use-token
+```
+
+Eilutės su `!!` – etiketė neteisinga arba šaltinis nepasiekiamas: pataisykite `tools\sources_5d.json` (`notepad tools\sources_5d.json`) arba pašalinkite šaltinį ir kartokite. Atsiųskite man šią išvestį – pagal ją sutvarkysiu šaltinių sąrašą.
+3. Importas (nemokama, tęstinis – nutrūkus paleiskite tą pačią komandą):
+
+```bat
+python -m tools.collect --sources tools\sources_5d.json --use-token
+```
+
+4. Kokybės patikra, testavimo rinkinio papildymas iki ~1 120 ir DI žymėjimo kainos įvertis (dry-run, API nekviečiamas):
+
+```bat
+python -m tools.check_data
+python -m tools.pipeline --skip-import --test-size 1120
+```
+
+Testo rinkinys atrenkamas atsitiktinai (su seed, proporcingai pagal repozitorijas) iš naujai importuotų įrašų; senieji 120 testo ir 30 bandomojo įrašų nekeičiami. Dėl to retų kategorijų (dokumentacija, saugumas) teste gali būti per mažai pavyzdžių; pažymėjus DI žymas pasiūlysiu, ar atrinkti papildomą kategorijų balansuotą testo dalį.
+
+Tolesni žingsniai (mokami / mokymas) – tik gavus Jūsų patvirtinimą po 4 žingsnio rezultatų.
+
 ## Automatinė klasifikacija svetainėje (5C)
 
 Pateikus klaidą viešoje formoje (`/report`), svetainė išsaugo pranešimą ir iškart paleidžia tris vietinius modelius (`models/category_label.joblib`, `complexity_label.joblib`, `priority_label.joblib`, sukurti `python -m tools.train_models`). Kiekvieno lauko prognozė išsaugoma SQLite lentelėje `prediction_runs` (prognozuota reikšmė, modelio įvertis, ar rekomenduojama peržiūra, metodas, modelio versija, laikas). Žmogaus patvirtintos žymos (`bug_reports.category_label` ir kt.) **niekada neperrašomos**. Klientas mato tik patvirtinimą, o ne prognozes.

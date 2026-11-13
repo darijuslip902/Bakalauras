@@ -30,6 +30,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 
 from app.ml.data_quality import check_quality, issue_text, quality_report, text_fingerprint
+from app.ml.leakage import near_duplicate_indices
 from app.ml.reporting import markdown_report
 
 FIELDS = ("category_label", "complexity_label", "priority_label")
@@ -136,6 +137,10 @@ def load_datasets(
     before = len(train)
     train = [example for example in train if example.fingerprint not in test_fingerprints]
     stats["excluded_test_duplicates"] = before - len(train)
+    # 5D: beveik vienodi (kosinuso panašumas ≥ 0.9) mokymo tekstai testo tekstams taip pat pašalinami.
+    near = set(near_duplicate_indices([e.text for e in train], [e.text for e in human_test]))
+    stats["excluded_test_near_duplicates"] = len(near)
+    train = [example for index, example in enumerate(train) if index not in near]
     leaked = {example.issue_id for example in train} & {example.issue_id for example in human_test}
     if leaked:  # papildoma apsauga: testo įrašas niekada neturi patekti į mokymą
         raise ValueError(f"Testo įrašai patektų į mokymą: {sorted(leaked)[:5]}")

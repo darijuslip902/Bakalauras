@@ -188,6 +188,7 @@ SQLite schema turi būti aiški ir paprasta. Visi SQL parametrai turi būti bind
 - Nenaudoti neriboto atsisiuntimo; turėti importo limitą, puslapio dydžio limitą ir aiškų klaidos pranešimą.
 - Išsaugoti originalų `title`, `body`, labels, state, URL ir laiko žymas.
 - Pakartotinis importas yra idempotentiškas.
+- **5D:** vieno šaltinio (repozitorija + etiketė) limitas – iki 3 000 issues (30 puslapių po 100); masinis importas (`tools.collect`) prieš darbą sukuria SQLite atsarginę kopiją (`<DB aplankas>/backups/`), o `--check --counts` planavimui naudoja Search API (`count_issues`, tik skaitymas, fiksuotas hostas). Mokymo tekstai, beveik vienodi testo tekstams (kosinuso panašumas ≥ 0,9), pašalinami iš mokymo (`app/ml/leakage.py`).
 - Viešoms repozitorijoms tokenas nebūtinas, bet aplinkos `GITHUB_TOKEN` gali būti naudojamas rate limit pagerinti.
 - Joks endpointas neturi keisti issue, label ar assignee GitHub pusėje.
 - Priimti tik `github.com` HTTPS URL / normalizuotą `owner/repo`, apsaugoti nuo SSRF ir neleidžiamų hostų. Nenaudotojo pateikto arbitrary URL serverio užklausa nevykdoma.
