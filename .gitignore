@@ -27,7 +27,10 @@ data/*
 # Local trained models / exports
 models/*
 !models/.gitkeep
-*.joblib
+# Apmokyti 5B modeliai ir ataskaitos saugomi repozitorijoje (žr. README)
+!models/*.joblib
+!models/training_report.json
+!models/training_report.md
 *.pkl
 
 # Editors / OS
