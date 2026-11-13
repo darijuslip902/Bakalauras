@@ -17,12 +17,20 @@ def main(argv: list[str] | None = None) -> int:
     args_parser.add_argument("--pilot-size", type=int, default=30,
                              help="norimas bandomojo rinkinio dydis iš viso (0 – nekurti)")
     args_parser.add_argument("--seed", type=int, default=42, help="atsitiktinumo seed (atkartojamumui)")
+    args_parser.add_argument("--new-since", metavar="YYYY-MM-DD", default=None,
+                             help="didinant esamą testo rinkinį, imti tik nuo šios datos importuotus nepažymėtus įrašus")
     args = args_parser.parse_args(argv)
     if args.size < 1 or args.pilot_size < 0:
         args_parser.error("--size turi būti teigiamas, --pilot-size – neneigiamas")
     conn = open_database(args.db)
+    existing = conn.execute("SELECT COUNT(*) FROM github_issues WHERE is_test_set = 1").fetchone()[0]
+    if existing and args.size > existing and not args.new_since:
+        print(f"KLAIDA: testo rinkinyje jau yra {existing} įrašų; norėdami jį didinti nurodykite --new-since "
+              "YYYY-MM-DD, kad seni mokymui naudoti įrašai nepatektų į testą.")
+        conn.close()
+        return 2
     # Galutinis testas atrenkamas pirmas – jis svarbesnis už bandomąjį rinkinį.
-    added = select_test_set(conn, args.size, args.seed)
+    added = select_test_set(conn, args.size, args.seed, args.new_since)
     total = conn.execute("SELECT COUNT(*) FROM github_issues WHERE is_test_set = 1").fetchone()[0]
     print(f"Pridėta į testavimo rinkinį: {added}. Iš viso testavimo rinkinyje: {total}.")
     if total < args.size:

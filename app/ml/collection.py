@@ -14,10 +14,18 @@ from pathlib import Path
 import httpx
 
 from app.services.annotation_service import LABEL_FIELDS
-from app.services.github_client import GitHubError, InvalidRepositoryError, fetch_issues, parse_repository
+from app.services.github_client import (
+    MAX_PAGES,
+    PER_PAGE,
+    GitHubError,
+    InvalidRepositoryError,
+    count_issues,
+    fetch_issues,
+    parse_repository,
+)
 from app.services.import_service import run_import
 
-MAX_LIMIT_PER_SOURCE = 1000  # GitHub klientas skaito iki 10 puslapių po 100
+MAX_LIMIT_PER_SOURCE = MAX_PAGES * PER_PAGE  # 3000: GitHub klientas skaito iki 30 puslapių po 100
 
 
 class SourcesError(ValueError):
@@ -73,15 +81,30 @@ def load_sources(path: Path) -> Sources:
 
 
 def check_sources(
-    sources: list[Source], token: str | None = None, transport: httpx.BaseTransport | None = None
+    sources: list[Source],
+    token: str | None = None,
+    transport: httpx.BaseTransport | None = None,
+    with_counts: bool = False,
+    pause: Callable[[], None] | None = None,
 ) -> list[dict[str, object]]:
-    """Nemokama patikra: po vieną užklausą kiekvienam šaltiniui – ar etiketė grąžina issues."""
+    """Nemokama patikra: po vieną užklausą kiekvienam šaltiniui – ar etiketė grąžina issues.
+
+    `with_counts` papildomai paprašo bendro issues skaičiaus (Search API, `pause` kviečiamas
+    tarp užklausų, kad nebūtų viršytas minutės limitas); skaičius pateikiamas pranešime.
+    """
     results = []
-    for source in sources:
+    for index, source in enumerate(sources):
         try:
             found = len(fetch_issues(source.repository, 1, token, transport, source.label).issues)
             status = "ok" if found else "empty"
             message = "rasta issues" if found else "0 issues – patikrinkite etiketės pavadinimą"
+            if with_counts and found:
+                if pause is not None and index:
+                    pause()
+                total = count_issues(source.repository, source.label, token, transport)
+                message = f"iš viso issues (be PR): {total}"
+                if total < source.limit:
+                    message += f" – mažiau nei limit {source.limit}"
         except (GitHubError, ValueError) as exc:
             status, message = "error", getattr(exc, "message", str(exc))
         results.append({"source": source, "status": status, "message": message})
@@ -174,5 +197,6 @@ def import_sources(
         totals["imported"] += result.imported
         totals["updated"] += result.updated
         progress(f"{name}: nauji {result.imported}, atnaujinti {result.updated}, "
+                 f"apsaugoti (testo / pažymėti) {result.protected}, "
                  f"praleisti PR {result.skipped_pull_requests}, nepavyko {result.failed}")
     return totals

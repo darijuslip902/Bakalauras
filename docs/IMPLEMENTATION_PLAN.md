@@ -119,6 +119,37 @@ Darbai:
 
 Priėmimas: testai patikrina prognozės formatą, automatinį naujo pranešimo klasifikavimą, modelio nebuvimo atvejį, prognozės ir anotacijos atskyrimą bei žemo pasitikėjimo žymos nustatymą. Neteigiama, kad score yra kalibruota tikimybė, jei kalibracija nepatikrinta.
 
+## 5D etapas – mokymo duomenų išplėtimas ir modelių kokybės gerinimas
+**Tikslas:** padidinti mokymo duomenų kiekį ir subalansuoti kategorijas; tuos pačius tris TF-IDF + LogisticRegression klasifikatorius apmokyti iš naujo (metodas ir parametrai nekeičiami, kad būtų matoma duomenų kiekio įtaka). Svetainė, autentifikavimas, klasifikacijos patvirtinimas ir lietuvių kalbos apdorojimas nekeičiami.
+
+**Pradinė būklė (užsakovo duomenys, 5C-final):** 2 906 importuoti, 2 608 tinkami mokymui, pilotas 30, testas 120 (112 tinkami). Kategorijos: backend_api 1 442, ui 436, database_data 217, build_deployment 160, security 119, performance 109, other 106, documentation 19. Macro-F1 (etalonas – Claude žymos): kategorija 0.4924, sudėtingumas 0.6094, prioritetas 0.5896. Prioriteto klasės `P0_critical` mokymo duomenyse praktiškai nėra.
+
+**Tikslai:** ≥ 15 000 tinkamų mokymo pavyzdžių, ≥ 1 000 kiekvienai iš 8 kategorijų, daugiau `P0_critical`, ~1 000 papildomų testo pavyzdžių.
+
+**Importo planas (`tools/sources_5d.json`: 54 šaltiniai, visi patikrinti `collect --check --counts` 2026-11-13; limitai – viršutinės ribos, ne garantuoti kiekiai):**
+
+| Kategorija / tikslas | Trūksta iki 1 000 (esama) | Šaltinių limitų suma | Pagrindiniai šaltiniai (etiketė) |
+|---|---:|---:|---|
+| ui | 564 | 3 600 | flutter (team-framework), angular (type: bug/fix), PowerToys (Issue-Bug) |
+| backend_api | 0 | 2 178 | spring-boot, aspnetcore, grpc, nest (217), express (161) |
+| database_data | 783 | 4 500 | typeorm, sequelize, supabase, ClickHouse, tidb (type/bug), cockroach (C-bug), drizzle |
+| security | 881 | 5 000 | keycloak, spring-security, vault, openssl, next-auth, zaproxy, trivy |
+| performance | 891 | 5 300 | pandas, dotnet/runtime, rust (I-slow), go, pytorch, vscode (freeze-slow-crash-leak) |
+| build_deployment | 840 | 5 416 | webpack, vite, gradle, bazel, helm, pnpm, moby, cargo, nx |
+| documentation | 981 | 6 621 | mdn/content, kubernetes/website, vuejs/docs, vscode-docs, home-assistant.io, docker/docs, dotnet/docs, angular (area: docs) |
+| other | 894 | 3 000 | home-assistant/core, rust (C-bug), godot |
+| P0 | ~0 | 4 546 | kubernetes (priority/critical-urgent), flutter (P0), tidb (severity/critical), rust (P-critical, 257), cockroach (release-blocker), pytorch (high priority) |
+
+Visų limitų suma 40 161 (sąmoningai su atsarga: dalis etikečių turės mažiau issues, dalis pasikartos su esamais ar tarpusavyje, dalį atmes kokybės filtras ir DI „netinka“). Pirmoji patikra (naudotojo kompiuteryje) rado 10 probleminių šaltinių (vscode [ui-glitch], material-ui [bug 🐛], vuejs/core, prisma, redis, DependencyCheck, flutter [severe: performance], docker/compose, obs-studio, ClickHouse [critical bug]) – jie pašalinti, nest / express / rust P-critical limitai sumažinti iki faktinio kiekio. Etiketės yra tik kandidatų atrankai: kategoriją, sudėtingumą, prioritetą ir tinkamumą nustato Claude žymėjimas pagal `docs/DATA_LABELING.md`; P0 nepriskiriamas vien dėl žodžio „critical“ ar saugumo temos. Jei po žymėjimo kuriai nors kategorijai trūks 1 000, naudojamas esamas `collect --augment` (tikslinis papildymas).
+
+**Apsauga nuo senų duomenų pakeitimo (5D, 2 dalis):** pakartotinis importas neperrašo testo, bandomojo ir DI pažymėtų įrašų teksto bei žymų, `imported_at` lieka pirmojo importo; papildomas ~1 000 testo įrašų atrenkamas tik iš nuo nurodytos datos importuotų nepažymėtų įrašų (`--test-new-since`), o esamo testo didinimas be šios datos atmetamas; `tools.collect --use-token` užkrauna `.env`.
+
+**Infrastruktūros pakeitimai (minimalūs, naujo įrankio nekurta):** šaltinio limitas iki 3 000 (30 puslapių), `collect --check --counts` (Search API, `count_issues`), automatinė DB atsarginė kopija prieš importą (`tools/_common.backup_database`, `--no-backup`), artimų dublikatų (kosinuso panašumas ≥ 0,9, `HashingVectorizer` be žodyno) pašalinimas iš mokymo vs. testas (`app/ml/leakage.py`, `training.load_datasets`). Jau buvo: tęstinis rinkimas (`collection_progress`), tikslių dublikatų, PR, trumpų ir ne klaidų įrašų filtravimas, `ON CONFLICT` įrašymas (esami įrašai ir anotacijos nekeičiami), testo / pilotinių rinkinių atskyrimas.
+
+**Eiga:** (1) importo paruošimas – **atlikta** (programinė dalis, testai); (2) naudotojas paleidžia `--check --counts`, taisome šaltinius; (3) importas; (4) testo rinkinio papildymas ir kainos dry-run; (5) mokamas žymėjimas – tik su naudotojo patvirtinimu; (6) `class_report`, prireikus tikslinis papildymas; (7) `train_models` su tais pačiais parametrais, naujų modelių failai ir ataskaitos saugomi atskirai (nekeičiant `models/` iki palyginimo), palyginimas senų ir naujų tame pačiame testo rinkinyje (accuracy, macro-F1, weighted-F1, klasių precision / recall / F1, confusion matrix).
+
+**Priėmimas:** testai patvirtina limitų, `--counts`, atsarginės kopijos ir artimų dublikatų elgesį; testo įrašai niekada nepatenka į mokymą; esama DB ir anotacijos nekeičiamos. Rezultatų (kokybės pagerėjimo) neteigiama, kol nėra naujo mokymo.
+
 ## 6 etapas – vertinimas ir sąsajos užbaigimas
 **Tikslas:** parengti atkuriamą, bakalauro darbui tinkamą modelio vertinimą.
 

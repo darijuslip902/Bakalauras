@@ -217,7 +217,8 @@ def _stratified_sample(by_repository: dict[str, list[int]], count: int, rng: ran
 
 
 def _select_evaluation_set(
-    conn: sqlite3.Connection, column: str, other_column: str, size: int, seed: int
+    conn: sqlite3.Connection, column: str, other_column: str, size: int, seed: int,
+    new_since: str | None = None,
 ) -> int:
     """Papildo rinkinį iki `size` įrašų; grąžina naujai pridėtų skaičių.
 
@@ -228,9 +229,19 @@ def _select_evaluation_set(
     current = conn.execute(f"SELECT COUNT(*) FROM github_issues WHERE {column} = 1").fetchone()[0]
     needed = max(0, size - current)
     by_repository: dict[str, list[int]] = defaultdict(list)
+    # `new_since` (ISO data / laikas): imami tik nuo tada importuoti dar nepažymėti įrašai. Seni
+    # (mokymui naudoti ar pažymėti) įrašai į naują rinkinį nepatenka. `imported_at` pakartotinio
+    # importo metu nekeičiamas, todėl persidengiantys šaltiniai senų įrašų „naujais“ nepadaro.
+    since_sql = (
+        " AND imported_at >= ? AND training_suitability = 'unreviewed' AND category_label IS NULL"
+        " AND complexity_label IS NULL AND priority_label IS NULL"
+        " AND NOT EXISTS (SELECT 1 FROM ai_annotations a WHERE a.github_issue_id = github_issues.id)"
+        if new_since else ""
+    )
     rows = conn.execute(
         f"SELECT id, repository_full_name FROM github_issues "
-        f"WHERE {column} = 0 AND {other_column} = 0 AND source_kind = 'base'"
+        f"WHERE {column} = 0 AND {other_column} = 0 AND source_kind = 'base'{since_sql}",
+        (new_since,) if new_since else (),
     )
     for issue_id, repository in rows:
         if issue_id in ok_ids:
@@ -241,9 +252,13 @@ def _select_evaluation_set(
     return len(chosen)
 
 
-def select_test_set(conn: sqlite3.Connection, size: int, seed: int) -> int:
-    """Galutinis nepriklausomas žmogaus testavimo rinkinys (niekada nenaudojamas mokymui)."""
-    return _select_evaluation_set(conn, "is_test_set", "is_pilot_set", size, seed)
+def select_test_set(conn: sqlite3.Connection, size: int, seed: int, new_since: str | None = None) -> int:
+    """Galutinis nepriklausomas žmogaus testavimo rinkinys (niekada nenaudojamas mokymui).
+
+    Su `new_since` rinkinys papildomas tik nuo tos datos importuotais nepažymėtais įrašais;
+    esami testo ir bandomojo rinkinio įrašai nekeičiami.
+    """
+    return _select_evaluation_set(conn, "is_test_set", "is_pilot_set", size, seed, new_since)
 
 
 def select_pilot_set(conn: sqlite3.Connection, size: int, seed: int) -> int:

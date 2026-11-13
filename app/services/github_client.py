@@ -11,7 +11,7 @@ import httpx
 # nevirsta pilnu URL (apsauga nuo SSRF).
 API_BASE_URL = "https://api.github.com"
 PER_PAGE = 100
-MAX_PAGES = 10
+MAX_PAGES = 30  # iki 3000 issues vienam šaltiniui (5D; anksčiau 10 puslapių)
 REQUEST_TIMEOUT = 10.0
 
 # GitHub pervadintas ar perkeltas repozitorijas nukreipia (pvz. 301 į
@@ -132,6 +132,48 @@ def fetch_issues(
             if len(items) < PER_PAGE:
                 break
     return FetchedIssues(issues, skipped)
+
+
+def count_issues(
+    repository: str,
+    label: str | None = None,
+    token: str | None = None,
+    transport: httpx.BaseTransport | None = None,
+) -> int:
+    """Kiek issues (be pull request) turi repozitorija su etikete – viena Search API užklausa.
+
+    Naudojama tik planavimui (`tools.collect --check --counts`); duomenų neįrašo. Search API
+    turi atskirą, mažesnį limitą (~10 užklausų per minutę be paskyros, ~30 su žetonu).
+    """
+    full_name = parse_repository(repository)
+    if label is not None and (not _LABELS_RE.fullmatch(label) or '"' in label):
+        raise ValueError("neteisingas etikečių filtras")
+    query = f"repo:{full_name} is:issue" + (f' label:"{label}"' if label else "")
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+        "User-Agent": "bakalauras-issue-importer",
+    }
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    try:
+        with httpx.Client(headers=headers, timeout=REQUEST_TIMEOUT, transport=transport,
+                          follow_redirects=False) as client:
+            response = client.get(f"{API_BASE_URL}/search/issues", params={"q": query, "per_page": 1})
+    except httpx.TimeoutException:
+        raise GitHubError("GitHub API neatsakė laiku. Bandykite vėliau.", 504) from None
+    except httpx.RequestError:
+        raise GitHubError("Nepavyko prisijungti prie GitHub API.", 502) from None
+    if response.status_code == 422:
+        raise GitHubError("Repozitorija nerasta arba paieška jos nepasiekia.", 404)
+    _raise_for_status(response)
+    try:
+        total = response.json().get("total_count")
+    except (ValueError, AttributeError):
+        total = None
+    if not isinstance(total, int):
+        raise GitHubError("GitHub API grąžino netikėtą atsakymą.", 502)
+    return total
 
 
 def _get_page(

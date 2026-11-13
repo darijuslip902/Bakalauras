@@ -1,6 +1,6 @@
 {
-  "model_version": "20261110-143223",
-  "trained_at": "2026-11-10T14:32:23+00:00",
+  "model_version": "20261113-125330",
+  "trained_at": "2026-11-13T12:53:30+00:00",
   "method": "TF-IDF (1-2 gramos) + LogisticRegression (class_weight=balanced)",
   "seed": 42,
   "validation_size": 0.2,
@@ -9,18 +9,33 @@
     "prompt_version": "v1"
   },
   "dataset": {
-    "test_set_rows": 120,
-    "test_labels_ai": 112,
-    "excluded_not_suitable": 156,
-    "test_set_not_usable": 8,
+    "test_set_rows": 1120,
+    "test_labels_ai": 901,
+    "excluded_not_suitable": 4254,
+    "test_set_not_usable": 219,
     "human_labelled_used": 29,
-    "excluded_quality": 22,
+    "excluded_quality": 3728,
+    "excluded_not_labelled_yet": 12412,
     "excluded_test_duplicates": 0,
-    "train_rows": 2608,
-    "human_test_rows": 112,
+    "excluded_test_near_duplicates": 243,
+    "train_rows": 18267,
+    "human_test_rows": 901,
     "pilot_set_rows": 30
   },
   "provenance": [
+    {
+      "repository": "angular/angular",
+      "imported": 1491,
+      "augmentation_imported": 0,
+      "quality_ok": 1478,
+      "excluded_short": 2,
+      "excluded_duplicate": 1,
+      "excluded_label": 10,
+      "pilot_set": 0,
+      "test_set": 44,
+      "train_base": 409,
+      "train_augmentation": 0
+    },
     {
       "repository": "ansible/ansible",
       "imported": 201,
@@ -32,6 +47,123 @@
       "pilot_set": 2,
       "test_set": 8,
       "train_base": 181,
+      "train_augmentation": 0
+    },
+    {
+      "repository": "aquasecurity/trivy",
+      "imported": 600,
+      "augmentation_imported": 0,
+      "quality_ok": 596,
+      "excluded_short": 0,
+      "excluded_duplicate": 1,
+      "excluded_label": 3,
+      "pilot_set": 0,
+      "test_set": 18,
+      "train_base": 438,
+      "train_augmentation": 0
+    },
+    {
+      "repository": "bazelbuild/bazel",
+      "imported": 600,
+      "augmentation_imported": 0,
+      "quality_ok": 598,
+      "excluded_short": 1,
+      "excluded_duplicate": 0,
+      "excluded_label": 1,
+      "pilot_set": 0,
+      "test_set": 18,
+      "train_base": 428,
+      "train_augmentation": 0
+    },
+    {
+      "repository": "ClickHouse/ClickHouse",
+      "imported": 900,
+      "augmentation_imported": 0,
+      "quality_ok": 893,
+      "excluded_short": 0,
+      "excluded_duplicate": 0,
+      "excluded_label": 7,
+      "pilot_set": 0,
+      "test_set": 27,
+      "train_base": 458,
+      "train_augmentation": 0
+    },
+    {
+      "repository": "cockroachdb/cockroach",
+      "imported": 1059,
+      "augmentation_imported": 0,
+      "quality_ok": 1003,
+      "excluded_short": 0,
+      "excluded_duplicate": 0,
+      "excluded_label": 56,
+      "pilot_set": 0,
+      "test_set": 30,
+      "train_base": 312,
+      "train_augmentation": 0
+    },
+    {
+      "repository": "docker/docs",
+      "imported": 669,
+      "augmentation_imported": 0,
+      "quality_ok": 641,
+      "excluded_short": 5,
+      "excluded_duplicate": 13,
+      "excluded_label": 10,
+      "pilot_set": 0,
+      "test_set": 19,
+      "train_base": 340,
+      "train_augmentation": 0
+    },
+    {
+      "repository": "dotnet/aspnetcore",
+      "imported": 700,
+      "augmentation_imported": 0,
+      "quality_ok": 417,
+      "excluded_short": 0,
+      "excluded_duplicate": 1,
+      "excluded_label": 282,
+      "pilot_set": 0,
+      "test_set": 12,
+      "train_base": 369,
+      "train_augmentation": 0
+    },
+    {
+      "repository": "dotnet/docs",
+      "imported": 414,
+      "augmentation_imported": 0,
+      "quality_ok": 411,
+      "excluded_short": 1,
+      "excluded_duplicate": 2,
+      "excluded_label": 0,
+      "pilot_set": 0,
+      "test_set": 12,
+      "train_base": 61,
+      "train_augmentation": 0
+    },
+    {
+      "repository": "dotnet/runtime",
+      "imported": 1000,
+      "augmentation_imported": 0,
+      "quality_ok": 975,
+      "excluded_short": 0,
+      "excluded_duplicate": 0,
+      "excluded_label": 25,
+      "pilot_set": 0,
+      "test_set": 29,
+      "train_base": 301,
+      "train_augmentation": 0
+    },
+    {
+      "repository": "drizzle-team/drizzle-orm",
+      "imported": 500,
+      "augmentation_imported": 0,
+      "quality_ok": 495,
+      "excluded_short": 2,
+      "excluded_duplicate": 0,
+      "excluded_label": 3,
+      "pilot_set": 0,
+      "test_set": 15,
+      "train_base": 435,
       "train_augmentation": 0
     },
     {
@@ -48,6 +180,19 @@
       "train_augmentation": 0
     },
     {
+      "repository": "expressjs/express",
+      "imported": 161,
+      "augmentation_imported": 0,
+      "quality_ok": 152,
+      "excluded_short": 3,
+      "excluded_duplicate": 1,
+      "excluded_label": 5,
+      "pilot_set": 0,
+      "test_set": 5,
+      "train_base": 122,
+      "train_augmentation": 0
+    },
+    {
       "repository": "facebook/react",
       "imported": 200,
       "augmentation_imported": 0,
@@ -57,7 +202,59 @@
       "excluded_label": 0,
       "pilot_set": 2,
       "test_set": 8,
-      "train_base": 157,
+      "train_base": 150,
+      "train_augmentation": 0
+    },
+    {
+      "repository": "flutter/flutter",
+      "imported": 1945,
+      "augmentation_imported": 0,
+      "quality_ok": 1539,
+      "excluded_short": 13,
+      "excluded_duplicate": 0,
+      "excluded_label": 393,
+      "pilot_set": 0,
+      "test_set": 46,
+      "train_base": 330,
+      "train_augmentation": 0
+    },
+    {
+      "repository": "godotengine/godot",
+      "imported": 1000,
+      "augmentation_imported": 0,
+      "quality_ok": 989,
+      "excluded_short": 0,
+      "excluded_duplicate": 0,
+      "excluded_label": 11,
+      "pilot_set": 0,
+      "test_set": 30,
+      "train_base": 455,
+      "train_augmentation": 0
+    },
+    {
+      "repository": "golang/go",
+      "imported": 900,
+      "augmentation_imported": 0,
+      "quality_ok": 803,
+      "excluded_short": 0,
+      "excluded_duplicate": 0,
+      "excluded_label": 97,
+      "pilot_set": 0,
+      "test_set": 24,
+      "train_base": 279,
+      "train_augmentation": 0
+    },
+    {
+      "repository": "gradle/gradle",
+      "imported": 600,
+      "augmentation_imported": 0,
+      "quality_ok": 558,
+      "excluded_short": 1,
+      "excluded_duplicate": 0,
+      "excluded_label": 41,
+      "pilot_set": 0,
+      "test_set": 17,
+      "train_base": 412,
       "train_augmentation": 0
     },
     {
@@ -74,6 +271,19 @@
       "train_augmentation": 0
     },
     {
+      "repository": "grpc/grpc",
+      "imported": 400,
+      "augmentation_imported": 0,
+      "quality_ok": 400,
+      "excluded_short": 0,
+      "excluded_duplicate": 0,
+      "excluded_label": 0,
+      "pilot_set": 0,
+      "test_set": 12,
+      "train_base": 333,
+      "train_augmentation": 0
+    },
+    {
       "repository": "hashicorp/terraform",
       "imported": 200,
       "augmentation_imported": 0,
@@ -87,16 +297,107 @@
       "train_augmentation": 0
     },
     {
-      "repository": "kubernetes/kubernetes",
-      "imported": 241,
+      "repository": "hashicorp/vault",
+      "imported": 700,
       "augmentation_imported": 0,
-      "quality_ok": 236,
+      "quality_ok": 695,
       "excluded_short": 0,
       "excluded_duplicate": 0,
       "excluded_label": 5,
+      "pilot_set": 0,
+      "test_set": 21,
+      "train_base": 436,
+      "train_augmentation": 0
+    },
+    {
+      "repository": "helm/helm",
+      "imported": 600,
+      "augmentation_imported": 0,
+      "quality_ok": 595,
+      "excluded_short": 0,
+      "excluded_duplicate": 0,
+      "excluded_label": 5,
+      "pilot_set": 0,
+      "test_set": 18,
+      "train_base": 432,
+      "train_augmentation": 0
+    },
+    {
+      "repository": "home-assistant/core",
+      "imported": 760,
+      "augmentation_imported": 0,
+      "quality_ok": 748,
+      "excluded_short": 0,
+      "excluded_duplicate": 0,
+      "excluded_label": 12,
+      "pilot_set": 0,
+      "test_set": 22,
+      "train_base": 279,
+      "train_augmentation": 0
+    },
+    {
+      "repository": "home-assistant/home-assistant.io",
+      "imported": 264,
+      "augmentation_imported": 0,
+      "quality_ok": 264,
+      "excluded_short": 0,
+      "excluded_duplicate": 0,
+      "excluded_label": 0,
+      "pilot_set": 0,
+      "test_set": 8,
+      "train_base": 96,
+      "train_augmentation": 0
+    },
+    {
+      "repository": "keycloak/keycloak",
+      "imported": 1000,
+      "augmentation_imported": 0,
+      "quality_ok": 996,
+      "excluded_short": 1,
+      "excluded_duplicate": 3,
+      "excluded_label": 0,
+      "pilot_set": 0,
+      "test_set": 30,
+      "train_base": 442,
+      "train_augmentation": 0
+    },
+    {
+      "repository": "kubernetes/kubernetes",
+      "imported": 963,
+      "augmentation_imported": 0,
+      "quality_ok": 952,
+      "excluded_short": 0,
+      "excluded_duplicate": 0,
+      "excluded_label": 11,
       "pilot_set": 2,
-      "test_set": 10,
-      "train_base": 206,
+      "test_set": 31,
+      "train_base": 573,
+      "train_augmentation": 0
+    },
+    {
+      "repository": "kubernetes/website",
+      "imported": 489,
+      "augmentation_imported": 0,
+      "quality_ok": 191,
+      "excluded_short": 15,
+      "excluded_duplicate": 2,
+      "excluded_label": 281,
+      "pilot_set": 0,
+      "test_set": 6,
+      "train_base": 89,
+      "train_augmentation": 0
+    },
+    {
+      "repository": "mdn/content",
+      "imported": 810,
+      "augmentation_imported": 0,
+      "quality_ok": 728,
+      "excluded_short": 11,
+      "excluded_duplicate": 9,
+      "excluded_label": 62,
+      "pilot_set": 0,
+      "test_set": 22,
+      "train_base": 138,
       "train_augmentation": 0
     },
     {
@@ -113,16 +414,81 @@
       "train_augmentation": 0
     },
     {
-      "repository": "microsoft/vscode",
-      "imported": 307,
+      "repository": "microsoft/PowerToys",
+      "imported": 1200,
       "augmentation_imported": 0,
-      "quality_ok": 304,
+      "quality_ok": 999,
       "excluded_short": 1,
       "excluded_duplicate": 0,
-      "excluded_label": 2,
+      "excluded_label": 200,
+      "pilot_set": 0,
+      "test_set": 30,
+      "train_base": 359,
+      "train_augmentation": 0
+    },
+    {
+      "repository": "microsoft/vscode",
+      "imported": 1202,
+      "augmentation_imported": 0,
+      "quality_ok": 1171,
+      "excluded_short": 1,
+      "excluded_duplicate": 0,
+      "excluded_label": 30,
       "pilot_set": 3,
-      "test_set": 13,
-      "train_base": 274,
+      "test_set": 39,
+      "train_base": 630,
+      "train_augmentation": 0
+    },
+    {
+      "repository": "microsoft/vscode-docs",
+      "imported": 754,
+      "augmentation_imported": 0,
+      "quality_ok": 355,
+      "excluded_short": 39,
+      "excluded_duplicate": 24,
+      "excluded_label": 336,
+      "pilot_set": 0,
+      "test_set": 11,
+      "train_base": 172,
+      "train_augmentation": 0
+    },
+    {
+      "repository": "moby/moby",
+      "imported": 600,
+      "augmentation_imported": 0,
+      "quality_ok": 578,
+      "excluded_short": 0,
+      "excluded_duplicate": 0,
+      "excluded_label": 22,
+      "pilot_set": 0,
+      "test_set": 17,
+      "train_base": 421,
+      "train_augmentation": 0
+    },
+    {
+      "repository": "nestjs/nest",
+      "imported": 217,
+      "augmentation_imported": 0,
+      "quality_ok": 213,
+      "excluded_short": 0,
+      "excluded_duplicate": 0,
+      "excluded_label": 4,
+      "pilot_set": 0,
+      "test_set": 6,
+      "train_base": 188,
+      "train_augmentation": 0
+    },
+    {
+      "repository": "nextauthjs/next-auth",
+      "imported": 700,
+      "augmentation_imported": 0,
+      "quality_ok": 307,
+      "excluded_short": 1,
+      "excluded_duplicate": 0,
+      "excluded_label": 392,
+      "pilot_set": 0,
+      "test_set": 9,
+      "train_base": 267,
       "train_augmentation": 0
     },
     {
@@ -135,20 +501,72 @@
       "excluded_label": 0,
       "pilot_set": 3,
       "test_set": 11,
-      "train_base": 229,
+      "train_base": 228,
+      "train_augmentation": 0
+    },
+    {
+      "repository": "nrwl/nx",
+      "imported": 600,
+      "augmentation_imported": 0,
+      "quality_ok": 600,
+      "excluded_short": 0,
+      "excluded_duplicate": 0,
+      "excluded_label": 0,
+      "pilot_set": 0,
+      "test_set": 18,
+      "train_base": 439,
+      "train_augmentation": 0
+    },
+    {
+      "repository": "openssl/openssl",
+      "imported": 600,
+      "augmentation_imported": 0,
+      "quality_ok": 553,
+      "excluded_short": 7,
+      "excluded_duplicate": 9,
+      "excluded_label": 31,
+      "pilot_set": 0,
+      "test_set": 17,
+      "train_base": 331,
       "train_augmentation": 0
     },
     {
       "repository": "pandas-dev/pandas",
-      "imported": 193,
+      "imported": 1193,
       "augmentation_imported": 0,
-      "quality_ok": 187,
-      "excluded_short": 0,
+      "quality_ok": 1061,
+      "excluded_short": 4,
       "excluded_duplicate": 0,
-      "excluded_label": 6,
+      "excluded_label": 128,
       "pilot_set": 2,
-      "test_set": 8,
-      "train_base": 176,
+      "test_set": 34,
+      "train_base": 529,
+      "train_augmentation": 0
+    },
+    {
+      "repository": "pingcap/tidb",
+      "imported": 1926,
+      "augmentation_imported": 0,
+      "quality_ok": 1722,
+      "excluded_short": 0,
+      "excluded_duplicate": 1,
+      "excluded_label": 203,
+      "pilot_set": 0,
+      "test_set": 51,
+      "train_base": 445,
+      "train_augmentation": 0
+    },
+    {
+      "repository": "pnpm/pnpm",
+      "imported": 600,
+      "augmentation_imported": 0,
+      "quality_ok": 592,
+      "excluded_short": 0,
+      "excluded_duplicate": 1,
+      "excluded_label": 7,
+      "pilot_set": 0,
+      "test_set": 18,
+      "train_base": 452,
       "train_augmentation": 0
     },
     {
@@ -178,6 +596,84 @@
       "train_augmentation": 0
     },
     {
+      "repository": "pytorch/pytorch",
+      "imported": 1282,
+      "augmentation_imported": 0,
+      "quality_ok": 1057,
+      "excluded_short": 0,
+      "excluded_duplicate": 0,
+      "excluded_label": 225,
+      "pilot_set": 0,
+      "test_set": 32,
+      "train_base": 362,
+      "train_augmentation": 0
+    },
+    {
+      "repository": "rust-lang/cargo",
+      "imported": 600,
+      "augmentation_imported": 0,
+      "quality_ok": 579,
+      "excluded_short": 0,
+      "excluded_duplicate": 0,
+      "excluded_label": 21,
+      "pilot_set": 0,
+      "test_set": 17,
+      "train_base": 417,
+      "train_augmentation": 0
+    },
+    {
+      "repository": "rust-lang/rust",
+      "imported": 2044,
+      "augmentation_imported": 0,
+      "quality_ok": 1846,
+      "excluded_short": 1,
+      "excluded_duplicate": 2,
+      "excluded_label": 195,
+      "pilot_set": 0,
+      "test_set": 55,
+      "train_base": 408,
+      "train_augmentation": 0
+    },
+    {
+      "repository": "sequelize/sequelize",
+      "imported": 500,
+      "augmentation_imported": 0,
+      "quality_ok": 496,
+      "excluded_short": 2,
+      "excluded_duplicate": 1,
+      "excluded_label": 1,
+      "pilot_set": 0,
+      "test_set": 15,
+      "train_base": 404,
+      "train_augmentation": 0
+    },
+    {
+      "repository": "spring-projects/spring-boot",
+      "imported": 700,
+      "augmentation_imported": 0,
+      "quality_ok": 664,
+      "excluded_short": 34,
+      "excluded_duplicate": 0,
+      "excluded_label": 2,
+      "pilot_set": 0,
+      "test_set": 20,
+      "train_base": 109,
+      "train_augmentation": 0
+    },
+    {
+      "repository": "spring-projects/spring-security",
+      "imported": 800,
+      "augmentation_imported": 0,
+      "quality_ok": 647,
+      "excluded_short": 28,
+      "excluded_duplicate": 7,
+      "excluded_label": 118,
+      "pilot_set": 0,
+      "test_set": 19,
+      "train_base": 308,
+      "train_augmentation": 0
+    },
+    {
       "repository": "sqlalchemy/sqlalchemy",
       "imported": 202,
       "augmentation_imported": 0,
@@ -189,31 +685,109 @@
       "test_set": 8,
       "train_base": 183,
       "train_augmentation": 0
+    },
+    {
+      "repository": "supabase/supabase",
+      "imported": 600,
+      "augmentation_imported": 0,
+      "quality_ok": 594,
+      "excluded_short": 2,
+      "excluded_duplicate": 4,
+      "excluded_label": 0,
+      "pilot_set": 0,
+      "test_set": 18,
+      "train_base": 277,
+      "train_augmentation": 0
+    },
+    {
+      "repository": "typeorm/typeorm",
+      "imported": 600,
+      "augmentation_imported": 0,
+      "quality_ok": 596,
+      "excluded_short": 1,
+      "excluded_duplicate": 0,
+      "excluded_label": 3,
+      "pilot_set": 0,
+      "test_set": 18,
+      "train_base": 402,
+      "train_augmentation": 0
+    },
+    {
+      "repository": "vitejs/vite",
+      "imported": 616,
+      "augmentation_imported": 0,
+      "quality_ok": 613,
+      "excluded_short": 0,
+      "excluded_duplicate": 0,
+      "excluded_label": 3,
+      "pilot_set": 0,
+      "test_set": 18,
+      "train_base": 409,
+      "train_augmentation": 0
+    },
+    {
+      "repository": "vuejs/docs",
+      "imported": 800,
+      "augmentation_imported": 0,
+      "quality_ok": 665,
+      "excluded_short": 29,
+      "excluded_duplicate": 25,
+      "excluded_label": 81,
+      "pilot_set": 0,
+      "test_set": 20,
+      "train_base": 221,
+      "train_augmentation": 0
+    },
+    {
+      "repository": "webpack/webpack",
+      "imported": 600,
+      "augmentation_imported": 0,
+      "quality_ok": 599,
+      "excluded_short": 1,
+      "excluded_duplicate": 0,
+      "excluded_label": 0,
+      "pilot_set": 0,
+      "test_set": 18,
+      "train_base": 427,
+      "train_augmentation": 0
+    },
+    {
+      "repository": "zaproxy/zaproxy",
+      "imported": 600,
+      "augmentation_imported": 0,
+      "quality_ok": 515,
+      "excluded_short": 0,
+      "excluded_duplicate": 0,
+      "excluded_label": 85,
+      "pilot_set": 0,
+      "test_set": 15,
+      "train_base": 379,
+      "train_augmentation": 0
     }
   ],
   "ai_labelling_summary": {
-    "rows": 2884,
-    "ok": 2884,
+    "rows": 23884,
+    "ok": 23884,
     "invalid": 0,
-    "suitable": 2721,
-    "unsuitable": 163,
-    "requests": 2884,
-    "input_tokens": 7879128,
-    "output_tokens": 366383,
-    "cost_usd": 0.6047
+    "suitable": 19412,
+    "unsuitable": 4472,
+    "requests": 23884,
+    "input_tokens": 61312405,
+    "output_tokens": 3000847,
+    "cost_usd": 4.5948
   },
   "fields": {
     "category_label": {
       "field": "category_label",
       "class_distribution": {
-        "backend_api": 1442,
-        "build_deployment": 160,
-        "database_data": 217,
-        "documentation": 19,
-        "other": 106,
-        "performance": 109,
-        "security": 119,
-        "ui": 436
+        "backend_api": 7291,
+        "build_deployment": 3148,
+        "database_data": 1502,
+        "documentation": 1236,
+        "other": 434,
+        "performance": 2376,
+        "security": 707,
+        "ui": 1573
       },
       "excluded_classes_below_min": {},
       "min_class_samples": 5,
@@ -228,76 +802,76 @@
         "security",
         "ui"
       ],
-      "train_samples": 2086,
-      "validation_samples": 522,
+      "train_samples": 14613,
+      "validation_samples": 3654,
       "validation_note": "Validacijos žymos – daugiausia DI sugeneruotos (ne žmogaus patikrintos).",
       "validation": {
         "model": {
-          "samples": 522,
-          "accuracy": 0.6073,
-          "macro_f1": 0.4697,
-          "weighted_f1": 0.6175,
+          "samples": 3654,
+          "accuracy": 0.6678,
+          "macro_f1": 0.6447,
+          "weighted_f1": 0.6705,
           "per_class": {
             "backend_api": {
-              "precision": 0.8208955223880597,
-              "recall": 0.5709342560553633,
-              "f1-score": 0.673469387755102,
-              "support": 289.0
+              "precision": 0.7980022197558269,
+              "recall": 0.49314128943758573,
+              "f1-score": 0.6095803306485799,
+              "support": 1458.0
             },
             "build_deployment": {
-              "precision": 0.56,
-              "recall": 0.4375,
-              "f1-score": 0.49122807017543857,
-              "support": 32.0
+              "precision": 0.6111111111111112,
+              "recall": 0.7333333333333333,
+              "f1-score": 0.6666666666666666,
+              "support": 630.0
             },
             "database_data": {
-              "precision": 0.3246753246753247,
-              "recall": 0.5813953488372093,
-              "f1-score": 0.4166666666666667,
-              "support": 43.0
+              "precision": 0.5020325203252033,
+              "recall": 0.8205980066445183,
+              "f1-score": 0.6229508196721312,
+              "support": 301.0
             },
             "documentation": {
-              "precision": 0.0,
-              "recall": 0.0,
-              "f1-score": 0.0,
-              "support": 4.0
+              "precision": 0.8936170212765957,
+              "recall": 0.8502024291497976,
+              "f1-score": 0.8713692946058091,
+              "support": 247.0
             },
             "other": {
-              "precision": 0.4418604651162791,
-              "recall": 0.9047619047619048,
-              "f1-score": 0.59375,
-              "support": 21.0
-            },
-            "performance": {
-              "precision": 0.5882352941176471,
-              "recall": 0.45454545454545453,
-              "f1-score": 0.5128205128205128,
-              "support": 22.0
-            },
-            "security": {
-              "precision": 0.2972972972972973,
-              "recall": 0.4583333333333333,
-              "f1-score": 0.36065573770491804,
-              "support": 24.0
-            },
-            "ui": {
-              "precision": 0.6134453781512605,
-              "recall": 0.8390804597701149,
-              "f1-score": 0.7087378640776699,
+              "precision": 0.24358974358974358,
+              "recall": 0.4367816091954023,
+              "f1-score": 0.31275720164609055,
               "support": 87.0
             },
-            "accuracy": 0.60727969348659,
+            "performance": {
+              "precision": 0.8818380743982495,
+              "recall": 0.848421052631579,
+              "f1-score": 0.8648068669527897,
+              "support": 475.0
+            },
+            "security": {
+              "precision": 0.3662551440329218,
+              "recall": 0.6312056737588653,
+              "f1-score": 0.4635416666666667,
+              "support": 141.0
+            },
+            "ui": {
+              "precision": 0.6570048309178744,
+              "recall": 0.8634920634920635,
+              "f1-score": 0.7462277091906722,
+              "support": 315.0
+            },
+            "accuracy": 0.6677613574165299,
             "macro avg": {
-              "precision": 0.4558011602182336,
-              "recall": 0.5308188446629225,
-              "f1-score": 0.4696660299000385,
-              "support": 522.0
+              "precision": 0.6191813331759408,
+              "recall": 0.7096469322053931,
+              "f1-score": 0.6447375695061758,
+              "support": 3654.0
             },
             "weighted avg": {
-              "precision": 0.6740325176312513,
-              "recall": 0.60727969348659,
-              "f1-score": 0.6175006726728579,
-              "support": 522.0
+              "precision": 0.7167450244544198,
+              "recall": 0.6677613574165299,
+              "f1-score": 0.6704758555871435,
+              "support": 3654.0
             }
           },
           "confusion_matrix": {
@@ -313,154 +887,154 @@
             ],
             "matrix": [
               [
-                165,
-                7,
-                47,
-                3,
-                13,
-                5,
-                17,
-                32
-              ],
-              [
-                5,
-                14,
-                0,
-                0,
-                7,
-                0,
-                2,
-                4
-              ],
-              [
-                12,
-                1,
-                25,
-                0,
-                0,
-                1,
-                2,
-                2
-              ],
-              [
-                1,
-                0,
-                1,
-                0,
-                0,
-                0,
-                0,
-                2
-              ],
-              [
-                1,
-                1,
-                0,
-                0,
-                19,
-                0,
-                0,
-                0
-              ],
-              [
-                6,
-                1,
-                1,
-                0,
-                0,
-                10,
-                1,
-                3
-              ],
-              [
-                5,
-                1,
-                2,
-                0,
-                1,
-                1,
+                719,
+                238,
+                194,
                 11,
-                3
+                67,
+                24,
+                122,
+                83
               ],
               [
-                6,
-                0,
-                1,
+                76,
+                462,
+                17,
+                4,
+                30,
+                14,
+                10,
+                17
+              ],
+              [
+                28,
+                9,
+                247,
                 0,
                 3,
+                2,
+                6,
+                6
+              ],
+              [
+                14,
+                11,
+                5,
+                210,
+                1,
                 0,
+                0,
+                6
+              ],
+              [
+                18,
+                7,
+                1,
+                1,
+                38,
+                10,
                 4,
-                73
+                8
+              ],
+              [
+                20,
+                11,
+                15,
+                0,
+                7,
+                403,
+                5,
+                14
+              ],
+              [
+                21,
+                11,
+                9,
+                0,
+                2,
+                1,
+                89,
+                8
+              ],
+              [
+                5,
+                7,
+                4,
+                9,
+                8,
+                3,
+                7,
+                272
               ]
             ]
           }
         },
         "majority_baseline": {
-          "samples": 522,
-          "accuracy": 0.5536,
-          "macro_f1": 0.0891,
-          "weighted_f1": 0.3946,
+          "samples": 3654,
+          "accuracy": 0.399,
+          "macro_f1": 0.0713,
+          "weighted_f1": 0.2276,
           "per_class": {
             "backend_api": {
-              "precision": 0.553639846743295,
+              "precision": 0.39901477832512317,
               "recall": 1.0,
-              "f1-score": 0.7127003699136868,
-              "support": 289.0
+              "f1-score": 0.5704225352112676,
+              "support": 1458.0
             },
             "build_deployment": {
               "precision": 0.0,
               "recall": 0.0,
               "f1-score": 0.0,
-              "support": 32.0
+              "support": 630.0
             },
             "database_data": {
               "precision": 0.0,
               "recall": 0.0,
               "f1-score": 0.0,
-              "support": 43.0
+              "support": 301.0
             },
             "documentation": {
               "precision": 0.0,
               "recall": 0.0,
               "f1-score": 0.0,
-              "support": 4.0
+              "support": 247.0
             },
             "other": {
               "precision": 0.0,
               "recall": 0.0,
               "f1-score": 0.0,
-              "support": 21.0
+              "support": 87.0
             },
             "performance": {
               "precision": 0.0,
               "recall": 0.0,
               "f1-score": 0.0,
-              "support": 22.0
+              "support": 475.0
             },
             "security": {
               "precision": 0.0,
               "recall": 0.0,
               "f1-score": 0.0,
-              "support": 24.0
+              "support": 141.0
             },
             "ui": {
               "precision": 0.0,
               "recall": 0.0,
               "f1-score": 0.0,
-              "support": 87.0
+              "support": 315.0
             },
-            "accuracy": 0.553639846743295,
+            "accuracy": 0.39901477832512317,
             "macro avg": {
-              "precision": 0.06920498084291188,
+              "precision": 0.049876847290640396,
               "recall": 0.125,
-              "f1-score": 0.08908754623921085,
-              "support": 522.0
+              "f1-score": 0.07130281690140845,
+              "support": 3654.0
             },
             "weighted avg": {
-              "precision": 0.3065170799019392,
-              "recall": 0.553639846743295,
-              "f1-score": 0.3945793235729032,
-              "support": 522.0
+              "precision": 0.15921279332184718,
+              "recall": 0.39901477832512317,
+              "f1-score": 0.2276070214389787,
+              "support": 3654.0
             }
           },
           "confusion_matrix": {
@@ -476,7 +1050,7 @@
             ],
             "matrix": [
               [
-                289,
+                1458,
                 0,
                 0,
                 0,
@@ -486,7 +1060,7 @@
                 0
               ],
               [
-                32,
+                630,
                 0,
                 0,
                 0,
@@ -496,7 +1070,7 @@
                 0
               ],
               [
-                43,
+                301,
                 0,
                 0,
                 0,
@@ -504,9 +1078,311 @@
                 0,
                 0,
                 0
+              ],
+              [
+                247,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                87,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                475,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                141,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                315,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            ]
+          }
+        }
+      },
+      "human_test": {
+        "reference": "ai",
+        "reference_counts": {
+          "ai": 901
+        },
+        "model": {
+          "samples": 901,
+          "accuracy": 0.6426,
+          "macro_f1": 0.6222,
+          "weighted_f1": 0.6395,
+          "per_class": {
+            "backend_api": {
+              "precision": 0.8097560975609757,
+              "recall": 0.45604395604395603,
+              "f1-score": 0.5834797891036907,
+              "support": 364.0
+            },
+            "build_deployment": {
+              "precision": 0.6047904191616766,
+              "recall": 0.7372262773722628,
+              "f1-score": 0.6644736842105263,
+              "support": 137.0
+            },
+            "database_data": {
+              "precision": 0.6209677419354839,
+              "recall": 0.8105263157894737,
+              "f1-score": 0.7031963470319634,
+              "support": 95.0
+            },
+            "documentation": {
+              "precision": 0.8490566037735849,
+              "recall": 0.8333333333333334,
+              "f1-score": 0.8411214953271028,
+              "support": 54.0
+            },
+            "other": {
+              "precision": 0.21951219512195122,
+              "recall": 0.375,
+              "f1-score": 0.27692307692307694,
+              "support": 24.0
+            },
+            "performance": {
+              "precision": 0.6620689655172414,
+              "recall": 0.8347826086956521,
+              "f1-score": 0.7384615384615385,
+              "support": 115.0
+            },
+            "security": {
+              "precision": 0.4,
+              "recall": 0.6666666666666666,
+              "f1-score": 0.5,
+              "support": 36.0
+            },
+            "ui": {
+              "precision": 0.5754716981132075,
+              "recall": 0.8026315789473685,
+              "f1-score": 0.6703296703296703,
+              "support": 76.0
+            },
+            "accuracy": 0.6426193118756937,
+            "macro avg": {
+              "precision": 0.5927029651480151,
+              "recall": 0.6895263421060891,
+              "f1-score": 0.6222482001734462,
+              "support": 901.0
+            },
+            "weighted avg": {
+              "precision": 0.6903335980011129,
+              "recall": 0.6426193118756937,
+              "f1-score": 0.639465080355795,
+              "support": 901.0
+            }
+          },
+          "confusion_matrix": {
+            "labels": [
+              "backend_api",
+              "build_deployment",
+              "database_data",
+              "documentation",
+              "other",
+              "performance",
+              "security",
+              "ui"
+            ],
+            "matrix": [
+              [
+                166,
+                49,
+                42,
+                3,
+                20,
+                38,
+                25,
+                21
+              ],
+              [
+                9,
+                101,
+                1,
+                1,
+                7,
+                4,
+                5,
+                9
+              ],
+              [
+                11,
+                2,
+                77,
+                0,
+                2,
+                1,
+                1,
+                1
               ],
               [
                 4,
+                1,
+                0,
+                45,
+                0,
+                0,
+                2,
+                2
+              ],
+              [
+                2,
+                2,
+                1,
+                1,
+                9,
+                6,
+                0,
+                3
+              ],
+              [
+                2,
+                7,
+                1,
+                0,
+                1,
+                96,
+                0,
+                8
+              ],
+              [
+                6,
+                4,
+                1,
+                0,
+                0,
+                0,
+                24,
+                1
+              ],
+              [
+                5,
+                1,
+                1,
+                3,
+                2,
+                0,
+                3,
+                61
+              ]
+            ]
+          }
+        },
+        "majority_baseline": {
+          "samples": 901,
+          "accuracy": 0.404,
+          "macro_f1": 0.0719,
+          "weighted_f1": 0.2325,
+          "per_class": {
+            "backend_api": {
+              "precision": 0.4039955604883463,
+              "recall": 1.0,
+              "f1-score": 0.5754940711462451,
+              "support": 364.0
+            },
+            "build_deployment": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1-score": 0.0,
+              "support": 137.0
+            },
+            "database_data": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1-score": 0.0,
+              "support": 95.0
+            },
+            "documentation": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1-score": 0.0,
+              "support": 54.0
+            },
+            "other": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1-score": 0.0,
+              "support": 24.0
+            },
+            "performance": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1-score": 0.0,
+              "support": 115.0
+            },
+            "security": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1-score": 0.0,
+              "support": 36.0
+            },
+            "ui": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1-score": 0.0,
+              "support": 76.0
+            },
+            "accuracy": 0.4039955604883463,
+            "macro avg": {
+              "precision": 0.050499445061043285,
+              "recall": 0.125,
+              "f1-score": 0.07193675889328063,
+              "support": 901.0
+            },
+            "weighted avg": {
+              "precision": 0.16321241289429306,
+              "recall": 0.4039955604883463,
+              "f1-score": 0.2324970498304475,
+              "support": 901.0
+            }
+          },
+          "confusion_matrix": {
+            "labels": [
+              "backend_api",
+              "build_deployment",
+              "database_data",
+              "documentation",
+              "other",
+              "performance",
+              "security",
+              "ui"
+            ],
+            "matrix": [
+              [
+                364,
                 0,
                 0,
                 0,
@@ -516,7 +1392,7 @@
                 0
               ],
               [
-                21,
+                137,
                 0,
                 0,
                 0,
@@ -526,7 +1402,17 @@
                 0
               ],
               [
-                22,
+                95,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                54,
                 0,
                 0,
                 0,
@@ -546,136 +1432,7 @@
                 0
               ],
               [
-                87,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0
-              ]
-            ]
-          }
-        }
-      },
-      "human_test": {
-        "reference": "ai",
-        "reference_counts": {
-          "ai": 112
-        },
-        "model": {
-          "samples": 112,
-          "accuracy": 0.6161,
-          "macro_f1": 0.4924,
-          "weighted_f1": 0.6162,
-          "per_class": {
-            "backend_api": {
-              "precision": 0.7954545454545454,
-              "recall": 0.546875,
-              "f1-score": 0.6481481481481481,
-              "support": 64.0
-            },
-            "build_deployment": {
-              "precision": 0.3333333333333333,
-              "recall": 0.25,
-              "f1-score": 0.2857142857142857,
-              "support": 4.0
-            },
-            "database_data": {
-              "precision": 0.4444444444444444,
-              "recall": 0.7272727272727273,
-              "f1-score": 0.5517241379310345,
-              "support": 11.0
-            },
-            "documentation": {
-              "precision": 0.0,
-              "recall": 0.0,
-              "f1-score": 0.0,
-              "support": 1.0
-            },
-            "other": {
-              "precision": 0.5,
-              "recall": 0.8333333333333334,
-              "f1-score": 0.625,
-              "support": 6.0
-            },
-            "performance": {
-              "precision": 0.5,
-              "recall": 0.6666666666666666,
-              "f1-score": 0.5714285714285714,
-              "support": 3.0
-            },
-            "security": {
-              "precision": 0.46153846153846156,
-              "recall": 0.75,
-              "f1-score": 0.5714285714285714,
-              "support": 8.0
-            },
-            "ui": {
-              "precision": 0.6,
-              "recall": 0.8,
-              "f1-score": 0.6857142857142857,
-              "support": 15.0
-            },
-            "accuracy": 0.6160714285714286,
-            "macro avg": {
-              "precision": 0.45434634809634805,
-              "recall": 0.5717684659090909,
-              "f1-score": 0.49239475004561206,
-              "support": 112.0
-            },
-            "weighted avg": {
-              "precision": 0.6636037573537573,
-              "recall": 0.6160714285714286,
-              "f1-score": 0.6162029706518624,
-              "support": 112.0
-            }
-          },
-          "confusion_matrix": {
-            "labels": [
-              "backend_api",
-              "build_deployment",
-              "database_data",
-              "documentation",
-              "other",
-              "performance",
-              "security",
-              "ui"
-            ],
-            "matrix": [
-              [
-                35,
-                1,
-                9,
-                0,
-                4,
-                2,
-                5,
-                8
-              ],
-              [
-                0,
-                1,
-                1,
-                0,
-                1,
-                0,
-                1,
-                0
-              ],
-              [
-                3,
-                0,
-                8,
-                0,
-                0,
-                0,
-                0,
-                0
-              ],
-              [
-                1,
+                115,
                 0,
                 0,
                 0,
@@ -685,130 +1442,7 @@
                 0
               ],
               [
-                0,
-                1,
-                0,
-                0,
-                5,
-                0,
-                0,
-                0
-              ],
-              [
-                1,
-                0,
-                0,
-                0,
-                0,
-                2,
-                0,
-                0
-              ],
-              [
-                2,
-                0,
-                0,
-                0,
-                0,
-                0,
-                6,
-                0
-              ],
-              [
-                2,
-                0,
-                0,
-                0,
-                0,
-                0,
-                1,
-                12
-              ]
-            ]
-          }
-        },
-        "majority_baseline": {
-          "samples": 112,
-          "accuracy": 0.5714,
-          "macro_f1": 0.0909,
-          "weighted_f1": 0.4156,
-          "per_class": {
-            "backend_api": {
-              "precision": 0.5714285714285714,
-              "recall": 1.0,
-              "f1-score": 0.7272727272727273,
-              "support": 64.0
-            },
-            "build_deployment": {
-              "precision": 0.0,
-              "recall": 0.0,
-              "f1-score": 0.0,
-              "support": 4.0
-            },
-            "database_data": {
-              "precision": 0.0,
-              "recall": 0.0,
-              "f1-score": 0.0,
-              "support": 11.0
-            },
-            "documentation": {
-              "precision": 0.0,
-              "recall": 0.0,
-              "f1-score": 0.0,
-              "support": 1.0
-            },
-            "other": {
-              "precision": 0.0,
-              "recall": 0.0,
-              "f1-score": 0.0,
-              "support": 6.0
-            },
-            "performance": {
-              "precision": 0.0,
-              "recall": 0.0,
-              "f1-score": 0.0,
-              "support": 3.0
-            },
-            "security": {
-              "precision": 0.0,
-              "recall": 0.0,
-              "f1-score": 0.0,
-              "support": 8.0
-            },
-            "ui": {
-              "precision": 0.0,
-              "recall": 0.0,
-              "f1-score": 0.0,
-              "support": 15.0
-            },
-            "accuracy": 0.5714285714285714,
-            "macro avg": {
-              "precision": 0.07142857142857142,
-              "recall": 0.125,
-              "f1-score": 0.09090909090909091,
-              "support": 112.0
-            },
-            "weighted avg": {
-              "precision": 0.32653061224489793,
-              "recall": 0.5714285714285714,
-              "f1-score": 0.4155844155844156,
-              "support": 112.0
-            }
-          },
-          "confusion_matrix": {
-            "labels": [
-              "backend_api",
-              "build_deployment",
-              "database_data",
-              "documentation",
-              "other",
-              "performance",
-              "security",
-              "ui"
-            ],
-            "matrix": [
-              [
-                64,
+                36,
                 0,
                 0,
                 0,
@@ -818,67 +1452,7 @@
                 0
               ],
               [
-                4,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0
-              ],
-              [
-                11,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0
-              ],
-              [
-                1,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0
-              ],
-              [
-                6,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0
-              ],
-              [
-                3,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0
-              ],
-              [
-                8,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0
-              ],
-              [
-                15,
+                76,
                 0,
                 0,
                 0,
@@ -892,31 +1466,27 @@
         },
         "ci95": {
           "accuracy": [
-            0.5268,
-            0.6964
+            0.6127,
+            0.6726
           ],
           "macro_f1": [
-            0.3801,
-            0.6521
+            0.5843,
+            0.6556
           ]
         },
         "skipped_unknown_classes": 0,
         "class_support": {
-          "backend_api": 64,
-          "build_deployment": 4,
-          "database_data": 11,
-          "documentation": 1,
-          "other": 6,
-          "performance": 3,
-          "security": 8,
-          "ui": 15
+          "backend_api": 364,
+          "build_deployment": 137,
+          "database_data": 95,
+          "documentation": 54,
+          "other": 24,
+          "performance": 115,
+          "security": 36,
+          "ui": 76
         },
         "classes_without_test_samples": [],
-        "classes_with_few_test_samples": [
-          "build_deployment",
-          "documentation",
-          "performance"
-        ]
+        "classes_with_few_test_samples": []
       },
       "ai_vs_human_agreement": null,
       "model_file": "category_label.joblib"
@@ -924,9 +1494,9 @@
     "complexity_label": {
       "field": "complexity_label",
       "class_distribution": {
-        "high": 350,
-        "low": 694,
-        "medium": 1564
+        "high": 3577,
+        "low": 4605,
+        "medium": 10085
       },
       "excluded_classes_below_min": {},
       "min_class_samples": 5,
@@ -936,46 +1506,46 @@
         "low",
         "medium"
       ],
-      "train_samples": 2086,
-      "validation_samples": 522,
+      "train_samples": 14613,
+      "validation_samples": 3654,
       "validation_note": "Validacijos žymos – daugiausia DI sugeneruotos (ne žmogaus patikrintos).",
       "validation": {
         "model": {
-          "samples": 522,
-          "accuracy": 0.6015,
-          "macro_f1": 0.5634,
-          "weighted_f1": 0.606,
+          "samples": 3654,
+          "accuracy": 0.6579,
+          "macro_f1": 0.6458,
+          "weighted_f1": 0.66,
           "per_class": {
             "high": {
-              "precision": 0.4810126582278481,
-              "recall": 0.5428571428571428,
-              "f1-score": 0.5100671140939598,
-              "support": 70.0
+              "precision": 0.5450643776824035,
+              "recall": 0.7094972067039106,
+              "f1-score": 0.616504854368932,
+              "support": 716.0
             },
             "low": {
-              "precision": 0.4779874213836478,
-              "recall": 0.5467625899280576,
-              "f1-score": 0.5100671140939598,
-              "support": 139.0
+              "precision": 0.6320346320346321,
+              "recall": 0.6340933767643865,
+              "f1-score": 0.6330623306233062,
+              "support": 921.0
             },
             "medium": {
-              "precision": 0.704225352112676,
-              "recall": 0.6389776357827476,
-              "f1-score": 0.6700167504187605,
-              "support": 313.0
+              "precision": 0.7296996662958843,
+              "recall": 0.6504709965294992,
+              "f1-score": 0.6878112712975099,
+              "support": 2017.0
             },
-            "accuracy": 0.6015325670498084,
+            "accuracy": 0.6579091406677614,
             "macro avg": {
-              "precision": 0.5544084772413906,
-              "recall": 0.5761991228559826,
-              "f1-score": 0.56338365953556,
-              "support": 522.0
+              "precision": 0.6355995586709733,
+              "recall": 0.6646871933325987,
+              "f1-score": 0.6457928187632493,
+              "support": 3654.0
             },
             "weighted avg": {
-              "precision": 0.6140491817232644,
-              "recall": 0.6015325670498084,
-              "f1-score": 0.6059756125032751,
-              "support": 522.0
+              "precision": 0.6689037267223031,
+              "recall": 0.6579091406677614,
+              "f1-score": 0.6600391944278319,
+              "support": 3654.0
             }
           },
           "confusion_matrix": {
@@ -986,59 +1556,59 @@
             ],
             "matrix": [
               [
-                38,
-                4,
-                28
+                508,
+                20,
+                188
               ],
               [
-                7,
-                76,
-                56
+                39,
+                584,
+                298
               ],
               [
-                34,
-                79,
-                200
+                385,
+                320,
+                1312
               ]
             ]
           }
         },
         "majority_baseline": {
-          "samples": 522,
-          "accuracy": 0.5996,
-          "macro_f1": 0.2499,
-          "weighted_f1": 0.4495,
+          "samples": 3654,
+          "accuracy": 0.552,
+          "macro_f1": 0.2371,
+          "weighted_f1": 0.3927,
           "per_class": {
             "high": {
               "precision": 0.0,
               "recall": 0.0,
               "f1-score": 0.0,
-              "support": 70.0
+              "support": 716.0
             },
             "low": {
               "precision": 0.0,
               "recall": 0.0,
               "f1-score": 0.0,
-              "support": 139.0
+              "support": 921.0
             },
             "medium": {
-              "precision": 0.5996168582375478,
+              "precision": 0.5519978106185003,
               "recall": 1.0,
-              "f1-score": 0.7497005988023953,
-              "support": 313.0
+              "f1-score": 0.7113383882913067,
+              "support": 2017.0
             },
-            "accuracy": 0.5996168582375478,
+            "accuracy": 0.5519978106185003,
             "macro avg": {
-              "precision": 0.19987228607918262,
+              "precision": 0.18399927020616677,
               "recall": 0.3333333333333333,
-              "f1-score": 0.24990019960079843,
-              "support": 522.0
+              "f1-score": 0.23711279609710223,
+              "support": 3654.0
             },
             "weighted avg": {
-              "precision": 0.3595403766826676,
-              "recall": 0.5996168582375478,
-              "f1-score": 0.4495331176727006,
-              "support": 522.0
+              "precision": 0.3047015829276177,
+              "recall": 0.5519978106185003,
+              "f1-score": 0.3926572329456939,
+              "support": 3654.0
             }
           },
           "confusion_matrix": {
@@ -1051,17 +1621,17 @@
               [
                 0,
                 0,
-                70
+                716
               ],
               [
                 0,
                 0,
-                139
+                921
               ],
               [
                 0,
                 0,
-                313
+                2017
               ]
             ]
           }
@@ -1070,44 +1640,44 @@
       "human_test": {
         "reference": "ai",
         "reference_counts": {
-          "ai": 112
+          "ai": 901
         },
         "model": {
-          "samples": 112,
-          "accuracy": 0.6518,
-          "macro_f1": 0.6094,
-          "weighted_f1": 0.6567,
+          "samples": 901,
+          "accuracy": 0.697,
+          "macro_f1": 0.6914,
+          "weighted_f1": 0.6975,
           "per_class": {
             "high": {
-              "precision": 0.391304347826087,
-              "recall": 0.47368421052631576,
-              "f1-score": 0.42857142857142855,
-              "support": 19.0
+              "precision": 0.6325088339222615,
+              "recall": 0.7782608695652173,
+              "f1-score": 0.6978557504873294,
+              "support": 230.0
             },
             "low": {
-              "precision": 0.7037037037037037,
-              "recall": 0.6785714285714286,
-              "f1-score": 0.6909090909090909,
-              "support": 28.0
+              "precision": 0.655,
+              "recall": 0.6787564766839378,
+              "f1-score": 0.6666666666666666,
+              "support": 193.0
             },
             "medium": {
-              "precision": 0.7258064516129032,
-              "recall": 0.6923076923076923,
-              "f1-score": 0.7086614173228346,
-              "support": 65.0
+              "precision": 0.7607655502392344,
+              "recall": 0.6652719665271967,
+              "f1-score": 0.7098214285714286,
+              "support": 478.0
             },
-            "accuracy": 0.6517857142857143,
+            "accuracy": 0.6970033296337403,
             "macro avg": {
-              "precision": 0.6069381677142313,
-              "recall": 0.6148544438018122,
-              "f1-score": 0.609380645601118,
-              "support": 112.0
+              "precision": 0.6827581280538321,
+              "recall": 0.7074297709254506,
+              "f1-score": 0.6914479485751416,
+              "support": 901.0
             },
             "weighted avg": {
-              "precision": 0.6635348720289114,
-              "recall": 0.6517857142857143,
-              "f1-score": 0.6567080697704994,
-              "support": 112.0
+              "precision": 0.7053695502957538,
+              "recall": 0.6970033296337403,
+              "f1-score": 0.6975228991519371,
+              "support": 901.0
             }
           },
           "confusion_matrix": {
@@ -1118,59 +1688,59 @@
             ],
             "matrix": [
               [
+                179,
+                4,
+                47
+              ],
+              [
                 9,
-                0,
-                10
+                131,
+                53
               ],
               [
-                2,
-                19,
-                7
-              ],
-              [
-                12,
-                8,
-                45
+                95,
+                65,
+                318
               ]
             ]
           }
         },
         "majority_baseline": {
-          "samples": 112,
-          "accuracy": 0.5804,
-          "macro_f1": 0.2448,
-          "weighted_f1": 0.4263,
+          "samples": 901,
+          "accuracy": 0.5305,
+          "macro_f1": 0.2311,
+          "weighted_f1": 0.3678,
           "per_class": {
             "high": {
               "precision": 0.0,
               "recall": 0.0,
               "f1-score": 0.0,
-              "support": 19.0
+              "support": 230.0
             },
             "low": {
               "precision": 0.0,
               "recall": 0.0,
               "f1-score": 0.0,
-              "support": 28.0
+              "support": 193.0
             },
             "medium": {
-              "precision": 0.5803571428571429,
+              "precision": 0.5305216426193119,
               "recall": 1.0,
-              "f1-score": 0.7344632768361582,
-              "support": 65.0
+              "f1-score": 0.6932559825960841,
+              "support": 478.0
             },
-            "accuracy": 0.5803571428571429,
+            "accuracy": 0.5305216426193119,
             "macro avg": {
-              "precision": 0.19345238095238096,
+              "precision": 0.17684054753977063,
               "recall": 0.3333333333333333,
-              "f1-score": 0.2448210922787194,
-              "support": 112.0
+              "f1-score": 0.23108532753202804,
+              "support": 901.0
             },
             "weighted avg": {
-              "precision": 0.3368144132653062,
-              "recall": 0.5803571428571429,
-              "f1-score": 0.42625100887812756,
-              "support": 112.0
+              "precision": 0.28145321328749284,
+              "recall": 0.5305216426193119,
+              "f1-score": 0.3677873026425396,
+              "support": 901.0
             }
           },
           "confusion_matrix": {
@@ -1183,36 +1753,36 @@
               [
                 0,
                 0,
-                19
+                230
               ],
               [
                 0,
                 0,
-                28
+                193
               ],
               [
                 0,
                 0,
-                65
+                478
               ]
             ]
           }
         },
         "ci95": {
           "accuracy": [
-            0.5714,
-            0.7321
+            0.6659,
+            0.727
           ],
           "macro_f1": [
-            0.5129,
-            0.6996
+            0.6597,
+            0.7222
           ]
         },
         "skipped_unknown_classes": 0,
         "class_support": {
-          "high": 19,
-          "low": 28,
-          "medium": 65
+          "high": 230,
+          "low": 193,
+          "medium": 478
         },
         "classes_without_test_samples": [],
         "classes_with_few_test_samples": []
@@ -1223,128 +1793,150 @@
     "priority_label": {
       "field": "priority_label",
       "class_distribution": {
-        "P0_critical": 1,
-        "P1_high": 620,
-        "P2_medium": 1570,
-        "P3_low": 417
+        "P0_critical": 21,
+        "P1_high": 4193,
+        "P2_medium": 10748,
+        "P3_low": 3305
       },
-      "excluded_classes_below_min": {
-        "P0_critical": 1
-      },
+      "excluded_classes_below_min": {},
       "min_class_samples": 5,
       "status": "trained",
       "classes": [
+        "P0_critical",
         "P1_high",
         "P2_medium",
         "P3_low"
       ],
-      "train_samples": 2085,
-      "validation_samples": 522,
+      "train_samples": 14613,
+      "validation_samples": 3654,
       "validation_note": "Validacijos žymos – daugiausia DI sugeneruotos (ne žmogaus patikrintos).",
       "validation": {
         "model": {
-          "samples": 522,
-          "accuracy": 0.5881,
-          "macro_f1": 0.5575,
-          "weighted_f1": 0.5942,
+          "samples": 3654,
+          "accuracy": 0.6623,
+          "macro_f1": 0.5471,
+          "weighted_f1": 0.6668,
           "per_class": {
+            "P0_critical": {
+              "precision": 0.25,
+              "recall": 0.25,
+              "f1-score": 0.25,
+              "support": 4.0
+            },
             "P1_high": {
-              "precision": 0.4807692307692308,
-              "recall": 0.6048387096774194,
-              "f1-score": 0.5357142857142857,
-              "support": 124.0
+              "precision": 0.5190697674418605,
+              "recall": 0.66507747318236,
+              "f1-score": 0.5830721003134797,
+              "support": 839.0
             },
             "P2_medium": {
-              "precision": 0.7072243346007605,
-              "recall": 0.5923566878980892,
-              "f1-score": 0.6447140381282496,
-              "support": 314.0
+              "precision": 0.7643865363735071,
+              "recall": 0.6548837209302325,
+              "f1-score": 0.7054108216432866,
+              "support": 2150.0
             },
             "P3_low": {
-              "precision": 0.44660194174757284,
-              "recall": 0.5476190476190477,
-              "f1-score": 0.4919786096256685,
-              "support": 84.0
+              "precision": 0.6180081855388813,
+              "recall": 0.6853252647503782,
+              "f1-score": 0.6499282639885222,
+              "support": 661.0
             },
-            "accuracy": 0.5881226053639846,
+            "accuracy": 0.662287903667214,
             "macro avg": {
-              "precision": 0.544865169039188,
-              "recall": 0.5816048150648521,
-              "f1-score": 0.5574689778227345,
-              "support": 522.0
+              "precision": 0.5378661223385622,
+              "recall": 0.5638216147157427,
+              "f1-score": 0.5471027964863221,
+              "support": 3654.0
             },
             "weighted avg": {
-              "precision": 0.6114911662582749,
-              "recall": 0.5881226053639846,
-              "f1-score": 0.5942432617038275,
-              "support": 522.0
+              "precision": 0.6810164200131257,
+              "recall": 0.662287903667214,
+              "f1-score": 0.6667852603154047,
+              "support": 3654.0
             }
           },
           "confusion_matrix": {
             "labels": [
+              "P0_critical",
               "P1_high",
               "P2_medium",
               "P3_low"
             ],
             "matrix": [
               [
-                75,
-                45,
-                4
+                1,
+                3,
+                0,
+                0
               ],
               [
-                75,
-                186,
-                53
+                3,
+                558,
+                257,
+                21
               ],
               [
-                6,
-                32,
-                46
+                0,
+                483,
+                1408,
+                259
+              ],
+              [
+                0,
+                31,
+                177,
+                453
               ]
             ]
           }
         },
         "majority_baseline": {
-          "samples": 522,
-          "accuracy": 0.6015,
-          "macro_f1": 0.2504,
-          "weighted_f1": 0.4519,
+          "samples": 3654,
+          "accuracy": 0.5884,
+          "macro_f1": 0.1852,
+          "weighted_f1": 0.4359,
           "per_class": {
+            "P0_critical": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1-score": 0.0,
+              "support": 4.0
+            },
             "P1_high": {
               "precision": 0.0,
               "recall": 0.0,
               "f1-score": 0.0,
-              "support": 124.0
+              "support": 839.0
             },
             "P2_medium": {
-              "precision": 0.6015325670498084,
+              "precision": 0.5883962780514504,
               "recall": 1.0,
-              "f1-score": 0.7511961722488039,
-              "support": 314.0
+              "f1-score": 0.740868366643694,
+              "support": 2150.0
             },
             "P3_low": {
               "precision": 0.0,
               "recall": 0.0,
               "f1-score": 0.0,
-              "support": 84.0
+              "support": 661.0
             },
-            "accuracy": 0.6015325670498084,
+            "accuracy": 0.5883962780514504,
             "macro avg": {
-              "precision": 0.20051085568326946,
-              "recall": 0.3333333333333333,
-              "f1-score": 0.2503987240829346,
-              "support": 522.0
+              "precision": 0.1470990695128626,
+              "recall": 0.25,
+              "f1-score": 0.1852170916609235,
+              "support": 3654.0
             },
             "weighted avg": {
-              "precision": 0.36184142922153223,
-              "recall": 0.6015325670498084,
-              "f1-score": 0.45186896185081304,
-              "support": 522.0
+              "precision": 0.3462101800247998,
+              "recall": 0.5883962780514504,
+              "f1-score": 0.43592418945920697,
+              "support": 3654.0
             }
           },
           "confusion_matrix": {
             "labels": [
+              "P0_critical",
               "P1_high",
               "P2_medium",
               "P3_low"
@@ -1352,17 +1944,26 @@
             "matrix": [
               [
                 0,
-                124,
+                0,
+                4,
                 0
               ],
               [
                 0,
-                314,
+                0,
+                839,
                 0
               ],
               [
                 0,
-                84,
+                0,
+                2150,
+                0
+              ],
+              [
+                0,
+                0,
+                661,
                 0
               ]
             ]
@@ -1372,111 +1973,134 @@
       "human_test": {
         "reference": "ai",
         "reference_counts": {
-          "ai": 112
+          "ai": 901
         },
         "model": {
-          "samples": 112,
-          "accuracy": 0.6161,
-          "macro_f1": 0.5896,
-          "weighted_f1": 0.6142,
+          "samples": 901,
+          "accuracy": 0.6593,
+          "macro_f1": 0.482,
+          "weighted_f1": 0.6612,
           "per_class": {
+            "P0_critical": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1-score": 0.0,
+              "support": 2.0
+            },
             "P1_high": {
-              "precision": 0.5609756097560976,
-              "recall": 0.7419354838709677,
-              "f1-score": 0.6388888888888888,
-              "support": 31.0
+              "precision": 0.5973154362416108,
+              "recall": 0.6793893129770993,
+              "f1-score": 0.6357142857142857,
+              "support": 262.0
             },
             "P2_medium": {
-              "precision": 0.6851851851851852,
-              "recall": 0.6065573770491803,
-              "f1-score": 0.6434782608695652,
-              "support": 61.0
+              "precision": 0.7442922374429224,
+              "recall": 0.6506986027944112,
+              "f1-score": 0.6943556975505857,
+              "support": 501.0
             },
             "P3_low": {
-              "precision": 0.5294117647058824,
-              "recall": 0.45,
-              "f1-score": 0.4864864864864865,
-              "support": 20.0
+              "precision": 0.5454545454545454,
+              "recall": 0.6617647058823529,
+              "f1-score": 0.5980066445182725,
+              "support": 136.0
             },
-            "accuracy": 0.6160714285714286,
+            "accuracy": 0.6592674805771365,
             "macro avg": {
-              "precision": 0.5918575198823883,
-              "recall": 0.599497620306716,
-              "f1-score": 0.5896178787483134,
-              "support": 112.0
+              "precision": 0.47176555478476967,
+              "recall": 0.4979631554134658,
+              "f1-score": 0.4820191569457859,
+              "support": 901.0
             },
             "weighted avg": {
-              "precision": 0.622989066900473,
-              "recall": 0.6160714285714286,
-              "f1-score": 0.614173742842221,
-              "support": 112.0
+              "precision": 0.6698877618601824,
+              "recall": 0.6592674805771365,
+              "f1-score": 0.661218924511067,
+              "support": 901.0
             }
           },
           "confusion_matrix": {
             "labels": [
+              "P0_critical",
               "P1_high",
               "P2_medium",
               "P3_low"
             ],
             "matrix": [
               [
-                23,
-                8,
+                0,
+                2,
+                0,
                 0
               ],
               [
-                16,
-                37,
-                8
+                0,
+                178,
+                75,
+                9
               ],
               [
-                2,
+                0,
+                109,
+                326,
+                66
+              ],
+              [
+                0,
                 9,
-                9
+                37,
+                90
               ]
             ]
           }
         },
         "majority_baseline": {
-          "samples": 112,
-          "accuracy": 0.5446,
-          "macro_f1": 0.2351,
-          "weighted_f1": 0.3841,
+          "samples": 901,
+          "accuracy": 0.556,
+          "macro_f1": 0.1787,
+          "weighted_f1": 0.3974,
           "per_class": {
+            "P0_critical": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1-score": 0.0,
+              "support": 2.0
+            },
             "P1_high": {
               "precision": 0.0,
               "recall": 0.0,
               "f1-score": 0.0,
-              "support": 31.0
+              "support": 262.0
             },
             "P2_medium": {
-              "precision": 0.5446428571428571,
+              "precision": 0.5560488346281909,
               "recall": 1.0,
-              "f1-score": 0.7052023121387283,
-              "support": 61.0
+              "f1-score": 0.7146932952924394,
+              "support": 501.0
             },
             "P3_low": {
               "precision": 0.0,
               "recall": 0.0,
               "f1-score": 0.0,
-              "support": 20.0
+              "support": 136.0
             },
-            "accuracy": 0.5446428571428571,
+            "accuracy": 0.5560488346281909,
             "macro avg": {
-              "precision": 0.18154761904761904,
-              "recall": 0.3333333333333333,
-              "f1-score": 0.2350674373795761,
-              "support": 112.0
+              "precision": 0.13901220865704772,
+              "recall": 0.25,
+              "f1-score": 0.17867332382310985,
+              "support": 901.0
             },
             "weighted avg": {
-              "precision": 0.2966358418367347,
-              "recall": 0.5446428571428571,
-              "f1-score": 0.38408340214698594,
-              "support": 112.0
+              "precision": 0.3091903064913692,
+              "recall": 0.5560488346281909,
+              "f1-score": 0.3974043739639424,
+              "support": 901.0
             }
           },
           "confusion_matrix": {
             "labels": [
+              "P0_critical",
               "P1_high",
               "P2_medium",
               "P3_low"
@@ -1484,17 +2108,26 @@
             "matrix": [
               [
                 0,
-                31,
+                0,
+                2,
                 0
               ],
               [
                 0,
-                61,
+                0,
+                262,
                 0
               ],
               [
                 0,
-                20,
+                0,
+                501,
+                0
+              ],
+              [
+                0,
+                0,
+                136,
                 0
               ]
             ]
@@ -1502,22 +2135,25 @@
         },
         "ci95": {
           "accuracy": [
-            0.5268,
-            0.7054
+            0.6271,
+            0.6892
           ],
           "macro_f1": [
-            0.4869,
-            0.6835
+            0.4567,
+            0.6583
           ]
         },
         "skipped_unknown_classes": 0,
         "class_support": {
-          "P1_high": 31,
-          "P2_medium": 61,
-          "P3_low": 20
+          "P0_critical": 2,
+          "P1_high": 262,
+          "P2_medium": 501,
+          "P3_low": 136
         },
         "classes_without_test_samples": [],
-        "classes_with_few_test_samples": []
+        "classes_with_few_test_samples": [
+          "P0_critical"
+        ]
       },
       "ai_vs_human_agreement": null,
       "model_file": "priority_label.joblib"

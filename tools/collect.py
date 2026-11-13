@@ -16,14 +16,21 @@ from app import config
 from app.ml import ai_labeling
 from app.ml.class_analysis import DEFAULT_TARGET_PER_CLASS, augmentation_plan, class_overview, deficits
 from app.ml.collection import SourcesError, check_sources, import_sources, load_sources
-from tools._common import open_database, parser
+import time
+
+from tools._common import backup_database, open_database, parser
 
 DEFAULT_SOURCES = config.PROJECT_DIR / "tools" / "sources.json"
 
 
 def _token(use_token: bool) -> str | None:
-    # Pagal nutylėjimą jokios GitHub paskyros autentifikacijos nenaudojama.
-    return config.github_token() if use_token else None
+    # Pagal nutylėjimą jokios GitHub paskyros autentifikacijos nenaudojama. `.env` užkraunamas
+    # čia (prieš skaitant GITHUB_TOKEN), o ne tik atidarant DB; jau nustatytas aplinkos kintamasis
+    # turi pirmenybę. Pats žetonas niekada neišvedamas.
+    if not use_token:
+        return None
+    config.load_env_file(config.PROJECT_DIR / ".env")
+    return config.github_token()
 
 
 def main(argv: list[str] | None = None, transport: object = None) -> int:
@@ -36,6 +43,10 @@ def main(argv: list[str] | None = None, transport: object = None) -> int:
                              help="norimas mokymo pavyzdžių skaičius kiekvienai klasei (--augment)")
     args_parser.add_argument("--refresh", action="store_true",
                              help="nepraleisti jau surinktų šaltinių, o surinkti juos iš naujo")
+    args_parser.add_argument("--counts", action="store_true",
+                             help="su --check: parodyti ir bendrą issues skaičių (Search API, lėčiau)")
+    args_parser.add_argument("--no-backup", action="store_true",
+                             help="nekurti DB atsarginės kopijos prieš importą (nerekomenduojama)")
     args_parser.add_argument("--ai-model", default=ai_labeling.DEFAULT_MODEL)
     args_parser.add_argument("--use-token", action="store_true",
                              help="naudoti GITHUB_TOKEN iš .env (pagal nutylėjimą – ne)")
@@ -46,13 +57,20 @@ def main(argv: list[str] | None = None, transport: object = None) -> int:
         print(f"KLAIDA: {exc}")
         return 2
     token = _token(args.use_token)
+    if args.use_token and not token:
+        print("KLAIDA: pasirinkta --use-token, bet GITHUB_TOKEN nerastas (nei aplinkoje, nei .env faile "
+              f"{config.PROJECT_DIR / '.env'}). Pridėkite eilutę GITHUB_TOKEN=... arba nenaudokite --use-token.")
+        return 2
+    auth = "su GITHUB_TOKEN (autentifikuota, ~5 000 užklausų per valandą)" if token else \
+        "be autentifikacijos (~60 užklausų per valandą; didesniam importui naudokite --use-token)"
 
     if args.check:
         all_sources = sources.base + [s for items in sources.augment.values() for s in items]
         unique = list(dict.fromkeys(all_sources))
-        print(f"Tikrinama šaltinių: {len(unique)} (GitHub be autentifikacijos leidžia ~60 užklausų per valandą)")
+        print(f"Tikrinama šaltinių: {len(unique)} – {auth}")
         problems = 0
-        for item in check_sources(unique, token, transport):
+        pause = (lambda: time.sleep(2.2 if token else 6.5)) if args.counts and transport is None else None
+        for item in check_sources(unique, token, transport, with_counts=args.counts, pause=pause):
             source = item["source"]
             mark = "OK " if item["status"] == "ok" else "!! "
             problems += item["status"] != "ok"
@@ -61,6 +79,11 @@ def main(argv: list[str] | None = None, transport: object = None) -> int:
               f"Probleminių šaltinių: {problems}. Pataisykite etiketes tools/sources.json arba juos pašalinkite.")
         return 1 if problems else 0
 
+    print(f"GitHub prieiga: {auth}")
+    if not args.no_backup:
+        backup = backup_database(args.db)
+        if backup:
+            print(f"DB atsarginė kopija: {backup}")
     conn = open_database(args.db)
     if args.augment:
         overview = class_overview(conn, args.ai_model, ai_labeling.PROMPT_VERSION, args.target)
