@@ -241,10 +241,12 @@ Sukuriami `models\category_label.joblib`, `models\complexity_label.joblib`, `mod
 5D tikslas – gerokai padidinti mokymo rinkinį (≥ 15 000 tinkamų pavyzdžių, ≥ 1 000 kiekvienai kategorijai) ir iš naujo apmokyti **tuos pačius** TF-IDF + LogisticRegression modelius. Šiame žingsnyje paruoštas tik importas; **mokamas žymėjimas ir mokymas dar nepradėti**. Esami `models/*` lieka kaip atskaitos taškas (modelio versija `20261110-143223`, Git žyma ar šaka `main`).
 
 Kas pakeista infrastruktūroje (naujo įrankio nekurta):
-- `tools\sources_5d.json` – 64 šaltiniai (repozitorija + etiketė), suskirstyti pagal kategorijas ir P0 (laukas `hint` tik planavimui; galutinę klasę nustato Claude žymėjimas). Etiketės **nepatikrintos gyvai** (mano aplinka negali kviesti GitHub API kitoms repozitorijoms) – patikrinkite `--check`;
+- `tools\sources_5d.json` – 54 šaltiniai (repozitorija + etiketė), suskirstyti pagal kategorijas ir P0 (laukas `hint` tik planavimui; galutinę klasę nustato Claude žymėjimas). Visi patikrinti `collect --check --counts` (2026-11-13); 10 probleminių pašalinta, limitai neviršija faktinio kiekio (limitų suma 40 161);
 - vieno šaltinio limitas padidintas nuo 1 000 iki 3 000 (30 puslapių po 100);
 - `--check --counts` papildomai parodo bendrą issues skaičių (Search API) ir įspėja, jei jo mažiau nei `limit`;
 - prieš importą automatiškai kuriama DB kopija `data\backups\bakalauras-<laikas>.sqlite3` (esamas failas nekeičiamas; išjungti: `--no-backup`);
+- `tools.collect --use-token` dabar pats užkrauna projekto `.env` (anksčiau `GITHUB_TOKEN` iš `.env` nebuvo skaitomas, jei DB dar neatidaryta); trūkstant žetono – aiški klaida, o ne tylus perėjimas prie ~60 užklausų per valandą. Pranešime nurodoma, ar naudojama autentifikacija; pats žetonas niekada nerodomas;
+- pakartotinis importas **neperrašo** testo, bandomojo ir DI pažymėtų įrašų teksto, o `imported_at` lieka pirmojo importo (pagal jį atskiriami seni ir nauji įrašai); persidengiantys šaltiniai dublikatų nekuria;
 - mokymo tekstai, beveik vienodi (kosinuso panašumas ≥ 0,9) testo tekstams, pašalinami iš mokymo (`excluded_test_near_duplicates` ataskaitoje); testo rinkinys nekeičiamas.
 
 Ką paleisti (Windows CMD, projekto kataloge, aktyvavus `.venv`):
@@ -274,10 +276,10 @@ python -m tools.collect --sources tools\sources_5d.json --use-token
 
 ```bat
 python -m tools.check_data
-python -m tools.pipeline --skip-import --test-size 1120
+python -m tools.pipeline --skip-import --test-size 1120 --test-new-since 2026-11-13
 ```
 
-Testo rinkinys atrenkamas atsitiktinai (su seed, proporcingai pagal repozitorijas) iš naujai importuotų įrašų; senieji 120 testo ir 30 bandomojo įrašų nekeičiami. Dėl to retų kategorijų (dokumentacija, saugumas) teste gali būti per mažai pavyzdžių; pažymėjus DI žymas pasiūlysiu, ar atrinkti papildomą kategorijų balansuotą testo dalį.
+(`2026-11-13` – diena, kurią pradėtas 5D importas; naudokite pirmo importo datą.) Testo rinkinys papildomas ~1 000 įrašų, atrenkamų atsitiktinai (su seed, proporcingai pagal repozitorijas) **tik iš nuo tos datos importuotų, dar nepažymėtų** įrašų – seni mokymui naudoti įrašai į testą nepatenka. Senieji 120 testo ir 30 bandomojo įrašų nekeičiami. Be `--test-new-since` esamo testo rinkinio didinti atsisakoma. Dėl to retų kategorijų (dokumentacija, saugumas) teste gali būti per mažai pavyzdžių; pažymėjus DI žymas pasiūlysiu, ar atrinkti papildomą kategorijų balansuotą testo dalį.
 
 Tolesni žingsniai (mokami / mokymas) – tik gavus Jūsų patvirtinimą po 4 žingsnio rezultatų.
 

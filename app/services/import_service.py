@@ -26,8 +26,17 @@ ON CONFLICT (repository_full_name, issue_number) DO UPDATE SET
     html_url = excluded.html_url,
     labels_json = excluded.labels_json,
     github_created_at = excluded.github_created_at,
-    github_updated_at = excluded.github_updated_at,
-    imported_at = excluded.imported_at
+    github_updated_at = excluded.github_updated_at
+"""
+# 5D: testo, bandomojo ir DI pažymėtų įrašų tekstas pakartotinai neperrašomas (jų žymos priklauso nuo
+# konkretaus teksto). Tik žmogaus pažymėti įrašai, kaip ir anksčiau, atnaujina šaltinio laukus,
+# o jų žymos nekeičiamos. Pirmojo importo laikas (imported_at) pakartotiniame importo metu nekeičiamas – pagal jį
+# atskiriami seni ir nauji įrašai.
+_PROTECTED_SQL = """
+SELECT 1 FROM github_issues g
+WHERE g.repository_full_name = ? AND g.issue_number = ?
+  AND (g.is_test_set = 1 OR g.is_pilot_set = 1
+       OR EXISTS (SELECT 1 FROM ai_annotations a WHERE a.github_issue_id = g.id))
 """
 _EXISTS_SQL = (
     "SELECT 1 FROM github_issues "
@@ -39,6 +48,7 @@ _EXISTS_SQL = (
 class ImportResult:
     imported: int = 0
     updated: int = 0
+    protected: int = 0  # testo / bandomojo / pažymėti įrašai: tekstas ir žymos nekeičiami
     skipped_pull_requests: int = 0
     failed: int = 0
 
@@ -78,6 +88,9 @@ def save_issues(
                 continue
             row.update(repository=repository, imported_at=imported_at, source_kind=source_kind)
             exists = conn.execute(_EXISTS_SQL, (repository, row["number"])).fetchone()
+            if exists and conn.execute(_PROTECTED_SQL, (repository, row["number"])).fetchone():
+                result.protected += 1  # testo, bandomasis ar pažymėtas įrašas pakartotinai neperrašomas
+                continue
             conn.execute(_UPSERT_SQL, row)
             if exists:
                 result.updated += 1

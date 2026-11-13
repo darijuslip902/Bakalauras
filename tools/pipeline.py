@@ -22,6 +22,9 @@ def main(argv: list[str] | None = None, transport: object = None) -> int:
     args_parser.add_argument("--pilot-size", type=int, default=30)
     args_parser.add_argument("--test-size", type=int, default=120)
     args_parser.add_argument("--seed", type=int, default=42)
+    args_parser.add_argument("--test-new-since", metavar="YYYY-MM-DD", default=None,
+                             help="testo rinkinį papildyti tik nuo šios datos importuotais nepažymėtais įrašais "
+                                  "(5D; būtina, jei testo rinkinys jau yra ir didinamas)")
     args_parser.add_argument("--model", default=ai_labeling.DEFAULT_MODEL,
                              choices=sorted(ai_labeling.PRICES_USD_PER_MTOK))
     args = args_parser.parse_args(argv)
@@ -40,7 +43,14 @@ def main(argv: list[str] | None = None, transport: object = None) -> int:
           f"dublikatai: {len(quality.duplicate_ids)}, ne klaidų etiketės: {len(quality.excluded_label_ids)}")
 
     print("\n== 3. Bandomasis ir testavimo rinkiniai ==")
-    added_test = select_test_set(conn, args.test_size, args.seed)  # galutinis testas – pirmas
+    existing_test = conn.execute("SELECT COUNT(*) FROM github_issues WHERE is_test_set = 1").fetchone()[0]
+    if existing_test and args.test_size > existing_test and not args.test_new_since:
+        print(f"KLAIDA: testo rinkinyje jau yra {existing_test} įrašų. Norėdami jį didinti, nurodykite "
+              "--test-new-since YYYY-MM-DD (tik nuo tos datos importuoti nauji įrašai), kad seni "
+              "mokymui naudoti įrašai nepatektų į testą.")
+        conn.close()
+        return 2
+    added_test = select_test_set(conn, args.test_size, args.seed, args.test_new_since)  # galutinis testas – pirmas
     added_pilot = select_pilot_set(conn, args.pilot_size, args.seed)
     pilot = conn.execute("SELECT COUNT(*) FROM github_issues WHERE is_pilot_set = 1").fetchone()[0]
     test = conn.execute("SELECT COUNT(*) FROM github_issues WHERE is_test_set = 1").fetchone()[0]

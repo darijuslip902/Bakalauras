@@ -24,8 +24,13 @@ DEFAULT_SOURCES = config.PROJECT_DIR / "tools" / "sources.json"
 
 
 def _token(use_token: bool) -> str | None:
-    # Pagal nutylėjimą jokios GitHub paskyros autentifikacijos nenaudojama.
-    return config.github_token() if use_token else None
+    # Pagal nutylėjimą jokios GitHub paskyros autentifikacijos nenaudojama. `.env` užkraunamas
+    # čia (prieš skaitant GITHUB_TOKEN), o ne tik atidarant DB; jau nustatytas aplinkos kintamasis
+    # turi pirmenybę. Pats žetonas niekada neišvedamas.
+    if not use_token:
+        return None
+    config.load_env_file(config.PROJECT_DIR / ".env")
+    return config.github_token()
 
 
 def main(argv: list[str] | None = None, transport: object = None) -> int:
@@ -52,11 +57,17 @@ def main(argv: list[str] | None = None, transport: object = None) -> int:
         print(f"KLAIDA: {exc}")
         return 2
     token = _token(args.use_token)
+    if args.use_token and not token:
+        print("KLAIDA: pasirinkta --use-token, bet GITHUB_TOKEN nerastas (nei aplinkoje, nei .env faile "
+              f"{config.PROJECT_DIR / '.env'}). Pridėkite eilutę GITHUB_TOKEN=... arba nenaudokite --use-token.")
+        return 2
+    auth = "su GITHUB_TOKEN (autentifikuota, ~5 000 užklausų per valandą)" if token else \
+        "be autentifikacijos (~60 užklausų per valandą; didesniam importui naudokite --use-token)"
 
     if args.check:
         all_sources = sources.base + [s for items in sources.augment.values() for s in items]
         unique = list(dict.fromkeys(all_sources))
-        print(f"Tikrinama šaltinių: {len(unique)} (GitHub be autentifikacijos leidžia ~60 užklausų per valandą)")
+        print(f"Tikrinama šaltinių: {len(unique)} – {auth}")
         problems = 0
         pause = (lambda: time.sleep(2.2 if token else 6.5)) if args.counts and transport is None else None
         for item in check_sources(unique, token, transport, with_counts=args.counts, pause=pause):
@@ -68,6 +79,7 @@ def main(argv: list[str] | None = None, transport: object = None) -> int:
               f"Probleminių šaltinių: {problems}. Pataisykite etiketes tools/sources.json arba juos pašalinkite.")
         return 1 if problems else 0
 
+    print(f"GitHub prieiga: {auth}")
     if not args.no_backup:
         backup = backup_database(args.db)
         if backup:

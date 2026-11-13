@@ -1,52 +1,34 @@
 {
- "_info": "5D papildomas importas (docs/IMPLEMENTATION_PLAN.md, 5D). 'hint' – tik planavimo užuomina (kuriai kategorijai šaltinis turėtų padėti); galutinę klasę nustato DI žymėjimas. Etikečių pavadinimai NEPATIKRINTI gyvai – prieš importą: python -m tools.collect --sources tools/sources_5d.json --check --counts --use-token. Šaltinį be 'label' renka visus issues. Sąrašų su 'base' šaltiniais jau įtrauktos poros (repo+etiketė) iš tools/sources.json nekartojamos.",
+ "_info": "5D papildomas importas (docs/IMPLEMENTATION_PLAN.md, 5D). Visi šaltiniai patikrinti `collect --check --counts` (2026-11-13); limitai neviršija faktinio kiekio. 'hint' – tik planavimo užuomina; galutinę klasę nustato DI žymėjimas. Pašalinti šaltiniai, kurie grąžino 0 / neprieinami: vscode [ui-glitch], material-ui [bug 🐛], vuejs/core [bug], prisma/prisma [kind/bug], redis/redis [bug], OWASP/DependencyCheck [bug], flutter [severe: performance], docker/compose [bug], obs-studio [Bug], ClickHouse [critical bug]. Šaltinį be 'label' renka visus issues.",
  "base": [
-  {
-   "repo": "microsoft/vscode",
-   "label": "ui-glitch",
-   "limit": 600,
-   "hint": "ui"
-  },
-  {
-   "repo": "mui/material-ui",
-   "label": "bug 🐛",
-   "limit": 800,
-   "hint": "ui"
-  },
   {
    "repo": "flutter/flutter",
    "label": "team-framework",
-   "limit": 600,
+   "limit": 1200,
    "hint": "ui"
   },
   {
    "repo": "angular/angular",
    "label": "type: bug/fix",
-   "limit": 800,
-   "hint": "ui"
-  },
-  {
-   "repo": "vuejs/core",
-   "label": "bug",
-   "limit": 400,
+   "limit": 1200,
    "hint": "ui"
   },
   {
    "repo": "microsoft/PowerToys",
    "label": "Issue-Bug",
-   "limit": 600,
+   "limit": 1200,
    "hint": "ui"
   },
   {
    "repo": "spring-projects/spring-boot",
    "label": "type: bug",
-   "limit": 400,
+   "limit": 700,
    "hint": "backend_api"
   },
   {
    "repo": "dotnet/aspnetcore",
    "label": "bug",
-   "limit": 600,
+   "limit": 700,
    "hint": "backend_api"
   },
   {
@@ -58,43 +40,37 @@
   {
    "repo": "nestjs/nest",
    "label": "type: bug :sob:",
-   "limit": 300,
+   "limit": 217,
    "hint": "backend_api"
   },
   {
    "repo": "expressjs/express",
    "label": "bug",
-   "limit": 300,
+   "limit": 161,
    "hint": "backend_api"
-  },
-  {
-   "repo": "prisma/prisma",
-   "label": "kind/bug",
-   "limit": 800,
-   "hint": "database_data"
   },
   {
    "repo": "typeorm/typeorm",
    "label": "bug",
-   "limit": 400,
+   "limit": 600,
    "hint": "database_data"
   },
   {
    "repo": "sequelize/sequelize",
    "label": "type: bug",
-   "limit": 300,
+   "limit": 500,
    "hint": "database_data"
   },
   {
    "repo": "supabase/supabase",
    "label": "bug",
-   "limit": 400,
+   "limit": 600,
    "hint": "database_data"
   },
   {
    "repo": "ClickHouse/ClickHouse",
    "label": "bug",
-   "limit": 800,
+   "limit": 900,
    "hint": "database_data"
   },
   {
@@ -106,19 +82,13 @@
   {
    "repo": "cockroachdb/cockroach",
    "label": "C-bug",
-   "limit": 800,
-   "hint": "database_data"
-  },
-  {
-   "repo": "redis/redis",
-   "label": "bug",
-   "limit": 300,
+   "limit": 600,
    "hint": "database_data"
   },
   {
    "repo": "drizzle-team/drizzle-orm",
    "label": "bug",
-   "limit": 300,
+   "limit": 500,
    "hint": "database_data"
   },
   {
@@ -130,37 +100,31 @@
   {
    "repo": "spring-projects/spring-security",
    "label": "type: bug",
-   "limit": 600,
-   "hint": "security"
-  },
-  {
-   "repo": "OWASP/DependencyCheck",
-   "label": "bug",
-   "limit": 400,
+   "limit": 800,
    "hint": "security"
   },
   {
    "repo": "hashicorp/vault",
    "label": "bug",
-   "limit": 600,
+   "limit": 700,
    "hint": "security"
   },
   {
    "repo": "openssl/openssl",
    "label": "issue: bug report",
-   "limit": 400,
+   "limit": 600,
    "hint": "security"
   },
   {
    "repo": "nextauthjs/next-auth",
    "label": "bug",
-   "limit": 600,
+   "limit": 700,
    "hint": "security"
   },
   {
    "repo": "zaproxy/zaproxy",
    "label": "bug",
-   "limit": 400,
+   "limit": 600,
    "hint": "security"
   },
   {
@@ -172,7 +136,7 @@
   {
    "repo": "pandas-dev/pandas",
    "label": "Performance",
-   "limit": 600,
+   "limit": 1000,
    "hint": "performance"
   },
   {
@@ -184,43 +148,37 @@
   {
    "repo": "rust-lang/rust",
    "label": "I-slow",
-   "limit": 500,
+   "limit": 800,
    "hint": "performance"
   },
   {
    "repo": "golang/go",
    "label": "Performance",
-   "limit": 600,
+   "limit": 900,
    "hint": "performance"
   },
   {
    "repo": "pytorch/pytorch",
    "label": "module: performance",
-   "limit": 500,
+   "limit": 700,
    "hint": "performance"
   },
   {
    "repo": "microsoft/vscode",
    "label": "freeze-slow-crash-leak",
-   "limit": 600,
-   "hint": "performance"
-  },
-  {
-   "repo": "flutter/flutter",
-   "label": "severe: performance",
-   "limit": 400,
+   "limit": 900,
    "hint": "performance"
   },
   {
    "repo": "webpack/webpack",
    "label": "bug",
-   "limit": 300,
+   "limit": 600,
    "hint": "build_deployment"
   },
   {
    "repo": "vitejs/vite",
    "label": "p3-minor-bug",
-   "limit": 400,
+   "limit": 616,
    "hint": "build_deployment"
   },
   {
@@ -238,13 +196,13 @@
   {
    "repo": "helm/helm",
    "label": "bug",
-   "limit": 400,
+   "limit": 600,
    "hint": "build_deployment"
   },
   {
    "repo": "pnpm/pnpm",
    "label": "type: bug",
-   "limit": 300,
+   "limit": 600,
    "hint": "build_deployment"
   },
   {
@@ -254,26 +212,20 @@
    "hint": "build_deployment"
   },
   {
-   "repo": "docker/compose",
-   "label": "bug",
-   "limit": 300,
-   "hint": "build_deployment"
-  },
-  {
    "repo": "rust-lang/cargo",
    "label": "C-bug",
-   "limit": 400,
+   "limit": 600,
    "hint": "build_deployment"
   },
   {
    "repo": "nrwl/nx",
    "label": "type: bug",
-   "limit": 400,
+   "limit": 600,
    "hint": "build_deployment"
   },
   {
    "repo": "mdn/content",
-   "limit": 1000,
+   "limit": 900,
    "hint": "documentation"
   },
   {
@@ -283,98 +235,86 @@
   },
   {
    "repo": "vuejs/docs",
-   "limit": 300,
+   "limit": 800,
    "hint": "documentation"
   },
   {
    "repo": "microsoft/vscode-docs",
-   "limit": 300,
+   "limit": 800,
    "hint": "documentation"
   },
   {
    "repo": "home-assistant/home-assistant.io",
-   "limit": 600,
+   "limit": 900,
    "hint": "documentation"
   },
   {
    "repo": "docker/docs",
-   "limit": 500,
+   "limit": 800,
    "hint": "documentation"
   },
   {
    "repo": "dotnet/docs",
-   "limit": 1000,
+   "limit": 900,
    "hint": "documentation"
   },
   {
    "repo": "angular/angular",
    "label": "area: docs",
-   "limit": 400,
+   "limit": 521,
    "hint": "documentation"
   },
   {
    "repo": "home-assistant/core",
-   "limit": 800,
+   "limit": 1000,
    "hint": "other"
   },
   {
    "repo": "rust-lang/rust",
    "label": "C-bug",
-   "limit": 800,
+   "limit": 1000,
    "hint": "other"
   },
   {
    "repo": "godotengine/godot",
    "label": "bug",
-   "limit": 800,
-   "hint": "other"
-  },
-  {
-   "repo": "obsproject/obs-studio",
-   "label": "Bug",
-   "limit": 300,
+   "limit": 1000,
    "hint": "other"
   },
   {
    "repo": "kubernetes/kubernetes",
    "label": "priority/critical-urgent",
-   "limit": 400,
+   "limit": 1000,
    "hint": "P0"
   },
   {
    "repo": "flutter/flutter",
    "label": "P0",
-   "limit": 300,
+   "limit": 800,
    "hint": "P0"
   },
   {
    "repo": "pingcap/tidb",
    "label": "severity/critical",
-   "limit": 400,
+   "limit": 1289,
    "hint": "P0"
   },
   {
    "repo": "rust-lang/rust",
    "label": "P-critical",
-   "limit": 300,
+   "limit": 257,
    "hint": "P0"
   },
   {
    "repo": "cockroachdb/cockroach",
    "label": "release-blocker",
-   "limit": 400,
-   "hint": "P0"
-  },
-  {
-   "repo": "ClickHouse/ClickHouse",
-   "label": "critical bug",
-   "limit": 300,
+   "limit": 600,
    "hint": "P0"
   },
   {
    "repo": "pytorch/pytorch",
    "label": "high priority",
-   "limit": 400,
+   "limit": 600,
    "hint": "P0"
   }
  ]

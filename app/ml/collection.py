@@ -197,5 +197,6 @@ def import_sources(
         totals["imported"] += result.imported
         totals["updated"] += result.updated
         progress(f"{name}: nauji {result.imported}, atnaujinti {result.updated}, "
+                 f"apsaugoti (testo / pažymėti) {result.protected}, "
                  f"praleisti PR {result.skipped_pull_requests}, nepavyko {result.failed}")
     return totals
