@@ -1,5 +1,15 @@
 # Modelio vertinimo planas bakalauro darbui
 
+## Dabartinė būklė (2026-11-13, po 5D)
+
+0–5D etapai baigti, PR #11 sujungtas į main. Modelių versija `20261113-125330`. 6 etapas nepradėtas: laukiama darbo vadovo pastabų; statistikos puslapis nėra patvirtintas reikalavimas. P0 paliekamas, nors jo atpažinimas silpnas.
+
+- 40 024 importuoti GitHub įrašai; 23 884 sėkmingos DI anotacijos (19 412 tinkamų, 4 472 netinkamų).
+- 18 267 mokymo ir validacijos pavyzdžiai; 1 120 atrinktų testo įrašų, iš jų 901 tinkamas (visi 901 su DI etalonu); 30 pilotinių įrašų.
+- 243 artimi testo dublikatai pašalinti iš mokymo. Bendra DI žymėjimo kaina 4,5948 USD.
+- Trys apmokyti modeliai ir jų ataskaitos saugomi GitHub; SQLite DB, jos kopijos, .env ir .venv – tik lokaliai.
+- Testo accuracy / macro-F1: kategorija 64,26 % / 62,22 %; sudėtingumas 69,70 % / 69,14 %; prioritetas 65,93 % / 48,20 %. P0 F1 = 0. Metrikos rodo atitikimą Claude žymoms, ne nepriklausomai žmogaus patvirtintai tiesai. Ankstesnio ir naujo modelio metrikos iš skirtingų testų nėra tiesiogiai palyginamos.
+
 ## 1. Tyrimo klausimas
 
 Ar issue pavadinimo ir aprašymo teksto požymiai (TF-IDF) su prižiūrimu LogisticRegression klasifikatoriumi leidžia tiksliau nustatyti programinės įrangos klaidos kategoriją, prioritetą ir sudėtingumą negu paprastas daugumos klasės bazinis metodas?
@@ -87,7 +97,7 @@ Modelio failai, DB ir privatūs duomenys neturi būti commit'inami į viešą Gi
 
 Modelio sėkmė nenustatoma vien pagal tai, ar pateikiama prognozė. Vertinama, ar jis pranoksta baseline, kaip elgiasi klasėse, kurių pavyzdžių mažai, ir ar žmogus gali peržiūrėti neaiškius atvejus. Jei modelis nepranoksta baseline, tai yra galiojantis tyrimo rezultatas – reikia aptarti duomenų ribotumą, klasių painiavą ir galimus patobulinimus, o ne slėpti rezultatą.
 
-## 10. Konkreti 5B strategija (pagal duomenų analizę)
+## 10. Istorinė 5B strategija (pagal pradinę duomenų analizę)
 
 Išsami analizė ir skaičiai – [DATA_QUALITY_REPORT.md](DATA_QUALITY_REPORT.md). Santrauka:
 
