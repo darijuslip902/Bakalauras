@@ -4,7 +4,21 @@
 {%- endmacro %}
 
 {% macro label_value(value, labels) -%}
-{% if value %}{{ labels.get(value, value) }}{% else %}<span class="muted">Dar nenustatyta</span>{% endif %}
+{% if value %}{{ labels.get(value, value) }}{% else %}<span class="muted nowrap">Dar nenustatyta</span>{% endif %}
+{%- endmacro %}
+
+{# Patvirtinta žyma; jei jos nėra – automatinė prognozė (pilkesnė, kursyvu), be papildomų žymų. #}
+{% macro shown_label(confirmed, auto, labels) -%}
+{% if confirmed %}<span class="label-value">{{ labels.get(confirmed, confirmed) }}</span>
+{%- elif auto %}<span class="label-value predicted" title="Automatinė prognozė, dar nepatvirtinta">{{ labels.get(auto, auto) }}</span>
+{%- else %}<span class="muted nowrap">Dar nenustatyta</span>{% endif %}
+{%- endmacro %}
+
+{# Vienas klasifikacijos būsenos indikatorius eilutei. #}
+{% macro classification_state(report) -%}
+{% if report.category_label and report.complexity_label and report.priority_label %}<span class="badge state-confirmed">Patvirtinta</span>
+{%- elif report.auto_category_label or report.auto_complexity_label or report.auto_priority_label or report.category_label or report.complexity_label or report.priority_label %}<span class="badge state-pending">Laukia patvirtinimo</span>
+{%- else %}<span class="badge state-none">Neklasifikuota</span>{% endif %}
 {%- endmacro %}
 
 {% macro annotation_badge(status, labels) -%}

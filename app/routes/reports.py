@@ -1,5 +1,6 @@
 """Vieša klaidos pateikimo forma. Prisijungimo nereikia, kiti pranešimai nerodomi."""
 
+import logging
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, Form, Request
@@ -7,7 +8,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 from app.db import get_connection, init_db
-from app.routes.issues import get_database_path
+from app.routes.issues import get_database_path, get_predictor
 from app.services.bug_report_service import (
     DESCRIPTION_MAX_LENGTH,
     TITLE_MAX_LENGTH,
@@ -15,6 +16,9 @@ from app.services.bug_report_service import (
     create_bug_report,
     validate_report,
 )
+from app.services.prediction_service import Predictor, classify_report
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 templates = Jinja2Templates(directory=Path(__file__).resolve().parent.parent / "templates")
@@ -50,6 +54,7 @@ def submit_report(
     title: str = Form(""),
     description: str = Form(""),
     database_path: Path = Depends(get_database_path),
+    predictor: Predictor = Depends(get_predictor),
 ) -> HTMLResponse | RedirectResponse:
     title = clean_text(title)
     description = clean_text(description)
@@ -59,7 +64,13 @@ def submit_report(
 
     with get_connection(database_path) as conn:
         init_db(conn)
-        create_bug_report(conn, title, description)
+        report_id = create_bug_report(conn, title, description)
+        # Automatinė klasifikacija vietiniais modeliais. Pranešimas jau išsaugotas, todėl bet kokia
+        # klasifikavimo klaida klientui nerodoma ir pranešimo nepraranda.
+        try:
+            classify_report(conn, predictor, report_id)
+        except Exception:
+            logger.exception("Pranešimo #%s automatinė klasifikacija nepavyko", report_id)
 
     # Post/Redirect/Get: atnaujinus patvirtinimo puslapį forma nepateikiama dar kartą.
     return RedirectResponse("/report/submitted", status_code=303)

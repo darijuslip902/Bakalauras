@@ -10,6 +10,7 @@ from app.auth import Session, check_csrf, require_login
 from app.db import get_connection, init_db
 from app.services.github_client import GitHubError, InvalidRepositoryError, parse_repository
 from app.services.import_service import run_import
+from app.services.prediction_service import Predictor, default_predictor
 
 router = APIRouter()
 templates = Jinja2Templates(directory=Path(__file__).resolve().parent.parent / "templates")
@@ -17,6 +18,11 @@ templates = Jinja2Templates(directory=Path(__file__).resolve().parent.parent / "
 
 def get_database_path() -> Path:
     return config.database_path()
+
+
+def get_predictor() -> Predictor:
+    """Vietiniai ML modeliai (5C); testuose pakeičiami laikinais modeliais."""
+    return default_predictor()
 
 
 def get_github_transport() -> httpx.BaseTransport | None:

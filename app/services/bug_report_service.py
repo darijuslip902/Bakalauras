@@ -69,8 +69,18 @@ class ReportFilters:
     complexity_label: str = ""
 
 
+def _auto_label_sql(column: str) -> str:
+    """Naujausia sėkminga automatinė prognozė (stulpelio pavadinimas fiksuotas, ne iš naudotojo)."""
+    return (f"(SELECT p.predicted_label FROM prediction_runs p WHERE p.bug_report_id = b.id "
+            f"AND p.field = '{column}' AND p.status = 'ok' ORDER BY p.id DESC LIMIT 1)")
+
+
 def list_bug_reports(conn: sqlite3.Connection, filters: ReportFilters) -> list[sqlite3.Row]:
-    """Grąžina pranešimus (naujausi viršuje), įskaitant išspręstus, pagal filtrus."""
+    """Grąžina pranešimus (naujausi viršuje), įskaitant išspręstus, pagal filtrus.
+
+    Kategorijos / prioriteto / sudėtingumo filtras ir rodoma reikšmė: žmogaus patvirtinta žyma,
+    o jei jos nėra – automatinė prognozė (`auto_<laukas>`, rodoma sąraše su žyma „auto“).
+    """
     add_casefold_function(conn)
     conditions: list[str] = []
     params: list[object] = []
@@ -85,16 +95,18 @@ def list_bug_reports(conn: sqlite3.Connection, filters: ReportFilters) -> list[s
         params.append(filters.status)
     for column in _LABEL_COLUMNS:  # stulpelių pavadinimai fiksuoti, ne iš naudotojo
         value = getattr(filters, column)
+        effective = f"COALESCE(b.{column}, {_auto_label_sql(column)})"
         if value == UNSET:
-            conditions.append(f"{column} IS NULL")
+            conditions.append(f"{effective} IS NULL")
         elif value:
-            conditions.append(f"{column} = ?")
+            conditions.append(f"{effective} = ?")
             params.append(value)
 
-    sql = "SELECT * FROM bug_reports"
+    auto_columns = ", ".join(f"{_auto_label_sql(c)} AS auto_{c}" for c in _LABEL_COLUMNS)
+    sql = f"SELECT b.*, {auto_columns} FROM bug_reports b"
     if conditions:
         sql += " WHERE " + " AND ".join(conditions)
-    sql += " ORDER BY created_at DESC, id DESC"
+    sql += " ORDER BY b.created_at DESC, b.id DESC"
     return conn.execute(sql, params).fetchall()
 
 

@@ -3,7 +3,7 @@
 import re
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from urllib.parse import urlsplit
+from urllib.parse import urljoin, urlsplit
 
 import httpx
 
@@ -14,8 +14,17 @@ PER_PAGE = 100
 MAX_PAGES = 10
 REQUEST_TIMEOUT = 10.0
 
+# GitHub pervadintas ar perkeltas repozitorijas nukreipia (pvz. 301 į
+# /repositories/<id>/issues). Peradresavimai vykdomi rankiniu būdu, kad kiekvienas
+# `Location` būtų patikrintas prieš siunčiant užklausą.
+REDIRECT_STATUSES = frozenset({301, 302, 307, 308})
+MAX_REDIRECTS = 3
+_REDIRECT_HOST = "api.github.com"
+_REDIRECT_PATH_PREFIXES = ("/repos/", "/repositories/")
+
 _OWNER_RE = re.compile(r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?")
 _REPO_RE = re.compile(r"[A-Za-z0-9._-]{1,100}")
+_LABELS_RE = re.compile(r"[^\x00-\x1f]{1,200}")
 _INVALID_REPOSITORY_MESSAGE = (
     "Neteisingas repozitorijos formatas. Naudokite owner/repo arba "
     "https://github.com/owner/repo."
@@ -80,10 +89,17 @@ def fetch_issues(
     limit: int,
     token: str | None = None,
     transport: httpx.BaseTransport | None = None,
+    labels: str | None = None,
 ) -> FetchedIssues:
-    """Paima iki `limit` issues (be pull request) iš viešos repozitorijos."""
+    """Paima iki `limit` issues (be pull request) iš viešos repozitorijos.
+
+    `labels` – neprivalomas GitHub etikečių filtras (pvz. "bug"), perduodamas
+    kaip užklausos parametras; naudojamas tik masinio importo CLI.
+    """
     if limit < 1:
         raise ValueError("limit turi būti teigiamas")
+    if labels is not None and not _LABELS_RE.fullmatch(labels):
+        raise ValueError("neteisingas etikečių filtras")
     full_name = parse_repository(repository)  # pakartotinis patikrinimas
 
     headers = {
@@ -104,7 +120,8 @@ def fetch_issues(
         follow_redirects=False,
     ) as client:
         for page in range(1, MAX_PAGES + 1):
-            items = _get_page(client, url, page)
+            # url atnaujinamas po peradresavimo, kad kiti puslapiai nebūtų nukreipiami iš naujo.
+            items, url = _get_page(client, url, page, labels)
             for item in items:
                 if isinstance(item, dict) and "pull_request" in item:
                     skipped += 1
@@ -117,16 +134,20 @@ def fetch_issues(
     return FetchedIssues(issues, skipped)
 
 
-def _get_page(client: httpx.Client, url: str, page: int) -> list[object]:
-    params = {
+def _get_page(
+    client: httpx.Client, url: str, page: int, labels: str | None = None
+) -> tuple[list[object], str]:
+    params: dict[str, object] = {
         "state": "all",
         "sort": "created",
         "direction": "desc",
         "per_page": PER_PAGE,
         "page": page,
     }
+    if labels:
+        params["labels"] = labels
     try:
-        response = client.get(url, params=params)
+        response, url = _get_following_redirects(client, url, params)
     except httpx.TimeoutException:
         raise GitHubError("GitHub API neatsakė laiku. Bandykite vėliau.", 504) from None
     except httpx.RequestError:
@@ -139,7 +160,48 @@ def _get_page(client: httpx.Client, url: str, page: int) -> list[object]:
         data = None
     if not isinstance(data, list):
         raise GitHubError("GitHub API grąžino netikėtą atsakymą.", 502)
-    return data
+    return data, url
+
+
+def _get_following_redirects(
+    client: httpx.Client, url: str, params: dict[str, object]
+) -> tuple[httpx.Response, str]:
+    """GET su ribotu, patikrintu peradresavimų sekimu.
+
+    Grąžina atsakymą ir galutinį URL be užklausos eilutės (kitiems puslapiams).
+    """
+    query: dict[str, object] | None = params
+    for _ in range(MAX_REDIRECTS + 1):
+        response = client.get(url, params=query)
+        if response.status_code not in REDIRECT_STATUSES:
+            return response, urlsplit(url)._replace(query="", fragment="").geturl()
+        url = _redirect_target(url, response.headers.get("location"))
+        # Jei GitHub `Location` jau turi užklausos eilutę, jos nekeičiame.
+        query = None if urlsplit(url).query else params
+    raise GitHubError("GitHub API grąžino per daug peradresavimų.", 502)
+
+
+def _redirect_target(current_url: str, location: str | None) -> str:
+    """Patikrina `Location`: tik HTTPS, tik api.github.com, be naudotojo vardo ir porto."""
+    error = GitHubError("GitHub API grąžino neleistiną peradresavimą.", 502)
+    if not location:
+        raise error
+    try:
+        target = urljoin(current_url, location)
+        parts = urlsplit(target)
+        port = parts.port
+    except ValueError:
+        raise error from None
+    if (
+        parts.scheme != "https"
+        or parts.hostname != _REDIRECT_HOST
+        or parts.username is not None
+        or parts.password is not None
+        or port not in (None, 443)
+        or not parts.path.startswith(_REDIRECT_PATH_PREFIXES)
+    ):
+        raise error
+    return target
 
 
 def _raise_for_status(response: httpx.Response) -> None:

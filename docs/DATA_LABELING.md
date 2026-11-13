@@ -53,6 +53,16 @@ Nepriskirti P0 vien todėl, kad issue aprašyme yra žodis „critical“. Jei n
 
 Atskirai nuo trijų klasifikavimo laukų žmogus pažymi, ar įrašas tinka mokymui: „Neįvertinta“ (numatyta), „Tinka mokymui“ arba „Netinka mokymui“. „Netinka“ žymimi funkcijų pasiūlymai, klausimai, diskusijos ir kiti ne klaidų įrašai. Mokymui naudojami tik „Tinka mokymui“ įrašai su visomis trimis reikšmėmis. Tinkamumas automatiškai nenustatomas.
 
+## DI žymėjimas (5A etapas)
+
+Didžioji mokymo rinkinio dalis žymima DI modeliu pagal tas pačias taisykles (jos perkeltos į `app/ml/ai_labeling.py` sisteminį promptą, versija `v1`; pakeitus taisykles reikia didinti versiją). DI papildomai pateikia trumpą pagrindimą (`reason`). DI žymos saugomos atskirai ir nekeičia žmogaus žymų. Rankinio žymėjimo atsisakyta (2026-11-10): ir mokymo, ir testavimo rinkinio žymas sukuria DI (`python -m tools.ai_label --subset test|training`). Jei žmogaus žyma egzistuoja (30 bandomojo rinkinio įrašų), ji turi pirmenybę. DI žymų kokybė matuojama bandomajame rinkinyje (`python -m tools.class_report`): 2026-11-10 sutapimas su žmogaus žymomis – kategorija 62 %, sudėtingumas 55 %, prioritetas 72 % (29 įrašai), tinkamumas 97 % (30 įrašų). Tai maža imtis, bet rodo, kad DI žymos nėra tiesa; testavimo metrikos, paremtos DI žymomis, matuoja atitikimą Claude, ne žmogaus nuomonę.
+
+## Automatinis išankstinis filtras (5B)
+
+Prieš DI žymėjimą automatiškai atmetami: pull request įrašai, tikslūs teksto dublikatai, aprašymai trumpesni nei 30 simbolių ir įrašai su GitHub etiketėmis, rodančiomis, kad tai ne klaida (enhancement, feature, question, duplicate, invalid, wontfix, not a bug, support, discussion, proposal). Etiketės „documentation“ / „docs“ neatmetamos – dokumentacijos klaidos yra atskira kategorija. Tikslinis papildymas tik nurodo, iš kur importuoti daugiau įrašų; jų klases nustato DI arba žmogus.
+
+Filtras pataisytas (2026-11-09): prieš ieškant raktažodžių pašalinamos nekenksmingos frazės – komponentų etiketės `feature: ...` (Nextcloud, `Feature:ES|QL`), būsenos etiketės `Needs Discussion` / `under-discussion` ir `*-unsupported` (`OS-unsupported`). Tikros ne klaidų etiketės (`enhancement`, `feature request`, `Type: Feature`, `question`, `duplicate`, `invalid`, `wontfix`, `support`, `proposal`, `discussion`...) ir toliau atmetamos. Pagal esamus duomenis tinkamų įrašų padaugėjo nuo 2774 iki 2884, atmestų pagal etiketę liko 19. Testai: `tests/test_ml_pipeline.py`.
+
 ## Pradinė duomenų atranka
 
 Pirmiausia rinkti aiškiai klaidoms skirtas issues. Jei duomenų šaltinio repo naudoja issues ir funkcijų prašymams, išfiltruoti feature requests, klausimus ir diskusijas pagal dokumentuotą atrankos politiką. Filtravimą daryti pagal peržiūrimą kriterijų rinkinį, o ne tyliai išmesti nepatogius pavyzdžius.

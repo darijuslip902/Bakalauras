@@ -11,6 +11,12 @@ def database_path() -> Path:
     return path if path.is_absolute() else PROJECT_DIR / path
 
 
+def models_dir() -> Path:
+    """Katalogas su apmokytais modeliais (`<laukas>.joblib`), pagal nutylėjimą `models/`."""
+    path = Path(os.environ.get("MODELS_DIR") or "models")
+    return path if path.is_absolute() else PROJECT_DIR / path
+
+
 def github_token() -> str | None:
     """Neprivalomas tokenas; skaitomas tik iš aplinkos ir niekur nerodomas."""
     return os.environ.get("GITHUB_TOKEN") or None

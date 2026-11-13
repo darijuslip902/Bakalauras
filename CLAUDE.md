@@ -26,6 +26,7 @@ Jei dokumentai prieštarauja vienas kitam, nekurk naujų prielaidų: pažymėk p
 - Prieš kurdamas kodą, trumpai pateik 3–6 veiksmų planą. Po to iškart vykdyk darbus; neklausk patvirtinimo dėl įprastų techninių detalių.
 - Pirmiausia naudok esamas priklausomybes. Naują priklausomybę pridėk tik jei ji būtina ir paaiškink, kodėl standartinės bibliotekos ar jau įdiegtos priemonės neužtenka.
 - Nepridėk React/Vue, Node, Docker, ORM, Redis, task queue, LLM API ar mikroservisų, nebent naudotojas aiškiai pakeistų reikalavimus.
+- Išimtis (naudotojo ir darbo vadovo sprendimas, 5A etapas): Anthropic Claude API naudojamas tik vienkartiniam mokymo duomenų žymėjimui per `tools/` CLI (`app/ml/`). Svetainė (`app/routes`, `app/services`) DI API neimportuoja ir nekviečia; jokių mokymo ar mokamo žymėjimo mygtukų svetainėje. Mokamas užklausas vykdyti tik naudotojui aiškiai leidus; testuose API visada imituojamas.
 - Nekurk iš anksto tuščių abstrakcijų ar katalogų, kurių dar nepasiekė įgyvendinimo etapas.
 - Nekeisk failų, nesusijusių su dabartiniu etapu. Neperrašinėk viso failo mažam pakeitimui.
 - Nenaudok interneto prieigos testuose; GitHub API atskirk nuo verslo logikos ir testuose ją mock'ink.
