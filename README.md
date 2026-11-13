@@ -267,3 +267,6 @@ Greita patikra: paleiskite `uvicorn app.main:app --reload`, atidarykite http://1
 - GitHub prieigos žetonas, jei reikalingas, pateikiamas per aplinkos kintamąjį GITHUB_TOKEN; jo negalima įrašyti į kodą, duomenų bazę, žurnalus ar Git istoriją.
 - Sistema nekeičia GitHub Issues, jų etikečių ar priskirtų programuotojų.
 - Kategorijos, prioritetas ir sudėtingumas yra rekomendacijos, o ne automatiškai patvirtinti faktai.
+
+## Apmokyti modeliai repozitorijoje
+`models/*.joblib` (modelio versija `20261110-143223`) ir `models/training_report.*` įkelti į Git, kad projektą būtų galima tęsti be ZIP failų. Failai priklauso nuo scikit-learn versijos; jei jų nepavyksta įkelti, permokykite: `python -m tools.train_models`. `joblib` naudoja pickle – nenaudokite svetimų modelių failų. SQLite duomenų bazė (`data/`) į Git **neįkeliama**.

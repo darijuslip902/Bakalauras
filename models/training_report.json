@@ -1,0 +1,1526 @@
+{
+  "model_version": "20261110-143223",
+  "trained_at": "2026-11-10T14:32:23+00:00",
+  "method": "TF-IDF (1-2 gramos) + LogisticRegression (class_weight=balanced)",
+  "seed": 42,
+  "validation_size": 0.2,
+  "ai_labels": {
+    "model": "claude-haiku-5-5",
+    "prompt_version": "v1"
+  },
+  "dataset": {
+    "test_set_rows": 120,
+    "test_labels_ai": 112,
+    "excluded_not_suitable": 156,
+    "test_set_not_usable": 8,
+    "human_labelled_used": 29,
+    "excluded_quality": 22,
+    "excluded_test_duplicates": 0,
+    "train_rows": 2608,
+    "human_test_rows": 112,
+    "pilot_set_rows": 30
+  },
+  "provenance": [
+    {
+      "repository": "ansible/ansible",
+      "imported": 201,
+      "augmentation_imported": 0,
+      "quality_ok": 201,
+      "excluded_short": 0,
+      "excluded_duplicate": 0,
+      "excluded_label": 0,
+      "pilot_set": 2,
+      "test_set": 8,
+      "train_base": 181,
+      "train_augmentation": 0
+    },
+    {
+      "repository": "elastic/elasticsearch",
+      "imported": 200,
+      "augmentation_imported": 0,
+      "quality_ok": 199,
+      "excluded_short": 0,
+      "excluded_duplicate": 0,
+      "excluded_label": 1,
+      "pilot_set": 2,
+      "test_set": 8,
+      "train_base": 191,
+      "train_augmentation": 0
+    },
+    {
+      "repository": "facebook/react",
+      "imported": 200,
+      "augmentation_imported": 0,
+      "quality_ok": 199,
+      "excluded_short": 0,
+      "excluded_duplicate": 1,
+      "excluded_label": 0,
+      "pilot_set": 2,
+      "test_set": 8,
+      "train_base": 157,
+      "train_augmentation": 0
+    },
+    {
+      "repository": "grafana/grafana",
+      "imported": 253,
+      "augmentation_imported": 0,
+      "quality_ok": 253,
+      "excluded_short": 0,
+      "excluded_duplicate": 0,
+      "excluded_label": 0,
+      "pilot_set": 3,
+      "test_set": 11,
+      "train_base": 237,
+      "train_augmentation": 0
+    },
+    {
+      "repository": "hashicorp/terraform",
+      "imported": 200,
+      "augmentation_imported": 0,
+      "quality_ok": 197,
+      "excluded_short": 0,
+      "excluded_duplicate": 0,
+      "excluded_label": 3,
+      "pilot_set": 2,
+      "test_set": 8,
+      "train_base": 177,
+      "train_augmentation": 0
+    },
+    {
+      "repository": "kubernetes/kubernetes",
+      "imported": 241,
+      "augmentation_imported": 0,
+      "quality_ok": 236,
+      "excluded_short": 0,
+      "excluded_duplicate": 0,
+      "excluded_label": 5,
+      "pilot_set": 2,
+      "test_set": 10,
+      "train_base": 206,
+      "train_augmentation": 0
+    },
+    {
+      "repository": "metabase/metabase",
+      "imported": 200,
+      "augmentation_imported": 0,
+      "quality_ok": 200,
+      "excluded_short": 0,
+      "excluded_duplicate": 0,
+      "excluded_label": 0,
+      "pilot_set": 2,
+      "test_set": 8,
+      "train_base": 190,
+      "train_augmentation": 0
+    },
+    {
+      "repository": "microsoft/vscode",
+      "imported": 307,
+      "augmentation_imported": 0,
+      "quality_ok": 304,
+      "excluded_short": 1,
+      "excluded_duplicate": 0,
+      "excluded_label": 2,
+      "pilot_set": 3,
+      "test_set": 13,
+      "train_base": 274,
+      "train_augmentation": 0
+    },
+    {
+      "repository": "nextcloud/server",
+      "imported": 251,
+      "augmentation_imported": 0,
+      "quality_ok": 250,
+      "excluded_short": 0,
+      "excluded_duplicate": 1,
+      "excluded_label": 0,
+      "pilot_set": 3,
+      "test_set": 11,
+      "train_base": 229,
+      "train_augmentation": 0
+    },
+    {
+      "repository": "pandas-dev/pandas",
+      "imported": 193,
+      "augmentation_imported": 0,
+      "quality_ok": 187,
+      "excluded_short": 0,
+      "excluded_duplicate": 0,
+      "excluded_label": 6,
+      "pilot_set": 2,
+      "test_set": 8,
+      "train_base": 176,
+      "train_augmentation": 0
+    },
+    {
+      "repository": "prometheus/prometheus",
+      "imported": 150,
+      "augmentation_imported": 0,
+      "quality_ok": 150,
+      "excluded_short": 0,
+      "excluded_duplicate": 0,
+      "excluded_label": 0,
+      "pilot_set": 2,
+      "test_set": 6,
+      "train_base": 129,
+      "train_augmentation": 0
+    },
+    {
+      "repository": "python/cpython",
+      "imported": 308,
+      "augmentation_imported": 0,
+      "quality_ok": 307,
+      "excluded_short": 0,
+      "excluded_duplicate": 0,
+      "excluded_label": 1,
+      "pilot_set": 3,
+      "test_set": 13,
+      "train_base": 278,
+      "train_augmentation": 0
+    },
+    {
+      "repository": "sqlalchemy/sqlalchemy",
+      "imported": 202,
+      "augmentation_imported": 0,
+      "quality_ok": 201,
+      "excluded_short": 0,
+      "excluded_duplicate": 0,
+      "excluded_label": 1,
+      "pilot_set": 2,
+      "test_set": 8,
+      "train_base": 183,
+      "train_augmentation": 0
+    }
+  ],
+  "ai_labelling_summary": {
+    "rows": 2884,
+    "ok": 2884,
+    "invalid": 0,
+    "suitable": 2721,
+    "unsuitable": 163,
+    "requests": 2884,
+    "input_tokens": 7879128,
+    "output_tokens": 366383,
+    "cost_usd": 0.6047
+  },
+  "fields": {
+    "category_label": {
+      "field": "category_label",
+      "class_distribution": {
+        "backend_api": 1442,
+        "build_deployment": 160,
+        "database_data": 217,
+        "documentation": 19,
+        "other": 106,
+        "performance": 109,
+        "security": 119,
+        "ui": 436
+      },
+      "excluded_classes_below_min": {},
+      "min_class_samples": 5,
+      "status": "trained",
+      "classes": [
+        "backend_api",
+        "build_deployment",
+        "database_data",
+        "documentation",
+        "other",
+        "performance",
+        "security",
+        "ui"
+      ],
+      "train_samples": 2086,
+      "validation_samples": 522,
+      "validation_note": "Validacijos žymos – daugiausia DI sugeneruotos (ne žmogaus patikrintos).",
+      "validation": {
+        "model": {
+          "samples": 522,
+          "accuracy": 0.6073,
+          "macro_f1": 0.4697,
+          "weighted_f1": 0.6175,
+          "per_class": {
+            "backend_api": {
+              "precision": 0.8208955223880597,
+              "recall": 0.5709342560553633,
+              "f1-score": 0.673469387755102,
+              "support": 289.0
+            },
+            "build_deployment": {
+              "precision": 0.56,
+              "recall": 0.4375,
+              "f1-score": 0.49122807017543857,
+              "support": 32.0
+            },
+            "database_data": {
+              "precision": 0.3246753246753247,
+              "recall": 0.5813953488372093,
+              "f1-score": 0.4166666666666667,
+              "support": 43.0
+            },
+            "documentation": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1-score": 0.0,
+              "support": 4.0
+            },
+            "other": {
+              "precision": 0.4418604651162791,
+              "recall": 0.9047619047619048,
+              "f1-score": 0.59375,
+              "support": 21.0
+            },
+            "performance": {
+              "precision": 0.5882352941176471,
+              "recall": 0.45454545454545453,
+              "f1-score": 0.5128205128205128,
+              "support": 22.0
+            },
+            "security": {
+              "precision": 0.2972972972972973,
+              "recall": 0.4583333333333333,
+              "f1-score": 0.36065573770491804,
+              "support": 24.0
+            },
+            "ui": {
+              "precision": 0.6134453781512605,
+              "recall": 0.8390804597701149,
+              "f1-score": 0.7087378640776699,
+              "support": 87.0
+            },
+            "accuracy": 0.60727969348659,
+            "macro avg": {
+              "precision": 0.4558011602182336,
+              "recall": 0.5308188446629225,
+              "f1-score": 0.4696660299000385,
+              "support": 522.0
+            },
+            "weighted avg": {
+              "precision": 0.6740325176312513,
+              "recall": 0.60727969348659,
+              "f1-score": 0.6175006726728579,
+              "support": 522.0
+            }
+          },
+          "confusion_matrix": {
+            "labels": [
+              "backend_api",
+              "build_deployment",
+              "database_data",
+              "documentation",
+              "other",
+              "performance",
+              "security",
+              "ui"
+            ],
+            "matrix": [
+              [
+                165,
+                7,
+                47,
+                3,
+                13,
+                5,
+                17,
+                32
+              ],
+              [
+                5,
+                14,
+                0,
+                0,
+                7,
+                0,
+                2,
+                4
+              ],
+              [
+                12,
+                1,
+                25,
+                0,
+                0,
+                1,
+                2,
+                2
+              ],
+              [
+                1,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                2
+              ],
+              [
+                1,
+                1,
+                0,
+                0,
+                19,
+                0,
+                0,
+                0
+              ],
+              [
+                6,
+                1,
+                1,
+                0,
+                0,
+                10,
+                1,
+                3
+              ],
+              [
+                5,
+                1,
+                2,
+                0,
+                1,
+                1,
+                11,
+                3
+              ],
+              [
+                6,
+                0,
+                1,
+                0,
+                3,
+                0,
+                4,
+                73
+              ]
+            ]
+          }
+        },
+        "majority_baseline": {
+          "samples": 522,
+          "accuracy": 0.5536,
+          "macro_f1": 0.0891,
+          "weighted_f1": 0.3946,
+          "per_class": {
+            "backend_api": {
+              "precision": 0.553639846743295,
+              "recall": 1.0,
+              "f1-score": 0.7127003699136868,
+              "support": 289.0
+            },
+            "build_deployment": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1-score": 0.0,
+              "support": 32.0
+            },
+            "database_data": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1-score": 0.0,
+              "support": 43.0
+            },
+            "documentation": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1-score": 0.0,
+              "support": 4.0
+            },
+            "other": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1-score": 0.0,
+              "support": 21.0
+            },
+            "performance": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1-score": 0.0,
+              "support": 22.0
+            },
+            "security": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1-score": 0.0,
+              "support": 24.0
+            },
+            "ui": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1-score": 0.0,
+              "support": 87.0
+            },
+            "accuracy": 0.553639846743295,
+            "macro avg": {
+              "precision": 0.06920498084291188,
+              "recall": 0.125,
+              "f1-score": 0.08908754623921085,
+              "support": 522.0
+            },
+            "weighted avg": {
+              "precision": 0.3065170799019392,
+              "recall": 0.553639846743295,
+              "f1-score": 0.3945793235729032,
+              "support": 522.0
+            }
+          },
+          "confusion_matrix": {
+            "labels": [
+              "backend_api",
+              "build_deployment",
+              "database_data",
+              "documentation",
+              "other",
+              "performance",
+              "security",
+              "ui"
+            ],
+            "matrix": [
+              [
+                289,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                32,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                43,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                4,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                21,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                22,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                24,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                87,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            ]
+          }
+        }
+      },
+      "human_test": {
+        "reference": "ai",
+        "reference_counts": {
+          "ai": 112
+        },
+        "model": {
+          "samples": 112,
+          "accuracy": 0.6161,
+          "macro_f1": 0.4924,
+          "weighted_f1": 0.6162,
+          "per_class": {
+            "backend_api": {
+              "precision": 0.7954545454545454,
+              "recall": 0.546875,
+              "f1-score": 0.6481481481481481,
+              "support": 64.0
+            },
+            "build_deployment": {
+              "precision": 0.3333333333333333,
+              "recall": 0.25,
+              "f1-score": 0.2857142857142857,
+              "support": 4.0
+            },
+            "database_data": {
+              "precision": 0.4444444444444444,
+              "recall": 0.7272727272727273,
+              "f1-score": 0.5517241379310345,
+              "support": 11.0
+            },
+            "documentation": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1-score": 0.0,
+              "support": 1.0
+            },
+            "other": {
+              "precision": 0.5,
+              "recall": 0.8333333333333334,
+              "f1-score": 0.625,
+              "support": 6.0
+            },
+            "performance": {
+              "precision": 0.5,
+              "recall": 0.6666666666666666,
+              "f1-score": 0.5714285714285714,
+              "support": 3.0
+            },
+            "security": {
+              "precision": 0.46153846153846156,
+              "recall": 0.75,
+              "f1-score": 0.5714285714285714,
+              "support": 8.0
+            },
+            "ui": {
+              "precision": 0.6,
+              "recall": 0.8,
+              "f1-score": 0.6857142857142857,
+              "support": 15.0
+            },
+            "accuracy": 0.6160714285714286,
+            "macro avg": {
+              "precision": 0.45434634809634805,
+              "recall": 0.5717684659090909,
+              "f1-score": 0.49239475004561206,
+              "support": 112.0
+            },
+            "weighted avg": {
+              "precision": 0.6636037573537573,
+              "recall": 0.6160714285714286,
+              "f1-score": 0.6162029706518624,
+              "support": 112.0
+            }
+          },
+          "confusion_matrix": {
+            "labels": [
+              "backend_api",
+              "build_deployment",
+              "database_data",
+              "documentation",
+              "other",
+              "performance",
+              "security",
+              "ui"
+            ],
+            "matrix": [
+              [
+                35,
+                1,
+                9,
+                0,
+                4,
+                2,
+                5,
+                8
+              ],
+              [
+                0,
+                1,
+                1,
+                0,
+                1,
+                0,
+                1,
+                0
+              ],
+              [
+                3,
+                0,
+                8,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                1,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                1,
+                0,
+                0,
+                5,
+                0,
+                0,
+                0
+              ],
+              [
+                1,
+                0,
+                0,
+                0,
+                0,
+                2,
+                0,
+                0
+              ],
+              [
+                2,
+                0,
+                0,
+                0,
+                0,
+                0,
+                6,
+                0
+              ],
+              [
+                2,
+                0,
+                0,
+                0,
+                0,
+                0,
+                1,
+                12
+              ]
+            ]
+          }
+        },
+        "majority_baseline": {
+          "samples": 112,
+          "accuracy": 0.5714,
+          "macro_f1": 0.0909,
+          "weighted_f1": 0.4156,
+          "per_class": {
+            "backend_api": {
+              "precision": 0.5714285714285714,
+              "recall": 1.0,
+              "f1-score": 0.7272727272727273,
+              "support": 64.0
+            },
+            "build_deployment": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1-score": 0.0,
+              "support": 4.0
+            },
+            "database_data": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1-score": 0.0,
+              "support": 11.0
+            },
+            "documentation": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1-score": 0.0,
+              "support": 1.0
+            },
+            "other": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1-score": 0.0,
+              "support": 6.0
+            },
+            "performance": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1-score": 0.0,
+              "support": 3.0
+            },
+            "security": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1-score": 0.0,
+              "support": 8.0
+            },
+            "ui": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1-score": 0.0,
+              "support": 15.0
+            },
+            "accuracy": 0.5714285714285714,
+            "macro avg": {
+              "precision": 0.07142857142857142,
+              "recall": 0.125,
+              "f1-score": 0.09090909090909091,
+              "support": 112.0
+            },
+            "weighted avg": {
+              "precision": 0.32653061224489793,
+              "recall": 0.5714285714285714,
+              "f1-score": 0.4155844155844156,
+              "support": 112.0
+            }
+          },
+          "confusion_matrix": {
+            "labels": [
+              "backend_api",
+              "build_deployment",
+              "database_data",
+              "documentation",
+              "other",
+              "performance",
+              "security",
+              "ui"
+            ],
+            "matrix": [
+              [
+                64,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                4,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                11,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                1,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                6,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                3,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                8,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                15,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            ]
+          }
+        },
+        "ci95": {
+          "accuracy": [
+            0.5268,
+            0.6964
+          ],
+          "macro_f1": [
+            0.3801,
+            0.6521
+          ]
+        },
+        "skipped_unknown_classes": 0,
+        "class_support": {
+          "backend_api": 64,
+          "build_deployment": 4,
+          "database_data": 11,
+          "documentation": 1,
+          "other": 6,
+          "performance": 3,
+          "security": 8,
+          "ui": 15
+        },
+        "classes_without_test_samples": [],
+        "classes_with_few_test_samples": [
+          "build_deployment",
+          "documentation",
+          "performance"
+        ]
+      },
+      "ai_vs_human_agreement": null,
+      "model_file": "category_label.joblib"
+    },
+    "complexity_label": {
+      "field": "complexity_label",
+      "class_distribution": {
+        "high": 350,
+        "low": 694,
+        "medium": 1564
+      },
+      "excluded_classes_below_min": {},
+      "min_class_samples": 5,
+      "status": "trained",
+      "classes": [
+        "high",
+        "low",
+        "medium"
+      ],
+      "train_samples": 2086,
+      "validation_samples": 522,
+      "validation_note": "Validacijos žymos – daugiausia DI sugeneruotos (ne žmogaus patikrintos).",
+      "validation": {
+        "model": {
+          "samples": 522,
+          "accuracy": 0.6015,
+          "macro_f1": 0.5634,
+          "weighted_f1": 0.606,
+          "per_class": {
+            "high": {
+              "precision": 0.4810126582278481,
+              "recall": 0.5428571428571428,
+              "f1-score": 0.5100671140939598,
+              "support": 70.0
+            },
+            "low": {
+              "precision": 0.4779874213836478,
+              "recall": 0.5467625899280576,
+              "f1-score": 0.5100671140939598,
+              "support": 139.0
+            },
+            "medium": {
+              "precision": 0.704225352112676,
+              "recall": 0.6389776357827476,
+              "f1-score": 0.6700167504187605,
+              "support": 313.0
+            },
+            "accuracy": 0.6015325670498084,
+            "macro avg": {
+              "precision": 0.5544084772413906,
+              "recall": 0.5761991228559826,
+              "f1-score": 0.56338365953556,
+              "support": 522.0
+            },
+            "weighted avg": {
+              "precision": 0.6140491817232644,
+              "recall": 0.6015325670498084,
+              "f1-score": 0.6059756125032751,
+              "support": 522.0
+            }
+          },
+          "confusion_matrix": {
+            "labels": [
+              "high",
+              "low",
+              "medium"
+            ],
+            "matrix": [
+              [
+                38,
+                4,
+                28
+              ],
+              [
+                7,
+                76,
+                56
+              ],
+              [
+                34,
+                79,
+                200
+              ]
+            ]
+          }
+        },
+        "majority_baseline": {
+          "samples": 522,
+          "accuracy": 0.5996,
+          "macro_f1": 0.2499,
+          "weighted_f1": 0.4495,
+          "per_class": {
+            "high": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1-score": 0.0,
+              "support": 70.0
+            },
+            "low": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1-score": 0.0,
+              "support": 139.0
+            },
+            "medium": {
+              "precision": 0.5996168582375478,
+              "recall": 1.0,
+              "f1-score": 0.7497005988023953,
+              "support": 313.0
+            },
+            "accuracy": 0.5996168582375478,
+            "macro avg": {
+              "precision": 0.19987228607918262,
+              "recall": 0.3333333333333333,
+              "f1-score": 0.24990019960079843,
+              "support": 522.0
+            },
+            "weighted avg": {
+              "precision": 0.3595403766826676,
+              "recall": 0.5996168582375478,
+              "f1-score": 0.4495331176727006,
+              "support": 522.0
+            }
+          },
+          "confusion_matrix": {
+            "labels": [
+              "high",
+              "low",
+              "medium"
+            ],
+            "matrix": [
+              [
+                0,
+                0,
+                70
+              ],
+              [
+                0,
+                0,
+                139
+              ],
+              [
+                0,
+                0,
+                313
+              ]
+            ]
+          }
+        }
+      },
+      "human_test": {
+        "reference": "ai",
+        "reference_counts": {
+          "ai": 112
+        },
+        "model": {
+          "samples": 112,
+          "accuracy": 0.6518,
+          "macro_f1": 0.6094,
+          "weighted_f1": 0.6567,
+          "per_class": {
+            "high": {
+              "precision": 0.391304347826087,
+              "recall": 0.47368421052631576,
+              "f1-score": 0.42857142857142855,
+              "support": 19.0
+            },
+            "low": {
+              "precision": 0.7037037037037037,
+              "recall": 0.6785714285714286,
+              "f1-score": 0.6909090909090909,
+              "support": 28.0
+            },
+            "medium": {
+              "precision": 0.7258064516129032,
+              "recall": 0.6923076923076923,
+              "f1-score": 0.7086614173228346,
+              "support": 65.0
+            },
+            "accuracy": 0.6517857142857143,
+            "macro avg": {
+              "precision": 0.6069381677142313,
+              "recall": 0.6148544438018122,
+              "f1-score": 0.609380645601118,
+              "support": 112.0
+            },
+            "weighted avg": {
+              "precision": 0.6635348720289114,
+              "recall": 0.6517857142857143,
+              "f1-score": 0.6567080697704994,
+              "support": 112.0
+            }
+          },
+          "confusion_matrix": {
+            "labels": [
+              "high",
+              "low",
+              "medium"
+            ],
+            "matrix": [
+              [
+                9,
+                0,
+                10
+              ],
+              [
+                2,
+                19,
+                7
+              ],
+              [
+                12,
+                8,
+                45
+              ]
+            ]
+          }
+        },
+        "majority_baseline": {
+          "samples": 112,
+          "accuracy": 0.5804,
+          "macro_f1": 0.2448,
+          "weighted_f1": 0.4263,
+          "per_class": {
+            "high": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1-score": 0.0,
+              "support": 19.0
+            },
+            "low": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1-score": 0.0,
+              "support": 28.0
+            },
+            "medium": {
+              "precision": 0.5803571428571429,
+              "recall": 1.0,
+              "f1-score": 0.7344632768361582,
+              "support": 65.0
+            },
+            "accuracy": 0.5803571428571429,
+            "macro avg": {
+              "precision": 0.19345238095238096,
+              "recall": 0.3333333333333333,
+              "f1-score": 0.2448210922787194,
+              "support": 112.0
+            },
+            "weighted avg": {
+              "precision": 0.3368144132653062,
+              "recall": 0.5803571428571429,
+              "f1-score": 0.42625100887812756,
+              "support": 112.0
+            }
+          },
+          "confusion_matrix": {
+            "labels": [
+              "high",
+              "low",
+              "medium"
+            ],
+            "matrix": [
+              [
+                0,
+                0,
+                19
+              ],
+              [
+                0,
+                0,
+                28
+              ],
+              [
+                0,
+                0,
+                65
+              ]
+            ]
+          }
+        },
+        "ci95": {
+          "accuracy": [
+            0.5714,
+            0.7321
+          ],
+          "macro_f1": [
+            0.5129,
+            0.6996
+          ]
+        },
+        "skipped_unknown_classes": 0,
+        "class_support": {
+          "high": 19,
+          "low": 28,
+          "medium": 65
+        },
+        "classes_without_test_samples": [],
+        "classes_with_few_test_samples": []
+      },
+      "ai_vs_human_agreement": null,
+      "model_file": "complexity_label.joblib"
+    },
+    "priority_label": {
+      "field": "priority_label",
+      "class_distribution": {
+        "P0_critical": 1,
+        "P1_high": 620,
+        "P2_medium": 1570,
+        "P3_low": 417
+      },
+      "excluded_classes_below_min": {
+        "P0_critical": 1
+      },
+      "min_class_samples": 5,
+      "status": "trained",
+      "classes": [
+        "P1_high",
+        "P2_medium",
+        "P3_low"
+      ],
+      "train_samples": 2085,
+      "validation_samples": 522,
+      "validation_note": "Validacijos žymos – daugiausia DI sugeneruotos (ne žmogaus patikrintos).",
+      "validation": {
+        "model": {
+          "samples": 522,
+          "accuracy": 0.5881,
+          "macro_f1": 0.5575,
+          "weighted_f1": 0.5942,
+          "per_class": {
+            "P1_high": {
+              "precision": 0.4807692307692308,
+              "recall": 0.6048387096774194,
+              "f1-score": 0.5357142857142857,
+              "support": 124.0
+            },
+            "P2_medium": {
+              "precision": 0.7072243346007605,
+              "recall": 0.5923566878980892,
+              "f1-score": 0.6447140381282496,
+              "support": 314.0
+            },
+            "P3_low": {
+              "precision": 0.44660194174757284,
+              "recall": 0.5476190476190477,
+              "f1-score": 0.4919786096256685,
+              "support": 84.0
+            },
+            "accuracy": 0.5881226053639846,
+            "macro avg": {
+              "precision": 0.544865169039188,
+              "recall": 0.5816048150648521,
+              "f1-score": 0.5574689778227345,
+              "support": 522.0
+            },
+            "weighted avg": {
+              "precision": 0.6114911662582749,
+              "recall": 0.5881226053639846,
+              "f1-score": 0.5942432617038275,
+              "support": 522.0
+            }
+          },
+          "confusion_matrix": {
+            "labels": [
+              "P1_high",
+              "P2_medium",
+              "P3_low"
+            ],
+            "matrix": [
+              [
+                75,
+                45,
+                4
+              ],
+              [
+                75,
+                186,
+                53
+              ],
+              [
+                6,
+                32,
+                46
+              ]
+            ]
+          }
+        },
+        "majority_baseline": {
+          "samples": 522,
+          "accuracy": 0.6015,
+          "macro_f1": 0.2504,
+          "weighted_f1": 0.4519,
+          "per_class": {
+            "P1_high": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1-score": 0.0,
+              "support": 124.0
+            },
+            "P2_medium": {
+              "precision": 0.6015325670498084,
+              "recall": 1.0,
+              "f1-score": 0.7511961722488039,
+              "support": 314.0
+            },
+            "P3_low": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1-score": 0.0,
+              "support": 84.0
+            },
+            "accuracy": 0.6015325670498084,
+            "macro avg": {
+              "precision": 0.20051085568326946,
+              "recall": 0.3333333333333333,
+              "f1-score": 0.2503987240829346,
+              "support": 522.0
+            },
+            "weighted avg": {
+              "precision": 0.36184142922153223,
+              "recall": 0.6015325670498084,
+              "f1-score": 0.45186896185081304,
+              "support": 522.0
+            }
+          },
+          "confusion_matrix": {
+            "labels": [
+              "P1_high",
+              "P2_medium",
+              "P3_low"
+            ],
+            "matrix": [
+              [
+                0,
+                124,
+                0
+              ],
+              [
+                0,
+                314,
+                0
+              ],
+              [
+                0,
+                84,
+                0
+              ]
+            ]
+          }
+        }
+      },
+      "human_test": {
+        "reference": "ai",
+        "reference_counts": {
+          "ai": 112
+        },
+        "model": {
+          "samples": 112,
+          "accuracy": 0.6161,
+          "macro_f1": 0.5896,
+          "weighted_f1": 0.6142,
+          "per_class": {
+            "P1_high": {
+              "precision": 0.5609756097560976,
+              "recall": 0.7419354838709677,
+              "f1-score": 0.6388888888888888,
+              "support": 31.0
+            },
+            "P2_medium": {
+              "precision": 0.6851851851851852,
+              "recall": 0.6065573770491803,
+              "f1-score": 0.6434782608695652,
+              "support": 61.0
+            },
+            "P3_low": {
+              "precision": 0.5294117647058824,
+              "recall": 0.45,
+              "f1-score": 0.4864864864864865,
+              "support": 20.0
+            },
+            "accuracy": 0.6160714285714286,
+            "macro avg": {
+              "precision": 0.5918575198823883,
+              "recall": 0.599497620306716,
+              "f1-score": 0.5896178787483134,
+              "support": 112.0
+            },
+            "weighted avg": {
+              "precision": 0.622989066900473,
+              "recall": 0.6160714285714286,
+              "f1-score": 0.614173742842221,
+              "support": 112.0
+            }
+          },
+          "confusion_matrix": {
+            "labels": [
+              "P1_high",
+              "P2_medium",
+              "P3_low"
+            ],
+            "matrix": [
+              [
+                23,
+                8,
+                0
+              ],
+              [
+                16,
+                37,
+                8
+              ],
+              [
+                2,
+                9,
+                9
+              ]
+            ]
+          }
+        },
+        "majority_baseline": {
+          "samples": 112,
+          "accuracy": 0.5446,
+          "macro_f1": 0.2351,
+          "weighted_f1": 0.3841,
+          "per_class": {
+            "P1_high": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1-score": 0.0,
+              "support": 31.0
+            },
+            "P2_medium": {
+              "precision": 0.5446428571428571,
+              "recall": 1.0,
+              "f1-score": 0.7052023121387283,
+              "support": 61.0
+            },
+            "P3_low": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1-score": 0.0,
+              "support": 20.0
+            },
+            "accuracy": 0.5446428571428571,
+            "macro avg": {
+              "precision": 0.18154761904761904,
+              "recall": 0.3333333333333333,
+              "f1-score": 0.2350674373795761,
+              "support": 112.0
+            },
+            "weighted avg": {
+              "precision": 0.2966358418367347,
+              "recall": 0.5446428571428571,
+              "f1-score": 0.38408340214698594,
+              "support": 112.0
+            }
+          },
+          "confusion_matrix": {
+            "labels": [
+              "P1_high",
+              "P2_medium",
+              "P3_low"
+            ],
+            "matrix": [
+              [
+                0,
+                31,
+                0
+              ],
+              [
+                0,
+                61,
+                0
+              ],
+              [
+                0,
+                20,
+                0
+              ]
+            ]
+          }
+        },
+        "ci95": {
+          "accuracy": [
+            0.5268,
+            0.7054
+          ],
+          "macro_f1": [
+            0.4869,
+            0.6835
+          ]
+        },
+        "skipped_unknown_classes": 0,
+        "class_support": {
+          "P1_high": 31,
+          "P2_medium": 61,
+          "P3_low": 20
+        },
+        "classes_without_test_samples": [],
+        "classes_with_few_test_samples": []
+      },
+      "ai_vs_human_agreement": null,
+      "model_file": "priority_label.joblib"
+    }
+  }
+}
