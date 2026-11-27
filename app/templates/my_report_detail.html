@@ -1,0 +1,26 @@
+{% extends "internal_base.html" %}
+{% block title %}{% if report %}Pranešimas #{{ report.id }}{% else %}Pranešimas nerastas{% endif %}{% endblock %}
+{% block content %}
+<p><a href="/my/reports">← Mano pranešimai</a></p>
+{% if report %}
+<h1>#{{ report.id }} {{ report.title }}</h1>
+<div class="detail-grid">
+  <section class="card" aria-labelledby="description-heading">
+    <h2 id="description-heading">Aprašymas</h2>
+    <p class="description">{{ report.description }}</p>
+  </section>
+  <aside class="card" aria-labelledby="info-heading">
+    <h2 id="info-heading">Informacija</h2>
+    <dl class="meta">
+      <dt>Būsena</dt><dd><span class="badge status-{{ report.status }}">{{ status_labels.get(report.status, report.status) }}</span></dd>
+      <dt>Pateikta</dt><dd>{{ report.created_at|replace("T", " ")|truncate(16, True, "") }}</dd>
+      <dt>Atnaujinta</dt><dd>{{ report.updated_at|replace("T", " ")|truncate(16, True, "") }}</dd>
+      <dt>Išspręsta</dt><dd>{% if report.resolved_at %}{{ report.resolved_at|replace("T", " ")|truncate(16, True, "") }}{% else %}<span class="muted nowrap">Dar neišspręsta</span>{% endif %}</dd>
+    </dl>
+  </aside>
+</div>
+{% else %}
+<h1>Pranešimas nerastas</h1>
+<p class="error" role="alert">Tokio pranešimo tarp jūsų pateiktų nėra.</p>
+{% endif %}
+{% endblock %}

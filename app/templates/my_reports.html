@@ -1,0 +1,33 @@
+{% extends "internal_base.html" %}
+{% block title %}Mano pranešimai{% endblock %}
+{% block content %}
+<div class="card-head">
+  <h1>Mano pranešimai</h1>
+  <a class="button" href="/report">Pranešti apie naują klaidą</a>
+</div>
+{% if session.role == "developer" %}
+<p class="notice" role="status">Programuotojo darbo aplinka (klaidos pagal priskirtas kategorijas) bus įjungta kitame etape. Kol kas matote tik savo pateiktus pranešimus.</p>
+{% endif %}
+{% if reports %}
+<div class="table-wrap">
+  <table class="reports">
+    <thead>
+      <tr><th scope="col">ID</th><th scope="col">Pavadinimas</th><th scope="col">Būsena</th><th scope="col">Pateikta</th><th scope="col">Atnaujinta</th></tr>
+    </thead>
+    <tbody>
+      {% for report in reports %}
+      <tr>
+        <td data-label="ID">#{{ report.id }}</td>
+        <td data-label="Pavadinimas"><a href="/my/reports/{{ report.id }}">{{ report.title }}</a></td>
+        <td data-label="Būsena"><span class="badge status-{{ report.status }}">{{ status_labels.get(report.status, report.status) }}</span></td>
+        <td data-label="Pateikta" class="nowrap">{{ report.created_at|replace("T", " ")|truncate(16, True, "") }}</td>
+        <td data-label="Atnaujinta" class="nowrap">{{ report.updated_at|replace("T", " ")|truncate(16, True, "") }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<p class="muted">Dar nepateikėte nė vieno pranešimo, kol buvote prisijungę.</p>
+{% endif %}
+{% endblock %}

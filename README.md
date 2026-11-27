@@ -4,9 +4,9 @@ Internetinis prototipas: klientas arba testuotojas be paskyros pateikia klaidą,
 
 Technologijos: Python, FastAPI, Jinja2, HTML/CSS, SQLite, scikit-learn (TF-IDF + Logistic Regression), pytest. Claude API naudojamas tik atskirame mokymo duomenų žymėjimo CLI, ne svetainėje.
 
-## Dabartinė būklė (2026-11-13, po 5D)
+## Dabartinė būklė (2026-11-27, 6A šakoje)
 
-0–5D etapai baigti, PR #11 sujungtas į main. Modelių versija `20261113-125330`. 6 etapo kryptis patvirtinta (vienos organizacijos paskyros, kategorijų paskirstymas, dizainas), bet 6A–6E kodas dar neįgyvendintas. Statistikos puslapis neprivalomas. P0 paliekamas, nors jo atpažinimas silpnas.
+0–5D etapai baigti, PR #11 sujungtas į main. Modelių versija `20261113-125330`. **6A (naudotojų paskyros, registracija, rolės) įgyvendintas šakoje `claude/phase-6a-user-accounts`**; 6B–6E dar neįgyvendinti. Statistikos puslapis neprivalomas. P0 paliekamas, nors jo atpažinimas silpnas.
 
 - 40 024 importuoti GitHub įrašai; 23 884 sėkmingos DI anotacijos (19 412 tinkamų, 4 472 netinkamų).
 - 18 267 mokymo ir validacijos pavyzdžiai; 1 120 atrinktų testo įrašų, iš jų 901 tinkamas (visi 901 su DI etalonu); 30 pilotinių įrašų.
@@ -14,15 +14,15 @@ Technologijos: Python, FastAPI, Jinja2, HTML/CSS, SQLite, scikit-learn (TF-IDF +
 - Trys apmokyti modeliai ir jų ataskaitos saugomi GitHub; SQLite DB, jos kopijos, .env ir .venv – tik lokaliai.
 - Testo accuracy / macro-F1: kategorija 64,26 % / 62,22 %; sudėtingumas 69,70 % / 69,14 %; prioritetas 65,93 % / 48,20 %. P0 F1 = 0. Metrikos rodo atitikimą Claude žymoms, ne nepriklausomai žmogaus patvirtintai tiesai. Ankstesnio ir naujo modelio metrikos iš skirtingų testų nėra tiesiogiai palyginamos.
 
-## Ateities etapai (2026-11-27, **dar neveikia svetainėje**)
+## 6 etapas
 
-- **6A:** DB naudotojų paskyros, vieša testuotojo registracija, saugus prisijungimas, rolės (`tester`, `developer`, `admin`) ir savo pranešimų peržiūra.
-- **6B:** administratoriaus priskiriamos kategorijos programuotojams, kategorijų matomumo taisyklės serverio pusėje.
+- **6A (įgyvendinta):** DB naudotojų paskyros, vieša testuotojo registracija, saugus prisijungimas, rolės (`tester`, `developer`, `admin`) ir savo pranešimų peržiūra. Žr. skyrių „Naudotojų paskyros ir rolės (6A)“.
+- **6B (dar neveikia):** administratoriaus priskiriamos kategorijos programuotojams, kategorijų matomumo taisyklės serverio pusėje.
 - **6C:** klaidos prisiėmimas, komentarai, įvykių istorija.
 - **6D:** galutinis vientisas mobiliesiems pritaikytas dizainas.
 - **6E:** asmeninės darbo apžvalgos ir filtrai. Multi-tenancy atidėtas; kol kas **vienai įmonei vienas diegimas**.
 
-Iki 6A sujungimo veikia esama vieno administratoriaus paskyra iš `.env`, kaip aprašyta toliau. Plačiau – [planuose](docs/IMPLEMENTATION_PLAN.md) ir [architektūroje](ARCHITECTURE.md).
+`.env` administratorius išlieka ir automatiškai perkeliamas į `users` lentelę (žr. toliau). Plačiau – [planuose](docs/IMPLEMENTATION_PLAN.md) ir [architektūroje](ARCHITECTURE.md).
 
 ## Vietinis paleidimas
 
@@ -49,9 +49,9 @@ Testai (naudoja laikiną duomenų bazę ir netikrą GitHub, todėl vietinio `dat
 python -m pytest
 ```
 
-## Programuotojo prisijungimo konfigūravimas
+## Administratoriaus ir prisijungimo konfigūravimas
 
-Vidinė aplinka turi vieną paskyrą. Numatytojo slaptažodžio nėra: kol nenustatyti žemiau esantys kintamieji, prisijungti neįmanoma (puslapis `/login` parodo pranešimą „Prisijungimas nesukonfigūruotas“).
+Pradinis administratorius aprašomas `.env` faile. Numatytojo slaptažodžio nėra: kol nenustatyti žemiau esantys kintamieji, prisijungti ir registruotis neįmanoma (puslapiai `/login` ir `/register` parodo „nesukonfigūruota“). Nuo 6A visos paskyros saugomos DB lentelėje `users`, o `.env` administratorius į ją perkeliamas (žr. „Naudotojų paskyros ir rolės (6A)“).
 
 | Kintamasis | Paskirtis |
 |---|---|
@@ -73,7 +73,48 @@ Vidinė aplinka turi vieną paskyrą. Numatytojo slaptažodžio nėra: kol nenus
 3. Atidarykite `.env` (pvz., `notepad .env`), įrašykite `ADMIN_USERNAME=admin` ir įklijuokite dvi komandos išvestas eilutes `ADMIN_PASSWORD_HASH=...` bei `SESSION_SECRET_KEY=...` vietoje tuščių. Išsaugokite failą.
 4. Paleiskite serverį `uvicorn app.main:app --reload` ir atidarykite http://127.0.0.1:8000/login.
 
-Programa `.env` failą nuskaito pati paleidimo metu; jei kintamasis jau nustatytas aplinkoje, jis turi pirmenybę. `.env` yra `.gitignore` sąraše, todėl į GitHub nepatenka. Niekada neįrašykite tikrų reikšmių į `.env.example`, kodą ar Git istoriją. Pakeitus slaptažodį (naujas maišas), visos senos sesijos nustoja galioti; pakeitus `SESSION_SECRET_KEY` – taip pat.
+Programa `.env` failą nuskaito pati paleidimo metu; jei kintamasis jau nustatytas aplinkoje, jis turi pirmenybę. `.env` yra `.gitignore` sąraše, todėl į GitHub nepatenka. Niekada neįrašykite tikrų reikšmių į `.env.example`, kodą ar Git istoriją. Pakeitus `SESSION_SECRET_KEY`, visos sesijos nustoja galioti.
+
+## Naudotojų paskyros ir rolės (6A)
+
+| Rolė | Ką gali |
+|---|---|
+| svečias (neprisijungęs) | Pateikti klaidą viešoje formoje `/report`; nieko kito nemato |
+| `tester` | Užsiregistruoti `/register`; pateikti klaidą; matyti **tik savo** pranešimus ir jų būsenas (`/my/reports`) |
+| `developer` | Kol kas – tik savo pranešimai. Klaidos pagal priskirtas kategorijas bus 6B etape; prieigos prie visų pranešimų neturi |
+| `admin` | Visa esama vidinė aplinka: `/dashboard`, klaidų detalės ir valdymas, `/import`, `/dashboard/training-data` |
+
+- **Registracija** visada sukuria `tester` paskyrą; bet koks `role` formos laukas ignoruojamas. Vardas (3–40 lotyniškų raidžių, skaičių, `. _ -`) ir el. paštas unikalūs nepriklausomai nuo raidžių dydžio; slaptažodis bent 10 simbolių, saugomas tik PBKDF2-SHA256 maiša. Vardas, sutampantis su `ADMIN_USERNAME`, rezervuotas.
+- **Teisės tikrinamos serveryje** kiekvienai užklausai (`require_admin` / `require_login`), ne tik paslepiant nuorodas. Testuotojas, atidaręs administratoriaus URL, gauna 403; svetimo pranešimo URL – 404.
+- **Sesijos** slapuke tik naudotojo ID; rolė ir aktyvumas kaskart skaitomi iš DB, todėl rolės pakeitimas ar paskyros išjungimas galioja iš karto, o pakeitus slaptažodį senos sesijos nebegalioja.
+- **Prisijungimo ir registracijos formos** apsaugotos CSRF (dvigubo pateikimo slapukas). Po 10 nesėkmingų bandymų tam pačiam vardui iš to paties IP 15 min. prisijungti neleidžiama (ribojimas atmintyje, vienam serverio procesui).
+- **Pranešimo savininkas:** prisijungusio naudotojo pranešimas susiejamas su jo paskyra (`reporter_user_id` imamas tik iš sesijos). Svečių ir visi seni pranešimai lieka be savininko ir niekam nepriskiriami.
+- Slaptažodžio atkūrimo el. paštu nėra (tam reikia pašto infrastruktūros); slaptažodį gali pakeisti administratorius komandine eilute.
+
+### Esamo administratoriaus išsaugojimas
+
+`.env` administratorius (`ADMIN_USERNAME`, `ADMIN_PASSWORD_HASH`) perkeliamas į `users` lentelę su **tuo pačiu vardu ir ta pačia maiša** (slaptažodis nepasikeičia) ir role `admin`:
+
+- automatiškai – pirmą kartą prisijungus tuo vardu ir teisingu slaptažodžiu; arba
+- rankiniu būdu (rekomenduojama, kartu sukuriama DB atsarginė kopija `data\backups\`):
+  ```bat
+  python -m tools.users bootstrap-admin
+  ```
+
+Perkėlimas idempotentiškas: jei administratorius jau yra – niekas nekeičiama. Jei vardas jau priklauso ne administratoriaus paskyrai – niekas neperrašoma, pranešama apie konfliktą. Po perkėlimo slaptažodis tikrinamas pagal DB, todėl vėlesnis `ADMIN_PASSWORD_HASH` pakeitimas `.env` faile slaptažodžio **nebekeičia** – naudokite `python -m tools.users set-password <vardas>`. `.env` kintamųjų netrinkite: jie reikalingi sesijų raktui ir administratoriaus vardo rezervavimui.
+
+### Naudotojų administravimas (Windows CMD)
+
+```bat
+python -m tools.users list
+python -m tools.users set-role jonas developer
+python -m tools.users set-role jonas admin
+python -m tools.users deactivate jonas
+python -m tools.users activate jonas
+python -m tools.users set-password jonas
+```
+
+Naudotojų valdymo puslapis svetainėje nesukurtas (numatyta vėlesniuose etapuose).
 
 ## Vidinės aplinkos naudojimas
 
@@ -284,9 +325,9 @@ Greita patikra: paleiskite `uvicorn app.main:app --reload`, atidarykite http://1
 
 ## Saugumas ir apribojimai
 
-- Pradinė versija skirta vietiniam akademiniam prototipui, o ne viešai diegiamai daugiavartotojų sistemai. Vieša forma priima pranešimus be paskyros, o visi vidiniai puslapiai apsaugoti programuotojo / koordinatoriaus prisijungimu (automatinis testas tikrina, kad kiekvienas ne viešas maršrutas be prisijungimo nukreipiamas į `/login`).
+- Pradinė versija skirta vietiniam akademiniam prototipui, vienai organizacijai. Vieša forma priima pranešimus be paskyros, o visi kiti puslapiai reikalauja prisijungimo (automatinis testas tikrina, kad kiekvienas ne viešas maršrutas be prisijungimo nukreipiamas į `/login`), administravimo puslapiai – `admin` rolės.
 - Sesija saugoma pasirašytame (HMAC-SHA256) `HttpOnly`, `SameSite=Lax` slapuke be serverio pusės saugyklos: atsijungus slapukas ištrinamas naršyklėje, bet jei kas nors būtų jį pavogęs anksčiau, jis galiotų iki 8 val. pabaigos (arba kol nepakeistas slaptažodis / `SESSION_SECRET_KEY`).
-- Nėra apsaugos nuo daugkartinių slaptažodžio spėjimų (užrakinimo / ribojimo); prieš viešą diegimą ją reikėtų pridėti. Prototipas skirtas vietiniam naudojimui.
+- Slaptažodžio spėjimų ribojimas (6A) laikomas serverio atmintyje: jis išsivalo perkrovus serverį ir neveikia tarp kelių procesų. Registracijos dažnis neribojamas. Prieš viešą diegimą tai reikėtų sustiprinti.
 - GitHub prieigos žetonas, jei reikalingas, pateikiamas per aplinkos kintamąjį GITHUB_TOKEN; jo negalima įrašyti į kodą, duomenų bazę, žurnalus ar Git istoriją.
 - Sistema nekeičia GitHub Issues, jų etikečių ar priskirtų programuotojų.
 - Kategorijos, prioritetas ir sudėtingumas yra rekomendacijos, o ne automatiškai patvirtinti faktai.

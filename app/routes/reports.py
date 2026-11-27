@@ -1,4 +1,8 @@
-"""Vieša klaidos pateikimo forma. Prisijungimo nereikia, kiti pranešimai nerodomi."""
+"""Vieša klaidos pateikimo forma. Prisijungimo nereikia, kiti pranešimai nerodomi.
+
+6A: jei naudotojas prisijungęs, pranešimas susiejamas su jo paskyra (`reporter_user_id`) ir
+matomas jo „Mano pranešimuose“. Svečio pranešimas lieka anoniminis.
+"""
 
 import logging
 from pathlib import Path
@@ -7,8 +11,9 @@ from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
-from app.db import get_connection, init_db
-from app.routes.issues import get_database_path, get_predictor
+from app.auth import Session, get_current_session
+from app.db import get_connection, get_database_path, init_db
+from app.routes.issues import get_predictor
 from app.services.bug_report_service import (
     DESCRIPTION_MAX_LENGTH,
     TITLE_MAX_LENGTH,
@@ -26,12 +31,14 @@ templates = Jinja2Templates(directory=Path(__file__).resolve().parent.parent / "
 
 def _render_form(
     request: Request,
+    session: Session | None = None,
     title: str = "",
     description: str = "",
     errors: dict[str, str] | None = None,
     status_code: int = 200,
 ) -> HTMLResponse:
     context = {
+        "session": session,
         "title": title,
         "description": description,
         "errors": errors or {},
@@ -44,8 +51,10 @@ def _render_form(
 
 
 @router.get("/report", response_class=HTMLResponse)
-def report_form(request: Request) -> HTMLResponse:
-    return _render_form(request)
+def report_form(
+    request: Request, session: Session | None = Depends(get_current_session)
+) -> HTMLResponse:
+    return _render_form(request, session)
 
 
 @router.post("/report", response_model=None)
@@ -55,16 +64,19 @@ def submit_report(
     description: str = Form(""),
     database_path: Path = Depends(get_database_path),
     predictor: Predictor = Depends(get_predictor),
+    session: Session | None = Depends(get_current_session),
 ) -> HTMLResponse | RedirectResponse:
     title = clean_text(title)
     description = clean_text(description)
     errors = validate_report(title, description)
     if errors:
-        return _render_form(request, title, description, errors, status_code=400)
+        return _render_form(request, session, title, description, errors, status_code=400)
 
+    # Savininkas imamas tik iš patikrintos sesijos, niekada iš formos laukų.
+    reporter_user_id = session.user_id if session is not None else None
     with get_connection(database_path) as conn:
         init_db(conn)
-        report_id = create_bug_report(conn, title, description)
+        report_id = create_bug_report(conn, title, description, reporter_user_id)
         # Automatinė klasifikacija vietiniais modeliais. Pranešimas jau išsaugotas, todėl bet kokia
         # klasifikavimo klaida klientui nerodoma ir pranešimo nepraranda.
         try:
@@ -77,5 +89,7 @@ def submit_report(
 
 
 @router.get("/report/submitted", response_class=HTMLResponse)
-def report_submitted(request: Request) -> HTMLResponse:
-    return templates.TemplateResponse(request, "report_submitted.html")
+def report_submitted(
+    request: Request, session: Session | None = Depends(get_current_session)
+) -> HTMLResponse:
+    return templates.TemplateResponse(request, "report_submitted.html", {"session": session})

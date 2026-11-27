@@ -9,16 +9,23 @@
 <body>
   <header class="topbar">
     <div class="topbar-inner">
-      <a class="brand" href="/dashboard">Klaidų valdymas</a>
-      <nav class="topnav" aria-label="Vidinė navigacija">
+      {# Navigacija pagal rolę (6A). Tai tik patogumas: teisės tikrinamos serveryje. #}
+      {% set role_names = {"tester": "testuotojas", "developer": "programuotojas", "admin": "administratorius"} %}
+      <a class="brand" href="{{ '/dashboard' if session.role == 'admin' else '/my/reports' }}">Klaidų valdymas</a>
+      <nav class="topnav" aria-label="Pagrindinė navigacija">
+        {% if session.role == "admin" %}
         <a href="/dashboard"{% if active == "dashboard" %} aria-current="page"{% endif %}>Klaidų sąrašas</a>
         <a href="/dashboard/training-data"{% if active == "training" %} aria-current="page"{% endif %}>Mokymo duomenys</a>
         <a href="/import"{% if active == "import" %} aria-current="page"{% endif %}>GitHub importas</a>
         <a href="/report">Vieša forma</a>
+        {% else %}
+        <a href="/my/reports"{% if active == "my_reports" %} aria-current="page"{% endif %}>Mano pranešimai</a>
+        <a href="/report">Pranešti apie klaidą</a>
+        {% endif %}
       </nav>
       <form class="logout" method="post" action="/logout">
         <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
-        <span class="user" title="Prisijungęs naudotojas">{{ session.username }}</span>
+        <span class="user" title="Prisijungęs naudotojas">{{ session.username }} <span class="muted small">({{ role_names.get(session.role, session.role) }})</span></span>
         <button type="submit" class="secondary">Atsijungti</button>
       </form>
     </div>

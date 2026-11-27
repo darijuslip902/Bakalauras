@@ -2,7 +2,7 @@
 
 ## Dabartinė būklė (2026-11-13, po 5D)
 
-0–5D etapai baigti, PR #11 sujungtas į main. Modelių versija `20261113-125330`. 6 etapas patvirtintas kaip vienos organizacijos sąsajos / paskyrų / kategorijų darbai. 6A–6E kodas dar neįgyvendintas; statistikos puslapis neprivalomas. P0 paliekamas, nors jo atpažinimas silpnas.
+0–5D etapai baigti, PR #11 sujungtas į main. Modelių versija `20261113-125330`. 6 etapas patvirtintas kaip vienos organizacijos sąsajos / paskyrų / kategorijų darbai. 6A įgyvendintas šakoje `claude/phase-6a-user-accounts` (PR laukia sujungimo); 6B–6E kodas dar neįgyvendintas; statistikos puslapis neprivalomas. P0 paliekamas, nors jo atpažinimas silpnas.
 
 - 40 024 importuoti GitHub įrašai; 23 884 sėkmingos DI anotacijos (19 412 tinkamų, 4 472 netinkamų).
 - 18 267 mokymo ir validacijos pavyzdžiai; 1 120 atrinktų testo įrašų, iš jų 901 tinkamas (visi 901 su DI etalonu); 30 pilotinių įrašų.
@@ -27,7 +27,7 @@ Jei dokumentai prieštarauja vienas kitam, nekurk naujų prielaidų: pažymėk p
 - Prognozė ir žmogaus pataisyta / patvirtinta žyma visada saugomos atskirai.
 - Vieši GitHub Issues naudojami atskirai mokymo duomenims; integracija nekeičia GitHub pusėje esančių issues.
 - Klientui nereikia paskyros ir jis negali peržiūrėti kitų pranešimų. Atsakingo programuotojo automatinis parinkimas neįtrauktas.
-- Įgyvendinimo etapus skaityti iš docs/IMPLEMENTATION_PLAN.md. 0–5D baigti; artimiausia konkreti kodavimo užduotis 6A, po jos 6B–6E atskirais PR. Dabartiniame main dar viena vidinė paskyra; naujos rolės / registracija tik suplanuotos. Modelių statistikos puslapis neprivalomas. Nekeisti modelių ar DB atliekant vien dokumentacijos darbus.
+- Įgyvendinimo etapus skaityti iš docs/IMPLEMENTATION_PLAN.md. 0–5D baigti; 6A įgyvendintas (naudotojų paskyros DB, registracija tik `tester`, `require_admin` esamiems vidiniams maršrutams, „Mano pranešimai“), po jo 6B–6E atskirais PR. Modelių statistikos puslapis neprivalomas. Nekeisti modelių ar DB atliekant vien dokumentacijos darbus.
 
 ## 6A architektūriniai reikalavimai (prieš 6A kodavimo PR)
 

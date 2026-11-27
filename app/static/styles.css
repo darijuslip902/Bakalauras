@@ -683,3 +683,9 @@ details.tech {
 details.tech summary { cursor: pointer; font-weight: 600; }
 ul.history { padding-left: 1.1rem; margin: 0.5rem 0 0; }
 .inline-form { margin-top: 0.5rem; }
+
+/* 6A: prisijungimo ir registracijos formos */
+.auth-form { display: grid; gap: 0.9rem; margin: 1rem 0; }
+.auth-form .form-field input { width: 100%; box-sizing: border-box; }
+.form-field input[aria-invalid="true"] { border-color: #b42318; }
+.card-head h1 { margin: 0; }
