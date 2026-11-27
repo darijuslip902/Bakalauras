@@ -29,6 +29,7 @@ from tests.auth_utils import (
     form_csrf,
     login,
     register,
+    submit_report,
     use_test_auth,
 )
 from tools import users as users_cli
@@ -93,8 +94,7 @@ class Site:
             conn.close()
 
     def submit(self, client: TestClient, title: str, description: str = "Aprašymas pakankamai ilgas.", **extra):
-        data = {"title": title, "description": description, **extra}
-        return client.post("/report", data=data, follow_redirects=False)
+        return submit_report(client, title, description, **extra)
 
 
 @pytest.fixture
@@ -544,3 +544,135 @@ def test_form_csrf_cookie_is_http_only_and_not_a_session(site: Site) -> None:
 
     assert cookie.startswith("bakalauras_form_csrf=") and "HttpOnly" in cookie and "SameSite=lax" in cookie
     assert re.search(r'name="form_csrf" value="[^"]{30,}"', response.text)
+
+
+
+# --- PR #14 peržiūra: CSRF viešoje formoje ---------------------------------------------------
+
+
+def test_report_form_sets_form_csrf_for_guest_and_user(site: Site) -> None:
+    guest = site.client().get("/report")
+    tester = site.tester("tomas").get("/report")
+
+    for page in (guest, tester):
+        assert page.status_code == 200
+        assert re.search(r'name="form_csrf" value="[^"]{30,}"', page.text)
+    assert "bakalauras_form_csrf=" in guest.headers["set-cookie"]
+
+
+@pytest.mark.parametrize("logged_in", [False, True])
+def test_report_without_valid_csrf_is_rejected_and_not_saved(site: Site, logged_in: bool) -> None:
+    client = site.tester("tomas") if logged_in else site.client()
+    valid = form_csrf(client, "/report")
+    data = {"title": "Klaida", "description": "Aprašymas pakankamai ilgas."}
+
+    no_token = client.post("/report", data=data, follow_redirects=False)
+    wrong = client.post("/report", data={**data, "form_csrf": valid + "x"}, follow_redirects=False)
+    other_browser = site.client()  # galiojantis žetonas, bet be atitinkamo slapuko (kita naršyklė)
+    if logged_in:
+        other_browser.cookies.set(SESSION_COOKIE_NAME, client.cookies.get(SESSION_COOKIE_NAME))
+    foreign = other_browser.post("/report", data={**data, "form_csrf": valid}, follow_redirects=False)
+
+    for response in (no_token, wrong, foreign):
+        assert response.status_code == 403 and "CSRF" in response.text
+    assert site.query("SELECT id FROM bug_reports") == []
+
+
+def test_report_csrf_cannot_be_forged_to_link_report_to_logged_in_user(site: Site) -> None:
+    """Kita svetainė negali pateikti klaidos prisijungusio testuotojo vardu (slapukas siunčiamas,
+    bet formos žetono ji nežino)."""
+    tomas = site.tester("tomas")
+
+    attack = tomas.post("/report", data={"title": "Suklastota", "description": "Kitos svetainės forma."},
+                        follow_redirects=False)
+    legit = site.submit(tomas, "Tikra klaida")
+
+    assert attack.status_code == 403 and legit.status_code == 303
+    rows = site.query("SELECT title, reporter_user_id FROM bug_reports")
+    assert [r["title"] for r in rows] == ["Tikra klaida"] and rows[0]["reporter_user_id"] is not None
+
+
+def test_report_csrf_works_without_login_configuration(tmp_path: Path) -> None:
+    """Vieša forma veikia ir be paskyrų konfigūracijos (atsarginis programos raktas)."""
+    app = create_app()
+    app.dependency_overrides[get_database_path] = lambda: tmp_path / "no-auth.sqlite3"
+    use_test_auth(app, None)
+    client = TestClient(app)
+
+    assert submit_report(client, "Svečio klaida", "Aprašymas pakankamai ilgas.").status_code == 303
+    rejected = client.post("/report", data={"title": "A", "description": "Aprašymas pakankamai ilgas."})
+    assert rejected.status_code == 403
+
+
+def test_invalid_report_keeps_csrf_token_for_resubmission(site: Site) -> None:
+    client = site.client()
+
+    first = submit_report(client, "", "Aprašymas")
+    token = re.search(r'name="form_csrf" value="([^"]+)"', first.text).group(1)
+    second = client.post("/report", data={"title": "Pataisyta", "description": "Aprašymas", "form_csrf": token},
+                         follow_redirects=False)
+
+    assert first.status_code == 400 and second.status_code == 303
+
+
+# --- PR #14 peržiūra: nukreipimas po prisijungimo pagal rolę ---------------------------------
+
+
+@pytest.mark.parametrize(
+    "next_path",
+    ["/dashboard", "/dashboard/reports/1", "/import", "/dashboard/training-data", "/my/reports/../../dashboard",
+     "https://evil.example/", "//evil.example/"],
+)
+def test_tester_is_not_redirected_to_admin_pages_after_login(site: Site, next_path: str) -> None:
+    register(site.client(), "tomas", "tomas@pavyzdys.lt", TESTER_PASSWORD)
+    client = site.client()
+
+    response = login(client, "tomas", TESTER_PASSWORD, next_path=next_path)
+
+    assert response.status_code == 303 and response.headers["location"] == "/my/reports"
+
+
+@pytest.mark.parametrize("next_path", ["/my/reports/5", "/my/reports", "/report", "/report/submitted"])
+def test_tester_can_return_to_own_allowed_pages(site: Site, next_path: str) -> None:
+    register(site.client(), "tomas", "tomas@pavyzdys.lt", TESTER_PASSWORD)
+
+    response = login(site.client(), "tomas", TESTER_PASSWORD, next_path=next_path)
+
+    assert response.headers["location"] == next_path
+
+
+def test_developer_redirect_is_limited_like_tester(site: Site) -> None:
+    register(site.client(), "programuotoja", "p@pavyzdys.lt", TESTER_PASSWORD)
+    site.change(set_role, "programuotoja", "developer")
+
+    assert login(site.client(), "programuotoja", TESTER_PASSWORD, next_path="/dashboard").headers["location"] == "/my/reports"
+
+
+@pytest.mark.parametrize(
+    ("next_path", "expected"),
+    [("/dashboard/reports/7?message=x", "/dashboard/reports/7?message=x"), ("/import", "/import"),
+     ("/dashboard/training-data", "/dashboard/training-data"), ("/my/reports", "/my/reports"),
+     ("https://evil.example/", "/dashboard"), ("/my/reports/../../import", "/dashboard"), ("", "/dashboard")],
+)
+def test_admin_returns_to_legitimate_internal_page(site: Site, next_path: str, expected: str) -> None:
+    assert login(site.client(), next_path=next_path).headers["location"] == expected
+
+
+def test_logged_in_tester_visiting_login_with_admin_next_goes_home(site: Site) -> None:
+    client = site.tester("tomas")
+
+    response = client.get("/login?next=%2Fdashboard", follow_redirects=False)
+
+    assert response.status_code == 303 and response.headers["location"] == "/my/reports"
+
+
+def test_tester_redirected_from_admin_page_to_login_lands_on_own_page(site: Site) -> None:
+    register(site.client(), "tomas", "tomas@pavyzdys.lt", TESTER_PASSWORD)
+    client = site.client()
+
+    first = client.get("/dashboard", follow_redirects=False)  # neprisijungus: /login?next=%2Fdashboard
+    assert first.headers["location"] == "/login?next=%2Fdashboard"
+    response = login(client, "tomas", TESTER_PASSWORD, next_path="/dashboard")
+
+    assert response.headers["location"] == "/my/reports"
+    assert client.get(response.headers["location"]).status_code == 200

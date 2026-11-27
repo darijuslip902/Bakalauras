@@ -44,6 +44,18 @@ def login(
     return client.post("/login", data=data, follow_redirects=False)
 
 
+def submit_report(
+    client: TestClient,
+    title: str,
+    description: str,
+    follow_redirects: bool = False,
+    **extra: str,
+) -> httpx.Response:
+    """Pateikia viešą klaidos formą kaip naršyklė: atidaro `/report` (CSRF slapukas + žetonas)."""
+    data = {"title": title, "description": description, "form_csrf": form_csrf(client, "/report"), **extra}
+    return client.post("/report", data=data, follow_redirects=follow_redirects)
+
+
 def register(
     client: TestClient,
     username: str,

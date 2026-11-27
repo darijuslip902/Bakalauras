@@ -28,6 +28,7 @@
     {% endif %}
 
     <form method="post" action="/report">
+      <input type="hidden" name="form_csrf" value="{{ form_csrf }}">
       <p>
         <label for="title">Klaidos pavadinimas</label><br>
         <input id="title" name="title" type="text" class="wide" required

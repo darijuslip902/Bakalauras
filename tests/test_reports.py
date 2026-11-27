@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 from app.main import create_app
 from app.routes.issues import get_database_path
 from app.services.bug_report_service import DESCRIPTION_MAX_LENGTH, TITLE_MAX_LENGTH
+from tests.auth_utils import submit_report
 
 
 class ReportApp:
@@ -20,11 +21,7 @@ class ReportApp:
         self.client = TestClient(app)
 
     def submit(self, title: str, description: str, follow_redirects: bool = True) -> httpx.Response:
-        return self.client.post(
-            "/report",
-            data={"title": title, "description": description},
-            follow_redirects=follow_redirects,
-        )
+        return submit_report(self.client, title, description, follow_redirects=follow_redirects)
 
     def rows(self) -> list[sqlite3.Row]:
         if not self.db_path.exists():

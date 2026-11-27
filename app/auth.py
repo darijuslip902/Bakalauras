@@ -18,6 +18,7 @@ import hashlib
 import hmac
 import json
 import os
+import re
 import secrets
 import time
 from collections import deque
@@ -231,11 +232,22 @@ def is_secure_request(request: Request, settings: AuthSettings) -> bool:
     return settings.cookie_secure or request.url.scheme == "https"
 
 
+_DOT_SEGMENT = re.compile(r"(^|/)(\.|%2e){1,2}(/|$|\?|#)", re.IGNORECASE)
+
+
 def safe_next_path(value: str | None, default: str = "/dashboard") -> str:
-    """Leidžia grįžti tik į vidinį kelią šioje svetainėje (apsauga nuo open redirect)."""
-    if value and value.startswith("/") and not value.startswith(("//", "/\\")):
-        return value
-    return default
+    """Leidžia grįžti tik į vidinį kelią šioje svetainėje (apsauga nuo open redirect).
+
+    Atmetami: išoriniai adresai, `//` ir `/\\` pradžios, bet kokie `\\`, valdymo / tarpo simboliai
+    ir `.` / `..` (taip pat `%2e`) segmentai – naršyklė juos sutrumpintų į kitą kelią.
+    """
+    if not value or not value.startswith("/") or value.startswith(("//", "/\\")):
+        return default
+    if "\\" in value or any(ord(char) < 33 or ord(char) == 127 for char in value):
+        return default
+    if _DOT_SEGMENT.search(value.split("?", 1)[0].split("#", 1)[0]):
+        return default
+    return value
 
 
 def home_path(role: str) -> str:
@@ -243,26 +255,71 @@ def home_path(role: str) -> str:
     return "/dashboard" if role == "admin" else "/my/reports"
 
 
-# --- CSRF formoms be sesijos (prisijungimas, registracija) -------------------
+# Ne administratoriams leidžiami grįžimo puslapiai (tikslus kelias arba kelio pradžia su „/“).
+_NON_ADMIN_NEXT_PATHS = ("/", "/my/reports", "/report", "/report/submitted")
+_NON_ADMIN_NEXT_PREFIXES = ("/my/reports/",)
 
 
-def form_csrf_token(request: Request, settings: AuthSettings) -> tuple[str, str | None]:
+def next_path_for_role(value: str | None, role: str) -> str:
+    """Kur nukreipti po prisijungimo: saugus vidinis kelias, kurį ši rolė gali atidaryti.
+
+    Administratorius gali grįžti į bet kurį saugų vidinį puslapį. Kitos rolės – tik į savo
+    puslapius; senas `next=/dashboard` ar kitas administravimo adresas pakeičiamas rolės
+    pradiniu puslapiu (teisės vis tiek tikrinamos ir pačiame maršrute).
+    """
+    default = home_path(role)
+    path = safe_next_path(value, "")
+    if not path:
+        return default
+    if role == "admin":
+        return path
+    bare = path.split("?", 1)[0].split("#", 1)[0]
+    if bare in _NON_ADMIN_NEXT_PATHS or bare.startswith(_NON_ADMIN_NEXT_PREFIXES):
+        return path
+    return default
+
+
+# --- CSRF formoms be sesijos (prisijungimas, registracija, vieša klaidos forma) -------
+
+
+def form_csrf_secret(request: Request, settings: AuthSettings | None) -> str:
+    """Formų CSRF raktas: SESSION_SECRET_KEY, o jei prisijungimas nesukonfigūruotas – atsitiktinis
+    šios programos instancijos raktas (vieša klaidos forma turi veikti ir be paskyrų)."""
+    if settings is not None:
+        return settings.secret_key
+    state = request.app.state
+    if not getattr(state, "form_csrf_fallback_key", None):
+        state.form_csrf_fallback_key = secrets.token_hex(32)
+    return state.form_csrf_fallback_key
+
+
+def form_csrf_token(request: Request, secret_key: str) -> tuple[str, str | None]:
     """Grąžina (žetonas formai, nauja slapuko reikšmė arba None, jei esamas slapukas tinka)."""
     cookie = request.cookies.get(FORM_CSRF_COOKIE_NAME, "")
     token, _, signature = cookie.partition(".")
-    if token and hmac.compare_digest(signature, _sign(settings.secret_key, "form:" + token)):
+    if token and hmac.compare_digest(signature, _sign(secret_key, "form:" + token)):
         return token, None
     token = secrets.token_urlsafe(32)
-    return token, f"{token}.{_sign(settings.secret_key, 'form:' + token)}"
+    return token, f"{token}.{_sign(secret_key, 'form:' + token)}"
 
 
-def check_form_csrf(request: Request, settings: AuthSettings, submitted_token: str) -> None:
+def check_form_csrf(request: Request, secret_key: str, submitted_token: str) -> None:
     """Dvigubas pateikimas: formos žetonas turi sutapti su pasirašytu slapuku."""
     cookie = request.cookies.get(FORM_CSRF_COOKIE_NAME, "")
     token, _, signature = cookie.partition(".")
-    valid_cookie = bool(token) and hmac.compare_digest(signature, _sign(settings.secret_key, "form:" + token))
+    valid_cookie = bool(token) and hmac.compare_digest(signature, _sign(secret_key, "form:" + token))
     if not valid_cookie or not submitted_token or not hmac.compare_digest(submitted_token, token):
         raise CsrfError()
+
+
+def set_form_csrf_cookie(response, request: Request, cookie_value: str | None) -> None:
+    """Nustato formų CSRF slapuką, jei sukurtas naujas žetonas. Tai ne prisijungimo slapukas."""
+    if cookie_value is None:
+        return
+    response.set_cookie(
+        FORM_CSRF_COOKIE_NAME, cookie_value, max_age=SESSION_MAX_AGE_SECONDS, path="/",
+        httponly=True, samesite="lax", secure=request.url.scheme == "https",
+    )
 
 
 # --- Prisijungimo bandymų ribojimas (be papildomos infrastruktūros) ------------

@@ -7,7 +7,6 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 from app.auth import (
-    FORM_CSRF_COOKIE_NAME,
     SESSION_COOKIE_NAME,
     SESSION_MAX_AGE_SECONDS,
     AuthSettings,
@@ -21,7 +20,9 @@ from app.auth import (
     get_current_session,
     home_path,
     is_secure_request,
+    next_path_for_role,
     safe_next_path,
+    set_form_csrf_cookie,
 )
 from app.db import get_connection, get_database_path, init_db
 from app.services.user_service import (
@@ -56,16 +57,6 @@ def _limiter(request: Request) -> LoginRateLimiter:
     return state.login_limiter
 
 
-def _set_form_csrf_cookie(response, request: Request, cookie_value: str | None) -> None:
-    if cookie_value is None:
-        return
-    # Tik apsauga nuo CSRF (ne prisijungimo slapukas); Secure – kai užklausa per HTTPS.
-    response.set_cookie(
-        FORM_CSRF_COOKIE_NAME, cookie_value, max_age=SESSION_MAX_AGE_SECONDS, path="/",
-        httponly=True, samesite="lax", secure=request.url.scheme == "https",
-    )
-
-
 def _set_session_cookie(response, request: Request, settings: AuthSettings, user) -> None:
     response.set_cookie(
         SESSION_COOKIE_NAME,
@@ -87,10 +78,10 @@ def _render(
 ) -> HTMLResponse:
     cookie_value = None
     if settings is not None:
-        context["form_csrf"], cookie_value = form_csrf_token(request, settings)
+        context["form_csrf"], cookie_value = form_csrf_token(request, settings.secret_key)
     context.setdefault("configured", settings is not None)
     response = templates.TemplateResponse(request, template, context, status_code=status_code)
-    _set_form_csrf_cookie(response, request, cookie_value)
+    set_form_csrf_cookie(response, request, cookie_value)
     return response
 
 
@@ -114,7 +105,7 @@ def login_form(
     session: Session | None = Depends(get_current_session),
 ) -> HTMLResponse | RedirectResponse:
     if session is not None:
-        return RedirectResponse(safe_next_path(next_path, home_path(session.role)), status_code=303)
+        return RedirectResponse(next_path_for_role(next_path, session.role), status_code=303)
     if settings is None:
         return _render_login(request, None, next_path, status_code=503)
     info = "Atsijungėte." if logged_out else None
@@ -135,7 +126,7 @@ def login(
 ) -> HTMLResponse | RedirectResponse:
     if settings is None:
         return _render_login(request, None, next_path, status_code=503)
-    check_form_csrf(request, settings, form_csrf)
+    check_form_csrf(request, settings.secret_key, form_csrf)
     username = username.strip()[:USERNAME_MAX_LENGTH * 2]
     key = (request.client.host if request.client else "", username.casefold())
     limiter = _limiter(request)
@@ -153,7 +144,7 @@ def login(
         return _render_login(request, settings, next_path, username, error=message, status_code=status_code)
 
     limiter.reset(key)
-    response = RedirectResponse(safe_next_path(next_path, home_path(user.role)), status_code=303)
+    response = RedirectResponse(next_path_for_role(next_path, user.role), status_code=303)
     _set_session_cookie(response, request, settings, user)
     return response
 
@@ -194,7 +185,7 @@ def register(
     """Rolės laukas sąmoningai nepriimamas: bet koks `role` formos laukas ignoruojamas."""
     if settings is None:
         return _render_register(request, None, status_code=503)
-    check_form_csrf(request, settings, form_csrf)
+    check_form_csrf(request, settings.secret_key, form_csrf)
     form = RegistrationForm(username, email, password, password_confirm)
     values = {"username": username.strip(), "email": email.strip()}
     errors = validate_registration(form, reserved_username=settings.username)

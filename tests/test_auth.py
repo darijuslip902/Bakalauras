@@ -26,6 +26,7 @@ from tests.auth_utils import (
     TEST_USERNAME,
     csrf_token,
     login,
+    submit_report,
     use_test_auth,
 )
 
@@ -187,6 +188,14 @@ def test_session_is_invalid_with_other_key_changed_password_or_inactive_user() -
         ("//evil.example/", "/dashboard"),
         ("/\\evil.example/", "/dashboard"),
         ("dashboard", "/dashboard"),
+        # Dot segmentus naršyklė sutrumpintų (pvz. /my/reports/../../dashboard -> /dashboard).
+        ("/my/reports/../../dashboard", "/dashboard"),
+        ("/my/reports/%2e%2e/%2E%2E/import", "/dashboard"),
+        ("/my/./reports", "/dashboard"),
+        ("/my/reports\\..\\dashboard", "/dashboard"),
+        ("/my/reports\n", "/dashboard"),
+        ("/my/reports?q=a b", "/dashboard"),
+        ("/my/reports?page=..", "/my/reports?page=.."),  # užklausos dalis kelio nekeičia
     ],
 )
 def test_safe_next_path_prevents_open_redirect(value: str | None, expected: str) -> None:
@@ -353,9 +362,7 @@ def test_public_routes_still_work_without_login(client: TestClient) -> None:
     for path in ("/", "/health", "/report", "/report/submitted", "/login"):
         assert client.get(path).status_code == 200, path
 
-    response = client.post(
-        "/report", data={"title": "Vieša klaida", "description": "Be prisijungimo"}, follow_redirects=False
-    )
+    response = submit_report(client, "Vieša klaida", "Be prisijungimo")
     assert response.status_code == 303
     assert response.headers["location"] == "/report/submitted"
 
