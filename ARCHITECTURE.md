@@ -1,8 +1,8 @@
 # Sistemos architektūra
 
-## Dabartinė būklė (2026-11-13, po 5D)
+## Dabartinė realizacija (5D baigta) ir naujas 6 etapo planas (2026-11-27)
 
-0–5D etapai baigti, PR #11 sujungtas į main. Modelių versija `20261113-125330`. 6 etapas nepradėtas: laukiama darbo vadovo pastabų; statistikos puslapis nėra patvirtintas reikalavimas. P0 paliekamas, nors jo atpažinimas silpnas.
+0–5D etapai baigti, PR #11 sujungtas į main. Modelių versija `20261113-125330`. 6 etapo reikalavimai aptarti su darbo vadovu ir pasirinkta vienos organizacijos kryptis; 6A–6E programinis kodas dar neįgyvendintas. Statistikos puslapis nėra privalomas. P0 paliekamas, nors jo atpažinimas silpnas.
 
 - 40 024 importuoti GitHub įrašai; 23 884 sėkmingos DI anotacijos (19 412 tinkamų, 4 472 netinkamų).
 - 18 267 mokymo ir validacijos pavyzdžiai; 1 120 atrinktų testo įrašų, iš jų 901 tinkamas (visi 901 su DI etalonu); 30 pilotinių įrašų.
@@ -28,7 +28,7 @@ Pirmoji versija:
 - pateikia modelio vertinimo ataskaitą;
 - saugo duomenis lokaliai SQLite faile.
 
-Pirmoji versija sąmoningai **nepriskiria atsakingo programuotojo**, nekeičia GitHub issues, nerašo į GitHub API, svetainėje nenaudoja mokamos LLM API (ji naudojama tik vienkartiniam mokymo duomenų žymėjimui atskirais scenarijais, žr. 5 skyriaus `ai_annotations`), netreniruoja milžiniško neuroninio tinklo ir neturi mikroservisų ar atskiro JavaScript SPA.
+Esama 5D versija sąmoningai **nepriskiria atsakingo programuotojo**, nekeičia GitHub issues, nerašo į GitHub API, svetainėje nenaudoja mokamos LLM API (ji naudojama tik vienkartiniam mokymo duomenų žymėjimui atskirais scenarijais, žr. 5 skyriaus `ai_annotations`), netreniruoja milžiniško neuroninio tinklo ir neturi mikroservisų ar atskiro JavaScript SPA.
 
 ## 2. Naudojamas technologijų rinkinys
 
@@ -207,10 +207,10 @@ Pradinis modelis: `Pipeline(TfidfVectorizer(...), LogisticRegression(...))`. Tek
 ## 9. Prisijungimas ir saugumas
 
 - Tik programuotojo / koordinatoriaus vidiniai maršrutai reikalauja autentifikavimo; viešas pranešimo pateikimo maršrutas lieka pasiekiamas be paskyros.
-- Pirmajai vietinei bakalauro prototipo versijai pakanka vienos administratoriaus / koordinatoriaus paskyros, kurios slaptažodis laikomas aplinkos kintamajame arba saugomas tik saugiu slaptažodžio maišu. Niekada nelaikyti slaptažodžio atviro teksto pavidalu kode ar repozitorijoje.
+- Iki 5D įgyvendinta viena administratoriaus / koordinatoriaus paskyra, kurios slaptažodis laikomas aplinkos kintamajame arba saugomas tik saugiu slaptažodžio maišu. Niekada nelaikyti slaptažodžio atviro teksto pavidalu kode ar repozitorijoje.
 - Apsaugoti vidinius sąrašo, detalių, būsenų keitimo, anotavimo, mokymo ir vertinimo maršrutus. Vien paslėpti nuorodas HTML puslapyje nepakanka.
 - Validuoti formas serverio pusėje, naudoti parametrizuotą SQL, šablonuose automatiškai escapinti naudotojo tekstą ir riboti pateikiamo teksto ilgį.
-- Pirmoje versijoje nereikia klientų paskyrų, vaidmenų valdymo sistemos, atsakingo programuotojo automatinio parinkimo ar viešo visų klaidų sąrašo.
+- Iki 5D klientų paskyrų ir vaidmenų valdymo nėra; jie suplanuoti 6A–6C. Viešo visų klaidų sąrašo nebus. Asmeninis klaidos prisiėmimas numatytas 6C.
 
 ## 10. Nefunkciniai reikalavimai
 
@@ -251,3 +251,50 @@ Pradinis modelis: `Pipeline(TfidfVectorizer(...), LogisticRegression(...))`. Tek
 - Rodomos bent precision, recall, F1, macro-F1, confusion matrix ir duomenų kiekis, kai vertinimas galimas.
 - Testai praeina be gyvo tinklo ir be išorinių AI API.
 - README aprašo paleidimą, konfigūraciją ir žinomus apribojimus.
+
+---
+
+## 6 etapo sprendimas (2026-11-27; planas, dar NEĮGYVENDINTA)
+
+Darbo vadovo aptartas kitas etapas: išbaigti naudotojų sąsają, įdiegti registraciją, kelias paskyras, teisių valdymą ir klaidų priskyrimą pagal klasifikavimo kategoriją. **Dabar taikoma viena organizacija / vienas diegimas**. Kelių organizacijų atskyrimas (multi-tenancy, `company_id`) **nėra šio etapo dalis**; ateityje galima išplėsti, jei bus reikalavimas. Šiame pakeitime atnaujinti tik dokumentai: šiame skyriuje aprašytos 6A–6E funkcijos nėra realizuotos, kol neatsiras atskiri programinio kodo PR.
+
+Patvirtinta darbų seka: **6A** paskyros, registracija, prisijungimas ir rolės; **6B** programuotojo specializacijų (vienas arba kelios kategorijos) priskyrimas ir saugus klaidų matomumo / paskirstymo valdymas; **6C** klaidos prisiėmimas, komentarai ir istorija; **6D** vientisas, mobiliesiems pritaikytas visų puslapių dizainas; **6E** pagal rolę pritaikytos apžvalgos. Kiekvienas etapas atskira šaka / PR, `main` neliesti tiesiogiai. 7 etapas – galutinis testavimas ir dokumentacija.
+
+Esama techninė bazė lieka: Python + FastAPI + Jinja2 + SQLite, vietiniai TF-IDF ir LogisticRegression modeliai, esami `prediction_runs` ir `classification_confirmations`. **Nekeisti ir nepermokyti modelių**, nedaryti mokamų API užklausų, nesukurti „Jira“ integracijos. P0 klasė išlieka, nors silpna. Esami 40 024 importuoti GitHub įrašai, žmogaus ir DI žymos turi likti nepakeisti.
+
+## 13. 6 etapo architektūros plėtra: viena organizacija (PLANUOJAMA)
+
+### Naudotojų rolės ir jų ribos
+
+| Rolė | Veiksmai (numatoma 6A–6C) |
+|---|---|
+| `guest` (neprisijungęs; ne DB rolė) | Pateikti klaidą vieša forma; nemato sąrašo |
+| `tester` | Savarankiškai registruojasi; pateikia klaidą; mato **tik savo paskyrai susietus** pranešimus ir jų būsenas |
+| `developer` | Mato savo administratoriaus paskirtų kategorijų pranešimus; 6C galės juos prisiimti ir valdyti, tvirtinti klasifikaciją pagal leidimus |
+| `admin` | Mato visus pranešimus; suteikia roles, valdo paskyras ir kategorijų priskyrimus; prižiūri importo bei mokymo duomenų įrankius |
+
+Nauja registracija sukuria **tik `tester` rolę**; `developer` ar `admin` teisės suteikiamos tik jau autorizuoto administratoriaus veiksmu. Svečio pateikti įrašai lieka be paskyros savininko; niekas negali jų prisiskirti vien įvedęs ID. Vienos organizacijos diegimas **neleidžia įmonėms atskirai registruotis**. Jei ateityje norėsime multi-tenancy, naujas etapas turės atskirai suprojektuoti organizacijų ir narystės lenteles bei tenant-scoped užklausas.
+
+### 6A duomenų ir autentifikavimo projektas
+
+- Pridėti `users`: `id`, `username` (unique / normalizuota), `email` (unique / normalizuota), `password_hash`, `role` (`tester|developer|admin`), `is_active`, `created_at`, `updated_at`; nepalikti slaptažodžio atviro teksto. Paskyrų ryšiai su klaidomis – `bug_reports.reporter_user_id NULL REFERENCES users(id)` (tik prisijungus pateiktoms klaidoms; seni duomenys lieka NULL). Prieš migration sukurti DB atsarginę kopiją, schema keičiama tik pridedant lentelę/stulpelį ir indeksus, be trynimo.
+- Vieną esamą `.env` administratorių (`ADMIN_USERNAME`, `ADMIN_PASSWORD_HASH`) migracijos metu išsaugoti: priimtinas saugus variantas – aiškiai dokumentuotas vienkartinis bootstrap į `users`, idempotentiškai, išsaugant paskyros vardą, tik maišą ir admin rolę. **Niekada nesukurti universalaus numatytojo administratoriaus**, neperrašyti esamos paskyros ir nepadaryti naudotojo `admin` per viešą registraciją. Jei admin vartotojo vardas jau užimtas, neperrašyti tyliai – aiškiai pranešti apie konfliktą ir saugų žingsnį. Nebūtinas parinktinis `ADMIN_PASSWORD_HASH` paprastas veikimo kelias: administratoriaus saugus rankinis bootstrap CLI, be HTTP registracijos eskalavimo.
+- Esamos `app/auth.py` PBKDF2-SHA256 maišos ir slapukų HMAC-SHA256 idėją išsaugoti arba tvarkingai pritaikyti; `Session` turi identifikuoti stabilų naudotojo ID ir rolė turi būti tikrinama DB kiekvienos autorizuotos užklausos metu (nepasikliauti vien pasirašyto slapuko rolės reikšme). Atšauktos/pakeistos rolės ar `is_active=0` paskyros negali išlaikyti teisių per seną slapuką. Esamos 8 val. sesijos, HttpOnly/SameSite, Secure HTTPS, CSRF POST ir saugus `next` išsaugomi. Apsvarstyti sesijos versiją / revokaciją, kad pakeistas slaptažodis panaikintų esamas sesijas.
+- Registracijos ir prisijungimo POST: serverio validacija, unikalaus vardo/el. pašto patikra su DB constraint, saugus klaidų pateikimas, CSRF (įskaitant anoniminę registracijos ir prisijungimo formą), pagrįstas bandymų ribojimas be papildomos infrastruktūros; tikrinimai neturi atskleisti slaptažodžių, hashų, sekretų. Nesiųsti jokių patvirtinimo el. laiškų ar diegti pašto serverio 6A etape. Nepridėti išgalvotų „pamiršau slaptažodį“ galimybių – tai atskiras sprendimas.
+- Esami vidiniai `/dashboard`, `/import`, `/dashboard/training-data` ir visi POST **neturi tapti prieinami registruotiems testuotojams**. Po 6A įvesti `require_role` ar analogišką centrinį tikrinimą: administratoriui išsaugoti senus maršrutus, testuotojui leisti tik naujai sukurtą jo funkciją; programuotojui iki 6B neišduoti visų pranešimų per seną dashboard. Jei reikia, 6A metu pateikti saugią „mano paskyra“ / „mano pranešimai“ peržiūrą be naujo didelio dizaino. Nėra saugu paslėpti nuorodą, jei URL veikia.
+- Testuose naudoti atskirą laikiną SQLite; išbandyti registracijos tik `tester` rolę, sesijos atšaukimą, seną admin prisijungimą / migraciją, testuotojo izoliaciją, GET ir POST prieigos draudimą, SQL ir formų saugumą, pasenusios sesijos elgseną. Neliesti GitHub Issues duomenų ar apmokytų modelių.
+
+### 6B paskirstymo pagal kategoriją taisyklės (tik projektas; NEĮGYVENDINTA)
+
+- `developer_categories(user_id, category_label)` su UNIQUE ir išoriniu raktu į `users`; reikšmės tik iš `app.config.CATEGORY_LABELS`. Vienas programuotojas gali turėti kelias kategorijas, viena kategorija – kelis programuotojus. `other` / nepatikimas ar nenustatytas modelio rezultatas lieka administratoriaus peržiūros eilėje, kad klaida nedingtų iš sistemos.
+- **Matomumas ir priskyrimas yra skirtingi dalykai**: 6B programuotojas mato savo kategorijų *bendrą eilę*, o 6C galės prisiimti konkrečią klaidą (`assigned_user_id`). Nepriskirti vienintelio žmogaus automatiškai vien iš kategorijos be administratoriaus patvirtintos taisyklės.
+- Kategorijos pasirinkimo prioritetas: žmogaus patvirtinta `bug_reports.category_label`; kitu atveju naujausia galiojanti automatinė `prediction_runs` kategorijos prognozė, bet tik kaip pasiūlymas. Žemo pasitikėjimo / vertimo įspėjimo / `model_unavailable` atveju išsaugoti administratoriaus peržiūros kelią. Pakeitus patvirtintą kategoriją, matomumas perskaičiuojamas pagal *dabartinę* kategoriją ir teises, ne pagal seną cache.
+- Filtravimas privalomas **SQL / paslaugos / serverio** lygiu visiems list/detail/POST veiksmams, taip pat skaičiams ir paieškai. Nenaudoti vien UI filtro. Admin turi prieigą prie visų organizacijos įrašų; tester tik prie jam priklausančių. Taisyklę 6B metu tikrinti visais galiniais maršrutais, ne vien `/dashboard`.
+
+### 6C–6E (tik planas)
+
+6C: klaidos prisiėmimas / `assigned_user_id`, komentarai (`bug_comments`), audito istorija; senų klasifikacijos patvirtinimų niekada neperrašyti. 6D: vieningas responsyvus viešų ir vidinių puslapių dizainas, prieinami formų laukų pavadinimai ir kontrastas, be React/Node. 6E: pagal rolę pritaikyti dashboard skaičiai, saugūs filtrai, naudotojo paskyros nustatymai ir pranešimų indikatoriai; atskiro ML statistikos puslapio nereikalaujama. 7: galutiniai testai, saugumas, diegimo ir darbo dokumentacija.
+
+### Perėjimo iš 5D rizikos
+
+Dabartinės šešios lentelės, 40 024 importuotų įrašų ir trys `models/*.joblib` turi likti. `bug_reports` istoriniai įrašai nesusiejami su atsitiktiniais registruotais testuotojais. Administratoriaus esami duomenys ir prisijungimas neturi būti prarasti. Jei pasirinkimas tarp paprastesnio kodo ir leidimų saugumo: rinktis serverio leidimų tikrinimą, be perteklinio karkaso.

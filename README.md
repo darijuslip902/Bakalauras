@@ -6,13 +6,23 @@ Technologijos: Python, FastAPI, Jinja2, HTML/CSS, SQLite, scikit-learn (TF-IDF +
 
 ## Dabartinė būklė (2026-11-13, po 5D)
 
-0–5D etapai baigti, PR #11 sujungtas į main. Modelių versija `20261113-125330`. 6 etapas nepradėtas: laukiama darbo vadovo pastabų; statistikos puslapis nėra patvirtintas reikalavimas. P0 paliekamas, nors jo atpažinimas silpnas.
+0–5D etapai baigti, PR #11 sujungtas į main. Modelių versija `20261113-125330`. 6 etapo kryptis patvirtinta (vienos organizacijos paskyros, kategorijų paskirstymas, dizainas), bet 6A–6E kodas dar neįgyvendintas. Statistikos puslapis neprivalomas. P0 paliekamas, nors jo atpažinimas silpnas.
 
 - 40 024 importuoti GitHub įrašai; 23 884 sėkmingos DI anotacijos (19 412 tinkamų, 4 472 netinkamų).
 - 18 267 mokymo ir validacijos pavyzdžiai; 1 120 atrinktų testo įrašų, iš jų 901 tinkamas (visi 901 su DI etalonu); 30 pilotinių įrašų.
 - 243 artimi testo dublikatai pašalinti iš mokymo. Bendra DI žymėjimo kaina 4,5948 USD.
 - Trys apmokyti modeliai ir jų ataskaitos saugomi GitHub; SQLite DB, jos kopijos, .env ir .venv – tik lokaliai.
 - Testo accuracy / macro-F1: kategorija 64,26 % / 62,22 %; sudėtingumas 69,70 % / 69,14 %; prioritetas 65,93 % / 48,20 %. P0 F1 = 0. Metrikos rodo atitikimą Claude žymoms, ne nepriklausomai žmogaus patvirtintai tiesai. Ankstesnio ir naujo modelio metrikos iš skirtingų testų nėra tiesiogiai palyginamos.
+
+## Ateities etapai (2026-11-27, **dar neveikia svetainėje**)
+
+- **6A:** DB naudotojų paskyros, vieša testuotojo registracija, saugus prisijungimas, rolės (`tester`, `developer`, `admin`) ir savo pranešimų peržiūra.
+- **6B:** administratoriaus priskiriamos kategorijos programuotojams, kategorijų matomumo taisyklės serverio pusėje.
+- **6C:** klaidos prisiėmimas, komentarai, įvykių istorija.
+- **6D:** galutinis vientisas mobiliesiems pritaikytas dizainas.
+- **6E:** asmeninės darbo apžvalgos ir filtrai. Multi-tenancy atidėtas; kol kas **vienai įmonei vienas diegimas**.
+
+Iki 6A sujungimo veikia esama vieno administratoriaus paskyra iš `.env`, kaip aprašyta toliau. Plačiau – [planuose](docs/IMPLEMENTATION_PLAN.md) ir [architektūroje](ARCHITECTURE.md).
 
 ## Vietinis paleidimas
 
