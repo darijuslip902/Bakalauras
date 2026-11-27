@@ -160,9 +160,31 @@ Visų limitų suma 40 161 (sąmoningai su atsarga: dalis etikečių turės maži
 
 **Priėmimas:** testai patvirtina limitų, `--counts`, atsarginės kopijos ir artimų dublikatų elgesį; testo įrašai niekada nepatenka į mokymą; esama DB ir anotacijos nekeičiamos. Rezultatų (kokybės pagerėjimo) neteigiama, kol nėra naujo mokymo.
 
-## 6 etapas – vertinimas ir sąsajos užbaigimas (ATIDĖTA)
+## 6 etapas – vienos organizacijos paskyros, paskirstymas ir UX (PATVIRTINTAS PLANAS; 6A–6E NEĮGYVENDINTI)
 
-Laukiama darbo vadovo rekomendacijų. Nepradėti naujų funkcijų be naudotojo nurodymo. Galimi darbai: galutinis funkcinis testavimas, dizaino peržiūra, papildomos rolės ar modelių statistikos puslapis, jei bus reikalingas. P0 išlieka. Modelių keitimas ar naujas mokamas žymėjimas neplanuojamas. Slenksčių kalibravimas nėra atliktas.
+Darbo vadovas pasiūlė išbaigti svetainę, registraciją / prisijungimą ir klaidų paskirstymą. Nuspręsta pradėti **vienos organizacijos** sprendimu. Multi-tenancy neįgyvendinti dabar; toks funkcionalumas būtų atskiras vėlesnis projektavimo etapas. 0–5D kodas išlieka kaip yra. Modelių atnaujinimas ir papildomas mokamas DI žymėjimas neplanuojami. Plačiau žr. ARCHITECTURE.md 13 skyrių.
+
+### 6A – paskyros, registracija, prisijungimas, rolės (KITA UŽDUOTIS; NEĮGYVENDINTA)
+
+Tikslas: pereiti nuo vienos .env vidinės paskyros prie saugios naudotojų lentelės. Viešai registruojantis priskirti tik `tester`; `developer` / `admin` teises gali suteikti tik administratorius. Apsaugoti visus esamus vidinius GET/POST maršrutus nuo testuotojų ir neprisijungusių asmenų. Užtikrinti esamo administratoriaus saugų idempotentišką perkėlimą ar bootstrap be duomenų praradimo, pasirašytas/atšaukiamas sesijas, CSRF ir slaptažodžių PBKDF2. Susieti prisijungusio testuotojo naujai pateiktą įrašą su jo `user_id`, leisti matyti tik savo įrašus; svečių pranešimai lieka anoniminiai. 6A nereiškia viso UI perpiešimo: tik tvarkingos prisijungimo/registracijos/mūsų paskyros bazinės formos.
+
+Priėmimas: migracija pakartojama be duomenų praradimo; egzistavęs admin gali prisijungti; testuotojas negali pasiekti nei vieno seno vidinio sąrašo, detalių, importo, anotacijų ar POST; negali išsiregistruoti kaip admin; aktyvumo / rolės pakeitimas iš karto panaikina senas teises; išlieka viešas /report; visi testai su laikina DB, nėra mokamų API.
+
+### 6B – programuotojų specializacijos ir klaidų kategorijų matomumas (NEĮGYVENDINTA)
+
+Administratorius gali priskirti programuotojui 1+ kategorijas, ta pati kategorija gali turėti kelis programuotojus. Programuotojas mato tik savo kategorijų klaidas, admin visas. Žmogaus patvirtinta kategorija turi pirmenybę prieš automatinę. „Kita“, nepatikimi / nenustatyti atvejai turi patekti administratoriui, o ne dingti. Tikrinti serverio lygmenyje list/detail/POST. Tai kategorijų eilės, **ne vieno darbuotojo automatinis paskyrimas**.
+
+### 6C – konkrečios klaidos prisiėmimas, komentarai, auditavimas (NEĮGYVENDINTA)
+
+Programuotojas iš savo kategorijos klaidų gali prisiimti konkrečią klaidą; kiti mato prisiėmimo būseną, neperrašo savavališkai. Numatyti komentarai ir būsenų / paskyrimų pakeitimų istorija, nesugadinant esamos `classification_confirmations` istorijos.
+
+### 6D – visų puslapių išbaigtas responsyvus dizainas (NEĮGYVENDINTA)
+
+Vieninga navigacija pagal rolę, prisijungimas, registracija, vieša klaidos forma, mano klaidos, programuotojo ir administratoriaus darbo aplinkos; neperkrautas modernus dizainas, aiškus tekstas ir mobilioji versija. Tik FastAPI/Jinja2/CSS/šiek tiek JS, be React.
+
+### 6E – darbo apžvalgos ir patogumas (NEĮGYVENDINTA)
+
+Matomi tik autorizuoti skaičiai ir sąrašai, asmeninės apžvalgos, paieška / prioritetų rikiavimas / naujų klaidų indikatoriai. Atskiro modelių statistikos puslapio nereikalaujama.
 
 ## 7 etapas – užbaigimas (NEPRADĖTA)
 **Tikslas:** kokybinė patikra, ne naujos funkcijos.
