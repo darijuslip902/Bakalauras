@@ -10,6 +10,11 @@
   <main>
     <h1>Pranešti apie klaidą</h1>
     <p>Aprašykite pastebėtą programinės įrangos klaidą. Paskyra nereikalinga. Abu laukai privalomi.</p>
+    {% if session %}
+    <p class="notice" role="status">Esate prisijungę kaip <strong>{{ session.username }}</strong>: pranešimas bus susietas su jūsų paskyra ir matomas skiltyje <a href="/my/reports">Mano pranešimai</a>.</p>
+    {% else %}
+    <p class="muted small">Norite matyti savo pranešimų būsenas? <a href="/login">Prisijunkite</a> arba <a href="/register">užsiregistruokite</a>.</p>
+    {% endif %}
 
     {% if errors %}
     <div class="error" role="alert">
@@ -23,6 +28,7 @@
     {% endif %}
 
     <form method="post" action="/report">
+      <input type="hidden" name="form_csrf" value="{{ form_csrf }}">
       <p>
         <label for="title">Klaidos pavadinimas</label><br>
         <input id="title" name="title" type="text" class="wide" required

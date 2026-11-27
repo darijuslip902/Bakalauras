@@ -160,15 +160,19 @@ Visų limitų suma 40 161 (sąmoningai su atsarga: dalis etikečių turės maži
 
 **Priėmimas:** testai patvirtina limitų, `--counts`, atsarginės kopijos ir artimų dublikatų elgesį; testo įrašai niekada nepatenka į mokymą; esama DB ir anotacijos nekeičiamos. Rezultatų (kokybės pagerėjimo) neteigiama, kol nėra naujo mokymo.
 
-## 6 etapas – vienos organizacijos paskyros, paskirstymas ir UX (PATVIRTINTAS PLANAS; 6A–6E NEĮGYVENDINTI)
+## 6 etapas – vienos organizacijos paskyros, paskirstymas ir UX (PATVIRTINTAS PLANAS; 6A ĮGYVENDINTAS, 6B–6E NEĮGYVENDINTI)
 
 Darbo vadovas pasiūlė išbaigti svetainę, registraciją / prisijungimą ir klaidų paskirstymą. Nuspręsta pradėti **vienos organizacijos** sprendimu. Multi-tenancy neįgyvendinti dabar; toks funkcionalumas būtų atskiras vėlesnis projektavimo etapas. 0–5D kodas išlieka kaip yra. Modelių atnaujinimas ir papildomas mokamas DI žymėjimas neplanuojami. Plačiau žr. ARCHITECTURE.md 13 skyrių.
 
-### 6A – paskyros, registracija, prisijungimas, rolės (KITA UŽDUOTIS; NEĮGYVENDINTA)
+### 6A – paskyros, registracija, prisijungimas, rolės (ĮGYVENDINTA šakoje `claude/phase-6a-user-accounts`, laukia PR sujungimo)
 
 Tikslas: pereiti nuo vienos .env vidinės paskyros prie saugios naudotojų lentelės. Viešai registruojantis priskirti tik `tester`; `developer` / `admin` teises gali suteikti tik administratorius. Apsaugoti visus esamus vidinius GET/POST maršrutus nuo testuotojų ir neprisijungusių asmenų. Užtikrinti esamo administratoriaus saugų idempotentišką perkėlimą ar bootstrap be duomenų praradimo, pasirašytas/atšaukiamas sesijas, CSRF ir slaptažodžių PBKDF2. Susieti prisijungusio testuotojo naujai pateiktą įrašą su jo `user_id`, leisti matyti tik savo įrašus; svečių pranešimai lieka anoniminiai. 6A nereiškia viso UI perpiešimo: tik tvarkingos prisijungimo/registracijos/mūsų paskyros bazinės formos.
 
 Priėmimas: migracija pakartojama be duomenų praradimo; egzistavęs admin gali prisijungti; testuotojas negali pasiekti nei vieno seno vidinio sąrašo, detalių, importo, anotacijų ar POST; negali išsiregistruoti kaip admin; aktyvumo / rolės pakeitimas iš karto panaikina senas teises; išlieka viešas /report; visi testai su laikina DB, nėra mokamų API.
+
+**Įgyvendinta (2026-11-27):** `users` lentelė ir `bug_reports.reporter_user_id` (pakartotinai vykdoma migracija `init_db`); `.env` administratoriaus idempotentiškas perkėlimas (automatiškai prisijungiant arba `python -m tools.users bootstrap-admin` su DB kopija), konfliktas nieko neperrašo; `/register` (visada `tester`), `/login`, `/logout` su formų CSRF ir bandymų ribojimu; sesijoje `user_id`, rolė / aktyvumas / slaptažodis tikrinami DB kiekvienos užklausos metu; `require_admin` visiems esamiems vidiniams GET/POST, programuotojui iki 6B jie uždrausti (403); `/my/reports` ir `/my/reports/{id}` su SQL nuosavybės tikrinimu (svetimas – 404); navigacija pagal rolę; CLI `tools.users` rolėms, aktyvumui ir slaptažodžiui. Testai: `tests/test_users.py` (55) ir pritaikyti `tests/test_auth.py`, `tests/auth_utils.py`, `tests/conftest.py` (numatytoji DB testuose visada laikina). Neįgyvendinta: slaptažodžio atkūrimas el. paštu, naudotojų valdymo UI, registracijos dažnio ribojimas.
+
+**PR #14 peržiūros pataisos:** `POST /report` tikrina formų CSRF žetoną (svečiui ir prisijungusiam; vieša forma veikia be registracijos ir be paskyrų konfigūracijos); po prisijungimo `next` leidžiamas tik saugus ir rolei prieinamas kelias (testuotojas / programuotojas nebenukreipiami į `/dashboard`, administratorius grįžta į teisėtą vidinį puslapį), `safe_next_path` papildomai atmeta dot segmentus ir `\\`.
 
 ### 6B – programuotojų specializacijos ir klaidų kategorijų matomumas (NEĮGYVENDINTA)
 

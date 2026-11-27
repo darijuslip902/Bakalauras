@@ -8,7 +8,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 from app import config
-from app.auth import Session, check_csrf, require_login
+from app.auth import Session, check_csrf, require_admin
 from app.db import get_connection, init_db
 from app.routes.issues import get_database_path, get_predictor
 from app.services.bug_report_service import (
@@ -85,7 +85,7 @@ def dashboard(
     category: str = Query(""),
     priority: str = Query(""),
     complexity: str = Query(""),
-    session: Session = Depends(require_login),
+    session: Session = Depends(require_admin),
     database_path: Path = Depends(get_database_path),
 ) -> HTMLResponse:
     status, status_ok = _allowed(status, config.STATUS_LABELS, allow_unset=False)
@@ -153,7 +153,7 @@ def report_detail(
     request: Request,
     report_id: int,
     message: str = Query(""),
-    session: Session = Depends(require_login),
+    session: Session = Depends(require_admin),
     database_path: Path = Depends(get_database_path),
 ) -> HTMLResponse:
     with get_connection(database_path) as conn:
@@ -170,7 +170,7 @@ def change_status(
     report_id: int,
     status: str = Form(""),
     csrf_token: str = Form(""),
-    session: Session = Depends(require_login),
+    session: Session = Depends(require_admin),
     database_path: Path = Depends(get_database_path),
 ) -> HTMLResponse | RedirectResponse:
     check_csrf(session, csrf_token)
@@ -196,7 +196,7 @@ def reclassify(
     request: Request,
     report_id: int,
     csrf_token: str = Form(""),
-    session: Session = Depends(require_login),
+    session: Session = Depends(require_admin),
     database_path: Path = Depends(get_database_path),
     predictor: Predictor = Depends(get_predictor),
 ) -> HTMLResponse | RedirectResponse:
@@ -218,7 +218,7 @@ def confirm_report_classification(
     complexity_label: str = Form(""),
     priority_label: str = Form(""),
     csrf_token: str = Form(""),
-    session: Session = Depends(require_login),
+    session: Session = Depends(require_admin),
     database_path: Path = Depends(get_database_path),
 ) -> HTMLResponse | RedirectResponse:
     """Programuotojas patvirtina arba pataiso klasifikaciją (serverio pusės validacija)."""

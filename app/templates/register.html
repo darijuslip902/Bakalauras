@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="lt">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Registracija</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='styles.css') }}">
+</head>
+<body>
+  <main>
+    <div class="card narrow">
+      <h1>Registracija</h1>
+      <p>Sukurkite testuotojo paskyrą: galėsite pateikti klaidų pranešimus ir matyti jų būsenas.
+        Programuotojo ar administratoriaus teises suteikia tik administratorius.</p>
+
+      {% if not configured %}
+      <div class="error" role="alert">
+        <p><strong>Registracija nesukonfigūruota.</strong></p>
+        <p>Administratorius turi nustatyti <code>SESSION_SECRET_KEY</code> ir administratoriaus paskyrą (žr. README).</p>
+      </div>
+      {% else %}
+        {% if errors %}
+      <div class="error" role="alert">
+        <p>Paskyra nesukurta. Pataisykite pažymėtus laukus.</p>
+      </div>
+        {% endif %}
+      <form method="post" action="/register" class="auth-form" novalidate>
+        <input type="hidden" name="form_csrf" value="{{ form_csrf }}">
+        <div class="form-field">
+          <label for="username">Naudotojo vardas</label>
+          <input id="username" name="username" type="text" class="wide" required
+                 maxlength="{{ username_max_length }}" autocomplete="username" value="{{ values.username }}"
+                 {% if errors.username %}aria-invalid="true" aria-describedby="username-error"{% endif %}>
+          {% if errors.username %}<span id="username-error" class="field-error">{{ errors.username }}</span>{% endif %}
+          <span class="muted small">3–40 simbolių: lotyniškos raidės, skaičiai, . _ -</span>
+        </div>
+        <div class="form-field">
+          <label for="email">El. paštas</label>
+          <input id="email" name="email" type="email" class="wide" required
+                 maxlength="{{ email_max_length }}" autocomplete="email" value="{{ values.email }}"
+                 {% if errors.email %}aria-invalid="true" aria-describedby="email-error"{% endif %}>
+          {% if errors.email %}<span id="email-error" class="field-error">{{ errors.email }}</span>{% endif %}
+        </div>
+        <div class="form-field">
+          <label for="password">Slaptažodis</label>
+          <input id="password" name="password" type="password" class="wide" required minlength="10" maxlength="200"
+                 autocomplete="new-password"
+                 {% if errors.password %}aria-invalid="true" aria-describedby="password-error"{% endif %}>
+          {% if errors.password %}<span id="password-error" class="field-error">{{ errors.password }}</span>{% endif %}
+          <span class="muted small">Bent 10 simbolių.</span>
+        </div>
+        <div class="form-field">
+          <label for="password_confirm">Pakartokite slaptažodį</label>
+          <input id="password_confirm" name="password_confirm" type="password" class="wide" required maxlength="200"
+                 autocomplete="new-password"
+                 {% if errors.password_confirm %}aria-invalid="true" aria-describedby="password-confirm-error"{% endif %}>
+          {% if errors.password_confirm %}<span id="password-confirm-error" class="field-error">{{ errors.password_confirm }}</span>{% endif %}
+        </div>
+        <button type="submit">Registruotis</button>
+      </form>
+      <p class="muted small">Jau turite paskyrą? <a href="/login">Prisijunkite</a>.</p>
+      {% endif %}
+    </div>
+    <p><a href="/">Į pradžią</a></p>
+  </main>
+</body>
+</html>

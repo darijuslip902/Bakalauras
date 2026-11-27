@@ -2,7 +2,7 @@
 
 ## Dabartinė realizacija (5D baigta) ir naujas 6 etapo planas (2026-11-27)
 
-0–5D etapai baigti, PR #11 sujungtas į main. Modelių versija `20261113-125330`. 6 etapo reikalavimai aptarti su darbo vadovu ir pasirinkta vienos organizacijos kryptis; 6A–6E programinis kodas dar neįgyvendintas. Statistikos puslapis nėra privalomas. P0 paliekamas, nors jo atpažinimas silpnas.
+0–5D etapai baigti, PR #11 sujungtas į main. Modelių versija `20261113-125330`. 6 etapo reikalavimai aptarti su darbo vadovu ir pasirinkta vienos organizacijos kryptis. **6A įgyvendintas šakoje `claude/phase-6a-user-accounts`** (žr. 13 skyrių „6A – įgyvendinta“); 6B–6E dar neįgyvendinti. Statistikos puslapis nėra privalomas. P0 paliekamas, nors jo atpažinimas silpnas.
 
 - 40 024 importuoti GitHub įrašai; 23 884 sėkmingos DI anotacijos (19 412 tinkamų, 4 472 netinkamų).
 - 18 267 mokymo ir validacijos pavyzdžiai; 1 120 atrinktų testo įrašų, iš jų 901 tinkamas (visi 901 su DI etalonu); 30 pilotinių įrašų.
@@ -111,6 +111,18 @@ Duomenų bazėje atskirti du susiję, bet skirtingos paskirties srautai: (1) sis
 | `status` | `new`, `in_progress` arba `resolved` |
 | `created_at`, `updated_at`, `resolved_at` | Įrašo gyvavimo ciklo datos |
 | `category_label`, `complexity_label`, `priority_label` | Tik žmogaus patvirtintos / pataisytos žymos, gali būti NULL |
+| `reporter_user_id` | 6A: `users.id`, jei pranešimą pateikė prisijungęs naudotojas; svečių ir senų įrašų – NULL |
+
+### `users` (6A)
+
+| Laukas | Paskirtis |
+|---|---|
+| `id` | Stabilus naudotojo ID (saugomas sesijoje) |
+| `username`, `email` | Unikalūs, `COLLATE NOCASE`; el. paštas saugomas mažosiomis raidėmis, `.env` administratoriui gali būti NULL |
+| `password_hash` | Tik PBKDF2-SHA256 maiša |
+| `role` | `tester`, `developer` arba `admin` (CHECK) |
+| `is_active` | 0 – paskyra išjungta, visos sesijos iš karto negalioja |
+| `created_at`, `updated_at` | UTC laikai |
 
 Viešai formai rinkti tik būtinus laukus: pavadinimą ir išsamų aprašymą; papildomas kontaktinis laukas nėra būtinas pirmajai versijai. Pateikimo metu sistema bando atlikti prognozę, tačiau jei modelio nepakanka, įrašas vis tiek išsaugomas ir aiškiai pažymimas, kad prognozė nepasiekiama.
 
@@ -206,11 +218,11 @@ Pradinis modelis: `Pipeline(TfidfVectorizer(...), LogisticRegression(...))`. Tek
 
 ## 9. Prisijungimas ir saugumas
 
-- Tik programuotojo / koordinatoriaus vidiniai maršrutai reikalauja autentifikavimo; viešas pranešimo pateikimo maršrutas lieka pasiekiamas be paskyros.
-- Iki 5D įgyvendinta viena administratoriaus / koordinatoriaus paskyra, kurios slaptažodis laikomas aplinkos kintamajame arba saugomas tik saugiu slaptažodžio maišu. Niekada nelaikyti slaptažodžio atviro teksto pavidalu kode ar repozitorijoje.
+- Viešas pranešimo pateikimo maršrutas, prisijungimas ir registracija pasiekiami be paskyros; visi kiti reikalauja prisijungimo, esami vidiniai (klaidų valdymas, importas, mokymo duomenys) – `admin` rolės (6A, `require_admin`).
+- Nuo 6A paskyros saugomos lentelėje `users` (tik PBKDF2 maišos). `.env` administratorius idempotentiškai perkeliamas į ją (`bootstrap_admin`). Niekada nelaikyti slaptažodžio atviro teksto pavidalu kode ar repozitorijoje.
 - Apsaugoti vidinius sąrašo, detalių, būsenų keitimo, anotavimo, mokymo ir vertinimo maršrutus. Vien paslėpti nuorodas HTML puslapyje nepakanka.
 - Validuoti formas serverio pusėje, naudoti parametrizuotą SQL, šablonuose automatiškai escapinti naudotojo tekstą ir riboti pateikiamo teksto ilgį.
-- Iki 5D klientų paskyrų ir vaidmenų valdymo nėra; jie suplanuoti 6A–6C. Viešo visų klaidų sąrašo nebus. Asmeninis klaidos prisiėmimas numatytas 6C.
+- 6A įgyvendintos paskyros ir rolės; kategorijų matomumas – 6B, prisiėmimas – 6C. Viešo visų klaidų sąrašo nebus.
 
 ## 10. Nefunkciniai reikalavimai
 
@@ -283,6 +295,17 @@ Nauja registracija sukuria **tik `tester` rolę**; `developer` ar `admin` teisė
 - Registracijos ir prisijungimo POST: serverio validacija, unikalaus vardo/el. pašto patikra su DB constraint, saugus klaidų pateikimas, CSRF (įskaitant anoniminę registracijos ir prisijungimo formą), pagrįstas bandymų ribojimas be papildomos infrastruktūros; tikrinimai neturi atskleisti slaptažodžių, hashų, sekretų. Nesiųsti jokių patvirtinimo el. laiškų ar diegti pašto serverio 6A etape. Nepridėti išgalvotų „pamiršau slaptažodį“ galimybių – tai atskiras sprendimas.
 - Esami vidiniai `/dashboard`, `/import`, `/dashboard/training-data` ir visi POST **neturi tapti prieinami registruotiems testuotojams**. Po 6A įvesti `require_role` ar analogišką centrinį tikrinimą: administratoriui išsaugoti senus maršrutus, testuotojui leisti tik naujai sukurtą jo funkciją; programuotojui iki 6B neišduoti visų pranešimų per seną dashboard. Jei reikia, 6A metu pateikti saugią „mano paskyra“ / „mano pranešimai“ peržiūrą be naujo didelio dizaino. Nėra saugu paslėpti nuorodą, jei URL veikia.
 - Testuose naudoti atskirą laikiną SQLite; išbandyti registracijos tik `tester` rolę, sesijos atšaukimą, seną admin prisijungimą / migraciją, testuotojo izoliaciją, GET ir POST prieigos draudimą, SQL ir formų saugumą, pasenusios sesijos elgseną. Neliesti GitHub Issues duomenų ar apmokytų modelių.
+
+### 6A – įgyvendinta (2026-11-27, šaka `claude/phase-6a-user-accounts`)
+
+- **DB:** `users` lentelė ir `bug_reports.reporter_user_id` su indeksu pridedami `init_db` metu (`CREATE TABLE IF NOT EXISTS`, `ALTER TABLE ADD COLUMN` tik jei stulpelio nėra) – pakartotinai vykdoma, nieko netrinant. Seni pranešimai lieka `reporter_user_id = NULL`. `tools.users bootstrap-admin` prieš perkėlimą sukuria DB kopiją.
+- **Administratorius:** `user_service.bootstrap_admin` sukuria `admin` paskyrą su `.env` vardu ir ta pačia maiša tik jei tokio vardo nėra; esama paskyra niekada neperrašoma (rezultatai `created` / `exists` / `conflict` / `not_configured`). Perkėlimas vyksta automatiškai pirmo teisingo prisijungimo metu arba CLI komanda. `ADMIN_USERNAME` rezervuotas registracijai. Konfigūracija nepasikeitė: be `ADMIN_USERNAME`, `ADMIN_PASSWORD_HASH` ir `SESSION_SECRET_KEY` prisijungimas ir registracija išjungti.
+- **Sesija (`app/auth.py`):** HMAC-SHA256 pasirašytame slapuke `uid`, CSRF žetonas, galiojimo laikas (8 val.) ir slaptažodžio maišos pirštų atspaudas. `get_current_session` kiekvienai užklausai įkelia naudotoją iš DB ir atmeta neegzistuojančią, išjungtą paskyrą ar pakeistą slaptažodį; rolė imama iš DB, ne iš slapuko. `HttpOnly`, `SameSite=Lax`, `Secure` (HTTPS / konfigūracija), saugus `next` išlaikyti.
+- **Teisės:** `require_login` (bet kuris aktyvus naudotojas), `require_role(...)` ir `require_admin`. Neprisijungus – nukreipimas į `/login`, netinkama rolė – 403 (`Forbidden`). Programuotojas iki 6B esamų vidinių puslapių nepasiekia.
+- **Registracija / prisijungimas (`app/routes/auth.py`, `app/services/user_service.py`):** serverio validacija, unikalumas DB lygiu, rolė visada `tester`, formų CSRF dvigubo pateikimo slapuku (tas pats mechanizmas saugo ir `POST /report` – svečiui ir prisijungusiam; be prisijungimo konfigūracijos naudojamas atsitiktinis programos instancijos raktas), nukreipimas po prisijungimo `next_path_for_role` (administratoriui – bet kuris saugus vidinis kelias, kitoms rolėms – tik jų puslapiai; `safe_next_path` atmeta `..`/`%2e`/`\\`/valdymo simbolius), nesėkmingų prisijungimų ribojimas atmintyje (10 per 15 min. pagal IP ir vardą), vienodas atsakymo laikas neegzistuojančiam vardui.
+- **Mano pranešimai (`app/routes/account.py`):** `/my/reports` ir `/my/reports/{id}`; nuosavybė tikrinama SQL sąlyga `reporter_user_id = sesijos naudotojas`, svetimas ar neegzistuojantis – 404. Klasifikacija ir vidiniai laukai testuotojui nerodomi. Vieša forma `reporter_user_id` ima tik iš sesijos.
+- **Administravimas:** `python -m tools.users` (`bootstrap-admin`, `list`, `set-role`, `activate`, `deactivate`, `set-password`). Naudotojų valdymo puslapio svetainėje dar nėra.
+- **Neįgyvendinta 6A:** slaptažodžio atkūrimas el. paštu, el. pašto patvirtinimas, registracijos dažnio ribojimas, naudotojų valdymo UI.
 
 ### 6B paskirstymo pagal kategoriją taisyklės (tik projektas; NEĮGYVENDINTA)
 

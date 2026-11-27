@@ -10,7 +10,7 @@ from app.main import create_app
 from app.routes.issues import get_database_path
 from app.services import bug_report_service
 from app.services.bug_report_service import create_bug_report, update_status
-from tests.auth_utils import csrf_token, login, use_test_auth
+from tests.auth_utils import csrf_token, login, submit_report, use_test_auth
 
 
 class DashboardApp:
@@ -332,7 +332,7 @@ def test_user_text_is_escaped_in_list_and_detail(dash: DashboardApp) -> None:
 def test_public_report_appears_in_internal_list(dash: DashboardApp) -> None:
     public = TestClient(dash.client.app)
 
-    response = public.post("/report", data={"title": "Iš viešos formos", "description": "Tekstas"})
+    response = submit_report(public, "Iš viešos formos", "Tekstas", follow_redirects=True)
     assert response.status_code == 200
     assert "Pranešimas gautas" in response.text
     assert public.get("/dashboard", follow_redirects=False).status_code == 303

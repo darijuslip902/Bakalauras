@@ -14,7 +14,7 @@ from app.routes import reports
 from app.routes.issues import get_database_path, get_predictor
 from app.services import prediction_service
 from app.services.prediction_service import FIELDS, Predictor
-from tests.auth_utils import csrf_token, login, use_test_auth
+from tests.auth_utils import csrf_token, login, submit_report, use_test_auth
 from tests.test_prediction_service import UI_TEXT, make_models
 
 TITLE = "Page layout broken"
@@ -32,8 +32,7 @@ class Site:
         self.client = TestClient(app)
 
     def submit(self, title: str = TITLE, description: str = UI_TEXT):
-        return self.client.post("/report", data={"title": title, "description": description},
-                                follow_redirects=False)
+        return submit_report(self.client, title, description)
 
     def query(self, sql: str, params: tuple = ()) -> list[sqlite3.Row]:
         if not self.db_path.exists():  # nesėkmingas pateikimas DB dar nesukuria
@@ -76,7 +75,7 @@ def test_new_report_is_classified_and_saved_separately(site: Site) -> None:
 
 
 def test_customer_does_not_see_predictions(site: Site) -> None:
-    response = site.client.post("/report", data={"title": TITLE, "description": UI_TEXT})
+    response = submit_report(site.client, TITLE, UI_TEXT, follow_redirects=True)
 
     assert response.status_code == 200 and "Pranešimas gautas" in response.text
     for hidden in ("Naudotojo sąsaja", "Modelio įvertis", "Automatinė klasifikacija"):

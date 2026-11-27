@@ -18,20 +18,61 @@ TEST_SETTINGS = AuthSettings(
 )
 
 _CSRF_RE = re.compile(r'name="csrf_token" value="([^"]+)"')
+_FORM_CSRF_RE = re.compile(r'name="form_csrf" value="([^"]+)"')
 
 
 def use_test_auth(app: FastAPI, settings: AuthSettings | None = TEST_SETTINGS) -> None:
     app.dependency_overrides[get_auth_settings] = lambda: settings
 
 
+def form_csrf(client: TestClient, path: str = "/login") -> str:
+    """6A: prisijungimo / registracijos formos CSRF žetonas (kartu nustatomas ir slapukas)."""
+    match = _FORM_CSRF_RE.search(client.get(path).text)
+    return match.group(1) if match else ""  # nesukonfigūruotoje sistemoje formos nėra
+
+
 def login(
-    client: TestClient, username: str = TEST_USERNAME, password: str = TEST_PASSWORD
+    client: TestClient,
+    username: str = TEST_USERNAME,
+    password: str = TEST_PASSWORD,
+    next_path: str | None = None,
 ) -> httpx.Response:
-    return client.post(
-        "/login",
-        data={"username": username, "password": password},
-        follow_redirects=False,
-    )
+    """Prisijungia kaip naršyklė: atidaro formą (CSRF slapukas + žetonas) ir ją pateikia."""
+    data = {"username": username, "password": password, "form_csrf": form_csrf(client)}
+    if next_path is not None:
+        data["next"] = next_path
+    return client.post("/login", data=data, follow_redirects=False)
+
+
+def submit_report(
+    client: TestClient,
+    title: str,
+    description: str,
+    follow_redirects: bool = False,
+    **extra: str,
+) -> httpx.Response:
+    """Pateikia viešą klaidos formą kaip naršyklė: atidaro `/report` (CSRF slapukas + žetonas)."""
+    data = {"title": title, "description": description, "form_csrf": form_csrf(client, "/report"), **extra}
+    return client.post("/report", data=data, follow_redirects=follow_redirects)
+
+
+def register(
+    client: TestClient,
+    username: str,
+    email: str,
+    password: str = "testuotojo-slaptazodis-1",
+    password_confirm: str | None = None,
+    **extra: str,
+) -> httpx.Response:
+    data = {
+        "username": username,
+        "email": email,
+        "password": password,
+        "password_confirm": password if password_confirm is None else password_confirm,
+        "form_csrf": form_csrf(client, "/register"),
+        **extra,
+    }
+    return client.post("/register", data=data, follow_redirects=False)
 
 
 def csrf_token(client: TestClient, path: str = "/dashboard") -> str:

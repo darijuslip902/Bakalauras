@@ -6,18 +6,14 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
 from app import config
-from app.auth import Session, check_csrf, require_login
-from app.db import get_connection, init_db
+from app.auth import Session, check_csrf, require_admin
+from app.db import get_connection, get_database_path, init_db
 from app.services.github_client import GitHubError, InvalidRepositoryError, parse_repository
 from app.services.import_service import run_import
 from app.services.prediction_service import Predictor, default_predictor
 
 router = APIRouter()
 templates = Jinja2Templates(directory=Path(__file__).resolve().parent.parent / "templates")
-
-
-def get_database_path() -> Path:
-    return config.database_path()
 
 
 def get_predictor() -> Predictor:
@@ -52,7 +48,7 @@ def _render(
 
 
 @router.get("/import", response_class=HTMLResponse)
-def import_form(request: Request, session: Session = Depends(require_login)) -> HTMLResponse:
+def import_form(request: Request, session: Session = Depends(require_admin)) -> HTMLResponse:
     return _render(request, session, "", str(config.max_import_limit()))
 
 
@@ -62,7 +58,7 @@ def import_issues(
     repository: str = Form(""),
     limit: str = Form(""),
     csrf_token: str = Form(""),
-    session: Session = Depends(require_login),
+    session: Session = Depends(require_admin),
     database_path: Path = Depends(get_database_path),
     transport: httpx.BaseTransport | None = Depends(get_github_transport),
 ) -> HTMLResponse:

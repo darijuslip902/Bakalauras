@@ -14,8 +14,10 @@ from app.auth import (
     hash_password,
     read_session_token,
     safe_next_path,
+    session_for_user,
     verify_password,
 )
+from app.services.user_service import User
 from app.main import create_app
 from app.routes.issues import get_database_path
 from tests.auth_utils import (
@@ -24,6 +26,7 @@ from tests.auth_utils import (
     TEST_USERNAME,
     csrf_token,
     login,
+    submit_report,
     use_test_auth,
 )
 
@@ -34,6 +37,7 @@ PUBLIC_PATHS = {
     "/report",
     "/report/submitted",
     "/login",
+    "/register",  # 6A: vieša registracija (visada tik `tester`)
     "/logout",
     "/openapi.json",
     "/docs",
@@ -132,13 +136,20 @@ def test_env_file_is_loaded_without_overriding_real_environment(
 # --- Pasirašyta sesija ----------------------------------------------------
 
 
-def test_session_token_roundtrip_and_tampering() -> None:
-    token = create_session_token(TEST_SETTINGS, now=1_000)
+def _user(password_hash: str = TEST_SETTINGS.password_hash, active: bool = True, role: str = "admin") -> User:
+    return User(1, TEST_USERNAME, None, password_hash, role, active, "t", "t")
 
-    session = read_session_token(TEST_SETTINGS, token, now=1_001)
-    assert session is not None
-    assert session.username == TEST_USERNAME
-    assert len(session.csrf_token) >= 32
+
+def test_session_token_roundtrip_and_tampering() -> None:
+    token = create_session_token(TEST_SETTINGS, 1, TEST_SETTINGS.password_hash, now=1_000)
+
+    claims = read_session_token(TEST_SETTINGS, token, now=1_001)
+    assert claims is not None
+    assert claims.user_id == 1
+    assert len(claims.csrf_token) >= 32
+    session = session_for_user(claims, _user())
+    assert session is not None and session.username == TEST_USERNAME and session.role == "admin"
+    assert TEST_SETTINGS.password_hash not in token  # slapuke tik maišos pirštų atspaudas
 
     payload, signature = token.split(".")
     assert read_session_token(TEST_SETTINGS, payload + "." + "0" * len(signature), now=1_001) is None
@@ -147,21 +158,23 @@ def test_session_token_roundtrip_and_tampering() -> None:
 
 
 def test_session_token_expires() -> None:
-    token = create_session_token(TEST_SETTINGS, now=1_000)
+    token = create_session_token(TEST_SETTINGS, 1, TEST_SETTINGS.password_hash, now=1_000)
 
     assert read_session_token(TEST_SETTINGS, token, now=1_000 + SESSION_MAX_AGE_SECONDS) is not None
     assert read_session_token(TEST_SETTINGS, token, now=1_001 + SESSION_MAX_AGE_SECONDS) is None
 
 
-def test_session_is_invalid_with_other_key_or_changed_password() -> None:
-    token = create_session_token(TEST_SETTINGS, now=1_000)
+def test_session_is_invalid_with_other_key_changed_password_or_inactive_user() -> None:
+    token = create_session_token(TEST_SETTINGS, 1, TEST_SETTINGS.password_hash, now=1_000)
     other_key = AuthSettings(TEST_USERNAME, TEST_SETTINGS.password_hash, "kitas-raktas-" + "x" * 32)
-    new_password = AuthSettings(
-        TEST_USERNAME, hash_password("naujas-slaptazodis", iterations=1_000), TEST_SETTINGS.secret_key
-    )
+    claims = read_session_token(TEST_SETTINGS, token, now=1_001)
 
     assert read_session_token(other_key, token, now=1_001) is None
-    assert read_session_token(new_password, token, now=1_001) is None
+    # Naudotojo slaptažodis DB pakeistas – sena sesija nebegalioja.
+    assert session_for_user(claims, _user(hash_password("naujas-slaptazodis", iterations=1_000))) is None
+    assert session_for_user(claims, _user(active=False)) is None  # išjungta paskyra
+    assert session_for_user(claims, None) is None  # paskyros nebėra
+    assert session_for_user(claims, _user()) is not None
 
 
 @pytest.mark.parametrize(
@@ -175,6 +188,14 @@ def test_session_is_invalid_with_other_key_or_changed_password() -> None:
         ("//evil.example/", "/dashboard"),
         ("/\\evil.example/", "/dashboard"),
         ("dashboard", "/dashboard"),
+        # Dot segmentus naršyklė sutrumpintų (pvz. /my/reports/../../dashboard -> /dashboard).
+        ("/my/reports/../../dashboard", "/dashboard"),
+        ("/my/reports/%2e%2e/%2E%2E/import", "/dashboard"),
+        ("/my/./reports", "/dashboard"),
+        ("/my/reports\\..\\dashboard", "/dashboard"),
+        ("/my/reports\n", "/dashboard"),
+        ("/my/reports?q=a b", "/dashboard"),
+        ("/my/reports?page=..", "/my/reports?page=.."),  # užklausos dalis kelio nekeičia
     ],
 )
 def test_safe_next_path_prevents_open_redirect(value: str | None, expected: str) -> None:
@@ -235,18 +256,11 @@ def test_login_redirects_back_to_requested_internal_page(client: TestClient) -> 
     form = client.get(first.headers["location"])
     assert 'name="next" value="/dashboard/reports/5"' in form.text
 
-    response = client.post(
-        "/login",
-        data={"username": TEST_USERNAME, "password": TEST_PASSWORD, "next": "/dashboard/reports/5"},
-        follow_redirects=False,
-    )
+    response = login(client, next_path="/dashboard/reports/5")
     assert response.headers["location"] == "/dashboard/reports/5"
 
-    evil = client.post(
-        "/login",
-        data={"username": TEST_USERNAME, "password": TEST_PASSWORD, "next": "https://evil.example/"},
-        follow_redirects=False,
-    )
+    client.cookies.delete(SESSION_COOKIE_NAME)
+    evil = login(client, next_path="https://evil.example/")
     assert evil.headers["location"] == "/dashboard"
 
 
@@ -312,7 +326,9 @@ def test_logout_is_not_available_via_get(client: TestClient) -> None:
 
 def test_forged_or_foreign_session_cookie_is_rejected(client: TestClient) -> None:
     other = AuthSettings(TEST_USERNAME, TEST_SETTINGS.password_hash, "svetimas-raktas-" + "z" * 32)
-    client.cookies.set(SESSION_COOKIE_NAME, create_session_token(other))
+    login(client)  # administratorius egzistuoja (ID 1), bet slapukas pasirašytas svetimu raktu
+    client.cookies.clear()
+    client.cookies.set(SESSION_COOKIE_NAME, create_session_token(other, 1, TEST_SETTINGS.password_hash))
 
     assert client.get("/dashboard", follow_redirects=False).status_code == 303
 
@@ -346,9 +362,7 @@ def test_public_routes_still_work_without_login(client: TestClient) -> None:
     for path in ("/", "/health", "/report", "/report/submitted", "/login"):
         assert client.get(path).status_code == 200, path
 
-    response = client.post(
-        "/report", data={"title": "Vieša klaida", "description": "Be prisijungimo"}, follow_redirects=False
-    )
+    response = submit_report(client, "Vieša klaida", "Be prisijungimo")
     assert response.status_code == 303
     assert response.headers["location"] == "/report/submitted"
 

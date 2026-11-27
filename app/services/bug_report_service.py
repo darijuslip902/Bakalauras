@@ -9,8 +9,8 @@ TITLE_MAX_LENGTH = 200
 DESCRIPTION_MAX_LENGTH = 10000
 
 _INSERT_SQL = """
-INSERT INTO bug_reports (title, description, status, created_at, updated_at)
-VALUES (?, ?, 'new', ?, ?)
+INSERT INTO bug_reports (title, description, status, created_at, updated_at, reporter_user_id)
+VALUES (?, ?, 'new', ?, ?, ?)
 """
 
 
@@ -43,12 +43,35 @@ def validate_report(title: str, description: str) -> dict[str, str]:
     return errors
 
 
-def create_bug_report(conn: sqlite3.Connection, title: str, description: str) -> int:
-    """Išsaugo naują pranešimą su būsena `new` ir grąžina jo ID."""
+def create_bug_report(
+    conn: sqlite3.Connection, title: str, description: str, reporter_user_id: int | None = None
+) -> int:
+    """Išsaugo naują pranešimą su būsena `new` ir grąžina jo ID.
+
+    `reporter_user_id` – tik prisijungusio naudotojo pranešimui (6A); svečio pranešimas – NULL.
+    """
     now = _utc_now()
     with conn:  # commit sėkmės atveju, kitaip rollback
-        cursor = conn.execute(_INSERT_SQL, (title, description, now, now))
+        cursor = conn.execute(_INSERT_SQL, (title, description, now, now, reporter_user_id))
     return cursor.lastrowid
+
+
+def list_reports_by_reporter(conn: sqlite3.Connection, user_id: int) -> list[sqlite3.Row]:
+    """Tik nurodyto naudotojo pateikti pranešimai (6A „Mano pranešimai“), naujausi pirmi."""
+    return conn.execute(
+        "SELECT id, title, status, created_at, updated_at, resolved_at FROM bug_reports"
+        " WHERE reporter_user_id = ? ORDER BY id DESC",
+        (user_id,),
+    ).fetchall()
+
+
+def get_report_of_reporter(conn: sqlite3.Connection, report_id: int, user_id: int) -> sqlite3.Row | None:
+    """Pranešimas tik jei jį pateikė šis naudotojas; svetimas ar neegzistuojantis – None."""
+    return conn.execute(
+        "SELECT id, title, description, status, created_at, updated_at, resolved_at FROM bug_reports"
+        " WHERE id = ? AND reporter_user_id = ?",
+        (report_id, user_id),
+    ).fetchone()
 
 
 # --- Vidinė klaidų valdymo aplinka (3 etapas) -------------------------------

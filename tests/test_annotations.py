@@ -20,7 +20,7 @@ from app.services.annotation_service import (
     validate_annotation,
 )
 from app.services.import_service import save_issues
-from tests.auth_utils import csrf_token, login, use_test_auth
+from tests.auth_utils import csrf_token, login, submit_report, use_test_auth
 
 URL = "/dashboard/training-data"
 
@@ -503,7 +503,7 @@ def test_reimport_keeps_human_annotations(training: TrainingApp) -> None:
 
 def test_github_issues_do_not_appear_in_customer_reports(training: TrainingApp) -> None:
     training.add(make_issue(1, "GitHub mokymo įrašas"))
-    training.client.post("/report", data={"title": "Kliento klaida", "description": "Tekstas"})
+    assert submit_report(training.client, "Kliento klaida", "Tekstas").status_code == 303
 
     dashboard = training.client.get("/dashboard").text
     training_list = training.client.get(URL).text

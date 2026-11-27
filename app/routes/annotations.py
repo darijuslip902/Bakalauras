@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, Form, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 from app import config
-from app.auth import Session, check_csrf, require_login
+from app.auth import Session, check_csrf, require_admin
 from app.db import get_connection, init_db
 from app.routes.dashboard import SEARCH_MAX_LENGTH, base_context, templates
 from app.routes.issues import get_database_path
@@ -64,7 +64,7 @@ def training_data_list(
     sort: str = Query("newest"),
     page: str = Query("1"),
     message: str = Query(""),
-    session: Session = Depends(require_login),
+    session: Session = Depends(require_admin),
     database_path: Path = Depends(get_database_path),
 ) -> HTMLResponse:
     with get_connection(database_path) as conn:
@@ -126,7 +126,7 @@ def training_data_list(
 def next_unlabeled(
     after: str = Query("0"),
     message: str = Query(""),
-    session: Session = Depends(require_login),
+    session: Session = Depends(require_admin),
     database_path: Path = Depends(get_database_path),
 ) -> RedirectResponse:
     after_id = int(after) if after.isascii() and after.isdigit() else 0
@@ -167,7 +167,7 @@ def training_data_detail(
     request: Request,
     issue_id: int,
     message: str = Query(""),
-    session: Session = Depends(require_login),
+    session: Session = Depends(require_admin),
     database_path: Path = Depends(get_database_path),
 ) -> HTMLResponse:
     with get_connection(database_path) as conn:
@@ -188,7 +188,7 @@ def save_training_annotation(
     training_suitability: str = Form(""),
     action: str = Form("save"),
     csrf_token: str = Form(""),
-    session: Session = Depends(require_login),
+    session: Session = Depends(require_admin),
     database_path: Path = Depends(get_database_path),
 ) -> HTMLResponse | RedirectResponse:
     check_csrf(session, csrf_token)

@@ -18,7 +18,7 @@ from app.services.classification_service import (
     validate_classification,
 )
 from app.services.prediction_service import Predictor, classify_report, latest_predictions
-from tests.auth_utils import TEST_USERNAME, csrf_token, login, use_test_auth
+from tests.auth_utils import TEST_USERNAME, csrf_token, login, submit_report, use_test_auth
 from tests.test_prediction_service import UI_TEXT, make_models
 
 GOOD = {"category_label": "security", "complexity_label": "high", "priority_label": "P0_critical"}
@@ -170,8 +170,7 @@ class Web:
         assert login(self.staff).status_code == 303
 
     def submit(self, title: str = "Page layout broken", description: str = UI_TEXT) -> None:
-        assert self.public.post("/report", data={"title": title, "description": description},
-                                follow_redirects=False).status_code == 303
+        assert submit_report(self.public, title, description).status_code == 303
 
     def confirm(self, values: dict | None = None, token: str | None = None, client: TestClient | None = None):
         client = client or self.staff

@@ -3,6 +3,8 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 
+from app import config
+
 # Du atskiri srautai: sistemos pranešimai (bug_reports) ir iš GitHub importuoti
 # mokymo įrašai (github_issues). Pakartotinis vykdymas saugus (IF NOT EXISTS).
 SCHEMA = """
@@ -18,6 +20,20 @@ CREATE TABLE IF NOT EXISTS bug_reports (
     category_label TEXT,
     complexity_label TEXT,
     priority_label TEXT
+);
+
+-- 6A: vienos organizacijos naudotojų paskyros. Viešai registruojantis visada `tester`.
+-- Vardas ir el. paštas unikalūs nepriklausomai nuo raidžių dydžio; slaptažodis tik PBKDF2 maiša.
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT NOT NULL UNIQUE COLLATE NOCASE,
+    email TEXT UNIQUE COLLATE NOCASE,
+    password_hash TEXT NOT NULL,
+    role TEXT NOT NULL DEFAULT 'tester'
+        CHECK (role IN ('tester', 'developer', 'admin')),
+    is_active INTEGER NOT NULL DEFAULT 1 CHECK (is_active IN (0, 1)),
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS github_issues (
@@ -148,7 +164,19 @@ _ADDED_COLUMNS = {
     ("github_issues", "source_kind"): (
         "TEXT NOT NULL DEFAULT 'base' CHECK (source_kind IN ('base', 'augmentation'))"
     ),
+    # 6A: kas pateikė pranešimą (tik prisijungus). Seni ir svečių pranešimai lieka NULL.
+    ("bug_reports", "reporter_user_id"): "INTEGER REFERENCES users(id)",
 }
+
+# Indeksai stulpeliams, kurie gali būti pridėti tik per ALTER (vykdomi po _ADDED_COLUMNS).
+_POST_MIGRATION_SQL = """
+CREATE INDEX IF NOT EXISTS idx_bug_reports_reporter ON bug_reports (reporter_user_id, id);
+"""
+
+
+def get_database_path() -> Path:
+    """FastAPI priklausomybė; testuose pakeičiama laikina DB (`dependency_overrides`)."""
+    return config.database_path()
 
 
 def connect(path: Path) -> sqlite3.Connection:
@@ -174,6 +202,7 @@ def init_db(conn: sqlite3.Connection) -> None:
             existing = {row[1] for row in conn.execute(f"PRAGMA table_info({table})")}
             if column not in existing:
                 conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {definition}")
+    conn.executescript(_POST_MIGRATION_SQL)
 
 
 def add_casefold_function(conn: sqlite3.Connection) -> None:
