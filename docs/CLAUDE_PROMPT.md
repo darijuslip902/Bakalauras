@@ -1,10 +1,14 @@
 # Claude Code darbo užklausos
 
-0–5D etapai baigti, PR #11 sujungtas į main. 6 etapas atidėtas iki darbo vadovo rekomendacijų. Toliau pateikta aktuali užklausos forma, o ankstesnės užklausos išsaugotos kaip istorija.
+0–5D etapai baigti, PR #11 sujungtas į main. 6 etapas patvirtintas darbo vadovo aptarimu: viena organizacija, paskyros ir rolės (6A), kategorijų paskirstymas (6B), klaidų prisiėmimas (6C), išbaigtas dizainas (6D), apžvalgos (6E). Kodu šie etapai dar nepradėti. Toliau pateikta aktuali užklausos forma, o ankstesnės užklausos išsaugotos kaip istorija.
 
 ## Aktualus darbo principas
 
 Dirbk tik pagal naują naudotojo užduotį. Perskaityk CLAUDE.md, ARCHITECTURE.md ir aktualią docs/IMPLEMENTATION_PLAN.md dalį. Patikrink git status, pradėk nuo naujausios main versijos ir naudok atskirą šaką. Nekeisk apmokytų modelių, vietinės DB, autentifikacijos ar svetainės be aiškaus reikalavimo. Mokamų API užklausų nevykdyk be leidimo. Testų rezultatus pateik tik faktiškai juos paleidęs. Jei užduotis tik dokumentacinė, keisk tik esamus dokumentus.
+
+## Nauja artimiausia užklausa
+
+6A: įdiegti SQLite users, saugią tik tester registraciją, prisijungimą kelioms paskyroms, esamo .env admin perėjimą, `reporter_user_id` naujiems prisijungusių testuotojų įrašams, tik savo pranešimų peržiūrą, rolėmis saugomus esamus maršrutus ir testus. Techniniai saugumo bei migracijos kriterijai išdėstyti `ARCHITECTURE.md` 13 skyriuje ir `docs/IMPLEMENTATION_PLAN.md` 6A punkte. Tai tik 6A, be kategorijų paskirstymo / komentarų / pilno dizaino (vėlesni etapai).
 
 ## Istorinės užklausos (nebevykdyti)
 
