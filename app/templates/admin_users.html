@@ -1,0 +1,73 @@
+{% extends "internal_base.html" %}
+{% block title %}Naudotojai{% endblock %}
+{% block content %}
+<h1>Naudotojai ir specializacijos</h1>
+<p class="muted">Programuotojo paskyra: naudotojas užsiregistruoja (visada testuotojo rolė), tada čia jam suteikiama programuotojo rolė ir priskiriamos kategorijos. Pakeitimai galioja iš karto. Kategorija „{{ category_labels["other"] }}“ nepriskiriama – tokios klaidos visada lieka administratoriaus peržiūrai.</p>
+
+{% if message %}<p class="success" role="status">{{ message }}</p>{% endif %}
+{% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+
+<section class="card" aria-labelledby="queues-heading">
+  <h2 id="queues-heading">Kategorijų eilės</h2>
+  <dl class="meta queues">
+    {% for label in assignable %}
+    <dt>{{ category_labels[label] }}</dt>
+    <dd>{% if queues[label] %}{{ queues[label]|join(", ") }}{% else %}<span class="badge state-pending">Nėra programuotojo</span>{% endif %}</dd>
+    {% endfor %}
+  </dl>
+</section>
+
+<div class="table-wrap">
+  <table class="reports users">
+    <thead>
+      <tr><th scope="col">Naudotojas</th><th scope="col">El. paštas</th><th scope="col">Rolė</th><th scope="col">Paskyra</th><th scope="col">Specializacijos</th></tr>
+    </thead>
+    <tbody>
+      {% for user in users %}
+      {% set own = user.id == session.user_id %}
+      <tr>
+        <td data-label="Naudotojas">{{ user.username }}{% if own %} <span class="muted small">(jūs)</span>{% endif %}<br><span class="muted small">sukurta {{ user.created_at|datetime }}</span></td>
+        <td data-label="El. paštas">{{ user.email or "—" }}</td>
+        <td data-label="Rolė">
+          {% if own %}{{ role_labels[user.role] }}{% else %}
+          <form class="inline-form" method="post" action="/admin/users/{{ user.id }}/role">
+            <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+            <label class="visually-hidden" for="role-{{ user.id }}">Rolė</label>
+            <select id="role-{{ user.id }}" name="role">
+              {% for role in roles %}<option value="{{ role }}"{% if user.role == role %} selected{% endif %}>{{ role_labels[role] }}</option>{% endfor %}
+            </select>
+            <button type="submit" class="secondary">Keisti</button>
+          </form>
+          {% endif %}
+        </td>
+        <td data-label="Paskyra">
+          {% if user.is_active %}<span class="badge state-confirmed">Aktyvi</span>{% else %}<span class="badge state-none">Išjungta</span>{% endif %}
+          {% if not own %}
+          <form class="inline-form" method="post" action="/admin/users/{{ user.id }}/active">
+            <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+            <input type="hidden" name="active" value="{{ 0 if user.is_active else 1 }}">
+            <button type="submit" class="secondary">{% if user.is_active %}Išjungti{% else %}Aktyvuoti{% endif %}</button>
+          </form>
+          {% endif %}
+        </td>
+        <td data-label="Specializacijos">
+          {% if user.role == "developer" %}
+          <form method="post" action="/admin/users/{{ user.id }}/categories">
+            <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+            <fieldset class="checkbox-list">
+              <legend class="visually-hidden">Kategorijos naudotojui {{ user.username }}</legend>
+              {% for label in assignable %}
+              <label><input type="checkbox" name="categories" value="{{ label }}"{% if label in user.categories %} checked{% endif %}> {{ category_labels[label] }}</label>
+              {% endfor %}
+            </fieldset>
+            <button type="submit" class="secondary">Išsaugoti</button>
+          </form>
+          {% if not user.categories %}<p class="muted small">Kategorijų nepriskirta – programuotojas klaidų nemato.</p>{% endif %}
+          {% else %}<span class="muted small">Tik programuotojui</span>{% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

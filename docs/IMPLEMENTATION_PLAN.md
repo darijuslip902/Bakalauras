@@ -160,11 +160,11 @@ Visų limitų suma 40 161 (sąmoningai su atsarga: dalis etikečių turės maži
 
 **Priėmimas:** testai patvirtina limitų, `--counts`, atsarginės kopijos ir artimų dublikatų elgesį; testo įrašai niekada nepatenka į mokymą; esama DB ir anotacijos nekeičiamos. Rezultatų (kokybės pagerėjimo) neteigiama, kol nėra naujo mokymo.
 
-## 6 etapas – vienos organizacijos paskyros, paskirstymas ir UX (PATVIRTINTAS PLANAS; 6A ĮGYVENDINTAS, 6B–6E NEĮGYVENDINTI)
+## 6 etapas – vienos organizacijos paskyros, paskirstymas ir UX (PATVIRTINTAS PLANAS; 6A SUJUNGTAS, 6B ĮGYVENDINTAS, 6C–6E NEĮGYVENDINTI)
 
 Darbo vadovas pasiūlė išbaigti svetainę, registraciją / prisijungimą ir klaidų paskirstymą. Nuspręsta pradėti **vienos organizacijos** sprendimu. Multi-tenancy neįgyvendinti dabar; toks funkcionalumas būtų atskiras vėlesnis projektavimo etapas. 0–5D kodas išlieka kaip yra. Modelių atnaujinimas ir papildomas mokamas DI žymėjimas neplanuojami. Plačiau žr. ARCHITECTURE.md 13 skyrių.
 
-### 6A – paskyros, registracija, prisijungimas, rolės (ĮGYVENDINTA šakoje `claude/phase-6a-user-accounts`, laukia PR sujungimo)
+### 6A – paskyros, registracija, prisijungimas, rolės (ĮGYVENDINTA, PR #14 sujungtas į main)
 
 Tikslas: pereiti nuo vienos .env vidinės paskyros prie saugios naudotojų lentelės. Viešai registruojantis priskirti tik `tester`; `developer` / `admin` teises gali suteikti tik administratorius. Apsaugoti visus esamus vidinius GET/POST maršrutus nuo testuotojų ir neprisijungusių asmenų. Užtikrinti esamo administratoriaus saugų idempotentišką perkėlimą ar bootstrap be duomenų praradimo, pasirašytas/atšaukiamas sesijas, CSRF ir slaptažodžių PBKDF2. Susieti prisijungusio testuotojo naujai pateiktą įrašą su jo `user_id`, leisti matyti tik savo įrašus; svečių pranešimai lieka anoniminiai. 6A nereiškia viso UI perpiešimo: tik tvarkingos prisijungimo/registracijos/mūsų paskyros bazinės formos.
 
@@ -174,9 +174,11 @@ Priėmimas: migracija pakartojama be duomenų praradimo; egzistavęs admin gali 
 
 **PR #14 peržiūros pataisos:** `POST /report` tikrina formų CSRF žetoną (svečiui ir prisijungusiam; vieša forma veikia be registracijos ir be paskyrų konfigūracijos); po prisijungimo `next` leidžiamas tik saugus ir rolei prieinamas kelias (testuotojas / programuotojas nebenukreipiami į `/dashboard`, administratorius grįžta į teisėtą vidinį puslapį), `safe_next_path` papildomai atmeta dot segmentus ir `\\`.
 
-### 6B – programuotojų specializacijos ir klaidų kategorijų matomumas (NEĮGYVENDINTA)
+### 6B – programuotojų specializacijos ir klaidų kategorijų matomumas (ĮGYVENDINTA šakoje `claude/phase-6b-developer-routing`, laukia PR sujungimo)
 
 Administratorius gali priskirti programuotojui 1+ kategorijas, ta pati kategorija gali turėti kelis programuotojus. Programuotojas mato tik savo kategorijų klaidas, admin visas. Žmogaus patvirtinta kategorija turi pirmenybę prieš automatinę. „Kita“, nepatikimi / nenustatyti atvejai turi patekti administratoriui, o ne dingti. Tikrinti serverio lygmenyje list/detail/POST. Tai kategorijų eilės, **ne vieno darbuotojo automatinis paskyrimas**.
+
+**Įgyvendinta (2026-11-28):** lentelė `developer_categories` (idempotentiška migracija); `/admin/users` – naudotojų sąrašas be maišų, rolė, aktyvumas, specializacijos (CSRF, serverio validacija, paskutinio aktyvaus administratoriaus apsauga servise ir CLI, specializacijų pašalinimas pakeitus `developer` rolę); paskirstymas SQL lygmeniu (patvirtinta kategorija → naujausia `ok` prognozė be `needs_review` → kitaip administratoriaus peržiūra; `other` visada peržiūrai); `/developer/dashboard`, detalės ir būsenos keitimas tik savo kategorijų klaidoms (kitaip 404); administratoriaus sąraše paskirstymo skaičiai, stulpelis ir filtras, detalėse paskirstymo būsena; navigacija ir `next` pagal rolę. Testai: `tests/test_routing.py` (68); `tests/test_users.py` pritaikyti 3 testai (programuotojo pradinis puslapis, nebėra „kitame etape“ pranešimo, rolės keitimo testui pridėtas antras administratorius dėl naujos apsaugos).
 
 ### 6C – konkrečios klaidos prisiėmimas, komentarai, auditavimas (NEĮGYVENDINTA)
 

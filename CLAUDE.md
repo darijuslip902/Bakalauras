@@ -1,8 +1,8 @@
 # Claude Code taisyklės
 
-## Dabartinė būklė (2026-11-13, po 5D)
+## Dabartinė būklė (2026-11-28, po 6A, 6B šakoje)
 
-0–5D etapai baigti, PR #11 sujungtas į main. Modelių versija `20261113-125330`. 6 etapas patvirtintas kaip vienos organizacijos sąsajos / paskyrų / kategorijų darbai. 6A įgyvendintas šakoje `claude/phase-6a-user-accounts` (PR laukia sujungimo); 6B–6E kodas dar neįgyvendintas; statistikos puslapis neprivalomas. P0 paliekamas, nors jo atpažinimas silpnas.
+0–5D etapai baigti, PR #11 sujungtas į main. Modelių versija `20261113-125330`. 6 etapas patvirtintas kaip vienos organizacijos sąsajos / paskyrų / kategorijų darbai. 6A sujungtas į main (PR #14); 6B įgyvendintas šakoje `claude/phase-6b-developer-routing` (PR laukia sujungimo); 6C–6E kodas dar neįgyvendintas; statistikos puslapis neprivalomas. P0 paliekamas, nors jo atpažinimas silpnas.
 
 - 40 024 importuoti GitHub įrašai; 23 884 sėkmingos DI anotacijos (19 412 tinkamų, 4 472 netinkamų).
 - 18 267 mokymo ir validacijos pavyzdžiai; 1 120 atrinktų testo įrašų, iš jų 901 tinkamas (visi 901 su DI etalonu); 30 pilotinių įrašų.
@@ -27,14 +27,14 @@ Jei dokumentai prieštarauja vienas kitam, nekurk naujų prielaidų: pažymėk p
 - Prognozė ir žmogaus pataisyta / patvirtinta žyma visada saugomos atskirai.
 - Vieši GitHub Issues naudojami atskirai mokymo duomenims; integracija nekeičia GitHub pusėje esančių issues.
 - Klientui nereikia paskyros ir jis negali peržiūrėti kitų pranešimų. Atsakingo programuotojo automatinis parinkimas neįtrauktas.
-- Įgyvendinimo etapus skaityti iš docs/IMPLEMENTATION_PLAN.md. 0–5D baigti; 6A įgyvendintas (naudotojų paskyros DB, registracija tik `tester`, `require_admin` esamiems vidiniams maršrutams, „Mano pranešimai“), po jo 6B–6E atskirais PR. Modelių statistikos puslapis neprivalomas. Nekeisti modelių ar DB atliekant vien dokumentacijos darbus.
+- Įgyvendinimo etapus skaityti iš docs/IMPLEMENTATION_PLAN.md. 0–5D baigti; 6A sujungtas (naudotojų paskyros DB, registracija tik `tester`, `require_admin` esamiems vidiniams maršrutams, „Mano pranešimai“); 6B įgyvendintas (`developer_categories`, `/admin/users`, `/developer/dashboard`, paskirstymas pagal kategoriją SQL lygmeniu); 6C–6E atskirais PR. Modelių statistikos puslapis neprivalomas. Nekeisti modelių ar DB atliekant vien dokumentacijos darbus.
 
-## 6A architektūriniai reikalavimai (prieš 6A kodavimo PR)
+## 6A architektūriniai reikalavimai (galioja ir toliau)
 
 - Sistema skirta **vienai organizacijai**. Daugiau įmonių, company_id, multi-tenant, React, Docker ar mokami API – **ne šio etapo dalis**.
 - 6A: DB users su `tester|developer|admin`, registruojasi **tik tester**, admin / developer tik administratoriaus valdomas vaidmuo. Prie naujų testuotojo pranešimų – reporter_user_id; senų anonimiškų įrašų nepriskirti jokiam naudotojui.
 - Saugiai išsaugoti `.env` administratorių ir visas esamas SQLite lenteles. Nekeisti `models/*.joblib`, DI mokymo duomenų, ML metodų, jų ataskaitų.
-- Sesijoje naudoti stabilų user_id; per kiekvieną autorizuotą užklausą tikrinti dabartinį naudotojo vaidmenį / aktyvumą DB. 6A turi užkirsti kelią `tester` patekti į dabartines /dashboard, /import, /dashboard/training-data ir jų POST; vien URL/HTML slėpimas nėra apsauga. Vėliau 6B programuotojas matys tik jo kategorijas.
+- Sesijoje naudoti stabilų user_id; per kiekvieną autorizuotą užklausą tikrinti dabartinį naudotojo vaidmenį / aktyvumą DB. 6A turi užkirsti kelią `tester` patekti į dabartines /dashboard, /import, /dashboard/training-data ir jų POST; vien URL/HTML slėpimas nėra apsauga. 6B: programuotojas mato tik savo kategorijų klaidas (`require_role("developer")` + SQL sąlyga), svetima klaida – 404; paskutinio aktyvaus administratoriaus apsauga `user_service`.
 - Vieša /report forma lieka; kategoriškai drausti role=admin/developer per viešą registracijos POST. Saugoti CSRF, PBKDF2, slapukų savybes ir esamus testus; reikalingus migracijų testus pridėti.
 - 6A neįgyvendinti 6B–6E funkcijų, tik tiek UI, kiek būtina registracijai, prisijungimui ir saugiam naršymui. Atskirų etapo PR sujungimą vykdo naudotojas.
 

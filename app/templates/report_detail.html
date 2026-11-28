@@ -150,6 +150,16 @@
       <button type="submit">Išsaugoti būseną</button>
     </form>
     <p class="muted small">Išspręsti pranešimai lieka istorijoje ir gali būti atidaryti iš naujo.</p>
+
+    {% if routing %}
+    <h3>Paskirstymas</h3>
+    <p>{{ ui.routing_badge(routing, routing_labels, category_labels) }}</p>
+    <p class="muted small">
+      {% if routing.routing_state == "queue" %}Klaidą mato visi šios kategorijos programuotojai ({{ routing.developer_count }}).
+      {% elif routing.routing_state == "no_developer" %}Šiai kategorijai nepriskirtas nė vienas aktyvus programuotojas – priskirkite jį puslapyje <a href="/admin/users">Naudotojai</a>.
+      {% else %}Kategorija nenustatyta, „Kita“ arba automatinė prognozė nepatikima: patvirtinkite klasifikaciją, kad klaida patektų į programuotojų eilę.{% endif %}
+    </p>
+    {% endif %}
   </aside>
 </div>
 {% endif %}

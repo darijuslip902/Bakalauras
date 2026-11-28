@@ -8,7 +8,7 @@ from fastapi.templating import Jinja2Templates
 
 from app import config
 from app.auth import CsrfError, Forbidden, LoginRateLimiter, LoginRequired, Session, get_current_session
-from app.routes import account, annotations, auth, dashboard, issues, reports
+from app.routes import account, admin_users, annotations, auth, dashboard, developer, issues, reports
 
 BASE_DIR = Path(__file__).resolve().parent
 
@@ -26,6 +26,8 @@ def create_app() -> FastAPI:
     app.include_router(dashboard.router)
     app.include_router(annotations.router)
     app.include_router(account.router)
+    app.include_router(developer.router)
+    app.include_router(admin_users.router)
 
     @app.exception_handler(LoginRequired)
     def redirect_to_login(request: Request, exc: LoginRequired) -> RedirectResponse:

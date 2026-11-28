@@ -5,6 +5,12 @@
 <h1>Klaidų pranešimai</h1>
 <p class="muted">Visi klientų pateikti pranešimai, įskaitant išspręstus. Kategoriją, prioritetą ir sudėtingumą automatiškai siūlo vietiniai ML modeliai (rodoma pilkesniu kursyvu, kol nepatvirtinta); programuotojo patvirtinta klasifikacija turi pirmenybę.</p>
 
+<ul class="routing-summary" aria-label="Paskirstymas pagal kategorijas">
+  {% for state, name in routing_labels.items() %}
+  <li><a href="/dashboard?routing={{ state }}"><span class="badge routing-{{ state }}">{{ name }}: {{ routing_summary[state] }}</span></a></li>
+  {% endfor %}
+</ul>
+
 <form class="filters" method="get" action="/dashboard" role="search">
   <div class="filter-field search">
     <label for="q">Paieška</label>
@@ -34,6 +40,15 @@
     </select>
   </div>
   {% endfor %}
+  <div class="filter-field">
+    <label for="routing">Paskirstymas</label>
+    <select id="routing" name="routing">
+      <option value="">Visi</option>
+      {% for value, name in routing_labels.items() %}
+      <option value="{{ value }}"{% if filters.routing == value %} selected{% endif %}>{{ name }}</option>
+      {% endfor %}
+    </select>
+  </div>
   <div class="filter-actions">
     <button type="submit">Filtruoti</button>
     {% if filters_active %}<a class="button secondary" href="/dashboard">Išvalyti</a>{% endif %}
@@ -59,6 +74,7 @@
         <th scope="col">Prioritetas</th>
         <th scope="col">Sudėtingumas</th>
         <th scope="col">Klasifikacija</th>
+        <th scope="col">Paskirstymas</th>
       </tr>
     </thead>
     <tbody>
@@ -72,6 +88,7 @@
         <td data-label="Prioritetas">{{ ui.shown_label(report.priority_label, report.auto_priority_label, priority_labels) }}</td>
         <td data-label="Sudėtingumas">{{ ui.shown_label(report.complexity_label, report.auto_complexity_label, complexity_labels) }}</td>
         <td data-label="Klasifikacija">{{ ui.classification_state(report) }}</td>
+        <td data-label="Paskirstymas">{{ ui.routing_badge(report, routing_labels, category_labels) }}</td>
       </tr>
       {% endfor %}
     </tbody>

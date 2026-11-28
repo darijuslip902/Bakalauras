@@ -689,3 +689,20 @@ ul.history { padding-left: 1.1rem; margin: 0.5rem 0 0; }
 .auth-form .form-field input { width: 100%; box-sizing: border-box; }
 .form-field input[aria-invalid="true"] { border-color: #b42318; }
 .card-head h1 { margin: 0; }
+
+/* 6B: naudotojų valdymas ir paskirstymo indikatoriai */
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
+.checkbox-list { border: 0; margin: 0 0 0.5rem; padding: 0; display: grid; gap: 0.2rem; }
+.checkbox-list label { font-weight: normal; display: flex; gap: 0.4rem; align-items: center; }
+.checkbox-list input { min-width: 0; width: auto; margin: 0; }
+table.users button { white-space: nowrap; }
+dl.meta.queues dt { white-space: normal; }
+table.users td { vertical-align: top; }
+.routing-summary { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0 0 1rem; padding: 0; list-style: none; }
+.routing-summary a { text-decoration: none; }
+.badge.routing-queue { background: #e6f4ea; color: #1e5e2f; }
+.badge.routing-no_developer { background: #fff4e0; color: #7a4b00; }
+.badge.routing-review { background: #fde8e8; color: #8a1c1c; }

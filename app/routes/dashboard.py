@@ -1,4 +1,4 @@
-"""Vidinė programuotojo / koordinatoriaus klaidų valdymo aplinka (reikia prisijungti)."""
+"""Administratoriaus klaidų valdymo aplinka: visos klaidos ir 6B paskirstymo indikatoriai."""
 
 import sqlite3
 from pathlib import Path
@@ -12,11 +12,14 @@ from app.auth import Session, check_csrf, require_admin
 from app.db import get_connection, init_db
 from app.routes.issues import get_database_path, get_predictor
 from app.services.bug_report_service import (
+    ROUTING_STATES,
     STATUSES,
     UNSET,
     ReportFilters,
     get_bug_report,
+    get_routed_report,
     list_bug_reports,
+    routing_summary,
     update_status,
 )
 from app.services.classification_service import (
@@ -66,6 +69,7 @@ def base_context(session: Session, active: str) -> dict[str, object]:
         "category_labels": config.CATEGORY_LABELS,
         "priority_labels": config.PRIORITY_LABELS,
         "complexity_labels": config.COMPLEXITY_LABELS,
+        "routing_labels": ROUTING_STATES,
     }
 
 
@@ -85,9 +89,11 @@ def dashboard(
     category: str = Query(""),
     priority: str = Query(""),
     complexity: str = Query(""),
+    routing: str = Query(""),
     session: Session = Depends(require_admin),
     database_path: Path = Depends(get_database_path),
 ) -> HTMLResponse:
+    routing, routing_ok = _allowed(routing, ROUTING_STATES, allow_unset=False)
     status, status_ok = _allowed(status, config.STATUS_LABELS, allow_unset=False)
     category, category_ok = _allowed(category, config.CATEGORY_LABELS)
     priority, priority_ok = _allowed(priority, config.PRIORITY_LABELS)
@@ -98,10 +104,12 @@ def dashboard(
         category_label=category,
         priority_label=priority,
         complexity_label=complexity,
+        routing=routing,
     )
     with get_connection(database_path) as conn:
         init_db(conn)
         reports = list_bug_reports(conn, filters)
+        summary = routing_summary(conn)
 
     context = base_context(session, "dashboard")
     context.update(
@@ -109,7 +117,8 @@ def dashboard(
         filters=filters,
         unset=UNSET,
         filters_active=any(vars(filters).values()),
-        invalid_filter=not (status_ok and category_ok and priority_ok and complexity_ok),
+        invalid_filter=not (status_ok and category_ok and priority_ok and complexity_ok and routing_ok),
+        routing_summary=summary,
     )
     return templates.TemplateResponse(request, "dashboard.html", context)
 
@@ -129,7 +138,9 @@ def _render_detail(
     predictions: dict = {}
     history: list = []
     confirmed = False
+    routing = None
     if report is not None and conn is not None:
+        routing = get_routed_report(conn, report["id"])  # 6B: kur klaida paskirstyta
         predictions = latest_predictions(conn, report["id"])
         history = confirmation_history(conn, report["id"])
         confirmed = is_confirmed(report)
@@ -141,7 +152,7 @@ def _render_detail(
         predictions=predictions, prediction_fields=FIELDS, prediction_method=METHOD,
         review_thresholds=REVIEW_THRESHOLDS, history=history, confirmed=confirmed,
         last_confirmation=history[0] if history else None,
-        form=form or {}, field_errors=field_errors or {},
+        form=form or {}, field_errors=field_errors or {}, routing=routing,
     )
     return templates.TemplateResponse(
         request, "report_detail.html", context, status_code=status_code
