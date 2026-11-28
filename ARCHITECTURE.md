@@ -1,8 +1,8 @@
 # Sistemos architektūra
 
-## Dabartinė realizacija (5D baigta) ir naujas 6 etapo planas (2026-11-27)
+## Dabartinė realizacija (6A sujungta, 6B šakoje) ir 6 etapo planas (2026-11-28)
 
-0–5D etapai baigti, PR #11 sujungtas į main. Modelių versija `20261113-125330`. 6 etapo reikalavimai aptarti su darbo vadovu ir pasirinkta vienos organizacijos kryptis. **6A įgyvendintas šakoje `claude/phase-6a-user-accounts`** (žr. 13 skyrių „6A – įgyvendinta“); 6B–6E dar neįgyvendinti. Statistikos puslapis nėra privalomas. P0 paliekamas, nors jo atpažinimas silpnas.
+0–5D etapai baigti, PR #11 sujungtas į main. Modelių versija `20261113-125330`. 6 etapo reikalavimai aptarti su darbo vadovu ir pasirinkta vienos organizacijos kryptis. 6A sujungtas į main (PR #14). **6B įgyvendintas šakoje `claude/phase-6b-developer-routing`** (žr. 13 skyrių „6B – įgyvendinta“); 6C–6E dar neįgyvendinti. Statistikos puslapis nėra privalomas. P0 paliekamas, nors jo atpažinimas silpnas.
 
 - 40 024 importuoti GitHub įrašai; 23 884 sėkmingos DI anotacijos (19 412 tinkamų, 4 472 netinkamų).
 - 18 267 mokymo ir validacijos pavyzdžiai; 1 120 atrinktų testo įrašų, iš jų 901 tinkamas (visi 901 su DI etalonu); 30 pilotinių įrašų.
@@ -124,6 +124,16 @@ Duomenų bazėje atskirti du susiję, bet skirtingos paskirties srautai: (1) sis
 | `is_active` | 0 – paskyra išjungta, visos sesijos iš karto negalioja |
 | `created_at`, `updated_at` | UTC laikai |
 
+### `developer_categories` (6B)
+
+| Laukas | Paskirtis |
+|---|---|
+| `user_id` | `users.id` (išorinis raktas, `ON DELETE CASCADE`) |
+| `category_label` | Kategorija iš `app.config.CATEGORY_LABELS`, išskyrus `other` (tikrinama `user_service`) |
+| `created_at` | Kada priskirta |
+
+Pirminis raktas `(user_id, category_label)` – pora unikali; indeksas `(category_label, user_id)` eilių paieškai. Įrašai yra tik `developer` rolės naudotojams: pakeitus rolę, jie pašalinami. Klaidos neperkeliamos ir nekopijuojamos – paskirstymas skaičiuojamas užklausoje.
+
 Viešai formai rinkti tik būtinus laukus: pavadinimą ir išsamų aprašymą; papildomas kontaktinis laukas nėra būtinas pirmajai versijai. Pateikimo metu sistema bando atlikti prognozę, tačiau jei modelio nepakanka, įrašas vis tiek išsaugomas ir aiškiai pažymimas, kad prognozė nepasiekiama.
 
 ### `github_issues`
@@ -222,7 +232,7 @@ Pradinis modelis: `Pipeline(TfidfVectorizer(...), LogisticRegression(...))`. Tek
 - Nuo 6A paskyros saugomos lentelėje `users` (tik PBKDF2 maišos). `.env` administratorius idempotentiškai perkeliamas į ją (`bootstrap_admin`). Niekada nelaikyti slaptažodžio atviro teksto pavidalu kode ar repozitorijoje.
 - Apsaugoti vidinius sąrašo, detalių, būsenų keitimo, anotavimo, mokymo ir vertinimo maršrutus. Vien paslėpti nuorodas HTML puslapyje nepakanka.
 - Validuoti formas serverio pusėje, naudoti parametrizuotą SQL, šablonuose automatiškai escapinti naudotojo tekstą ir riboti pateikiamo teksto ilgį.
-- 6A įgyvendintos paskyros ir rolės; kategorijų matomumas – 6B, prisiėmimas – 6C. Viešo visų klaidų sąrašo nebus.
+- 6A įgyvendintos paskyros ir rolės; 6B – programuotojų kategorijų matomumas (`require_role("developer")` + SQL kategorijų sąlyga) ir naudotojų valdymas `/admin/users`; prisiėmimas – 6C. Viešo visų klaidų sąrašo nebus.
 
 ## 10. Nefunkciniai reikalavimai
 
@@ -301,13 +311,23 @@ Nauja registracija sukuria **tik `tester` rolę**; `developer` ar `admin` teisė
 - **DB:** `users` lentelė ir `bug_reports.reporter_user_id` su indeksu pridedami `init_db` metu (`CREATE TABLE IF NOT EXISTS`, `ALTER TABLE ADD COLUMN` tik jei stulpelio nėra) – pakartotinai vykdoma, nieko netrinant. Seni pranešimai lieka `reporter_user_id = NULL`. `tools.users bootstrap-admin` prieš perkėlimą sukuria DB kopiją.
 - **Administratorius:** `user_service.bootstrap_admin` sukuria `admin` paskyrą su `.env` vardu ir ta pačia maiša tik jei tokio vardo nėra; esama paskyra niekada neperrašoma (rezultatai `created` / `exists` / `conflict` / `not_configured`). Perkėlimas vyksta automatiškai pirmo teisingo prisijungimo metu arba CLI komanda. `ADMIN_USERNAME` rezervuotas registracijai. Konfigūracija nepasikeitė: be `ADMIN_USERNAME`, `ADMIN_PASSWORD_HASH` ir `SESSION_SECRET_KEY` prisijungimas ir registracija išjungti.
 - **Sesija (`app/auth.py`):** HMAC-SHA256 pasirašytame slapuke `uid`, CSRF žetonas, galiojimo laikas (8 val.) ir slaptažodžio maišos pirštų atspaudas. `get_current_session` kiekvienai užklausai įkelia naudotoją iš DB ir atmeta neegzistuojančią, išjungtą paskyrą ar pakeistą slaptažodį; rolė imama iš DB, ne iš slapuko. `HttpOnly`, `SameSite=Lax`, `Secure` (HTTPS / konfigūracija), saugus `next` išlaikyti.
-- **Teisės:** `require_login` (bet kuris aktyvus naudotojas), `require_role(...)` ir `require_admin`. Neprisijungus – nukreipimas į `/login`, netinkama rolė – 403 (`Forbidden`). Programuotojas iki 6B esamų vidinių puslapių nepasiekia.
+- **Teisės:** `require_login` (bet kuris aktyvus naudotojas), `require_role(...)` ir `require_admin`. Neprisijungus – nukreipimas į `/login`, netinkama rolė – 403 (`Forbidden`). Programuotojas esamų administratoriaus puslapių nepasiekia.
 - **Registracija / prisijungimas (`app/routes/auth.py`, `app/services/user_service.py`):** serverio validacija, unikalumas DB lygiu, rolė visada `tester`, formų CSRF dvigubo pateikimo slapuku (tas pats mechanizmas saugo ir `POST /report` – svečiui ir prisijungusiam; be prisijungimo konfigūracijos naudojamas atsitiktinis programos instancijos raktas), nukreipimas po prisijungimo `next_path_for_role` (administratoriui – bet kuris saugus vidinis kelias, kitoms rolėms – tik jų puslapiai; `safe_next_path` atmeta `..`/`%2e`/`\\`/valdymo simbolius), nesėkmingų prisijungimų ribojimas atmintyje (10 per 15 min. pagal IP ir vardą), vienodas atsakymo laikas neegzistuojančiam vardui.
 - **Mano pranešimai (`app/routes/account.py`):** `/my/reports` ir `/my/reports/{id}`; nuosavybė tikrinama SQL sąlyga `reporter_user_id = sesijos naudotojas`, svetimas ar neegzistuojantis – 404. Klasifikacija ir vidiniai laukai testuotojui nerodomi. Vieša forma `reporter_user_id` ima tik iš sesijos.
 - **Administravimas:** `python -m tools.users` (`bootstrap-admin`, `list`, `set-role`, `activate`, `deactivate`, `set-password`). Naudotojų valdymo puslapio svetainėje dar nėra.
 - **Neįgyvendinta 6A:** slaptažodžio atkūrimas el. paštu, el. pašto patvirtinimas, registracijos dažnio ribojimas, naudotojų valdymo UI.
 
-### 6B paskirstymo pagal kategoriją taisyklės (tik projektas; NEĮGYVENDINTA)
+### 6B – įgyvendinta (2026-11-28, šaka `claude/phase-6b-developer-routing`)
+
+- **DB:** `developer_categories` (žr. 6 skyrių), kuriama `init_db` metu (`IF NOT EXISTS`), nieko netrinant; senos lentelės nekeičiamos.
+- **Naudotojų valdymas (`app/routes/admin_users.py`, `app/services/user_service.py`):** `/admin/users` (tik `admin`) – sąrašas be slaptažodžių maišų, rolės keitimas, aktyvavimas / išjungimas, specializacijų priskyrimas (žymimieji langeliai, visas sąrašas pakeičiamas). `change_role` / `change_active` vienoje `UPDATE` užklausoje tikrina, kad neliktų be aktyvaus administratoriaus (`LastAdminError`, taikoma ir CLI); palikus `developer` rolę specializacijos ištrinamos toje pačioje transakcijoje; specializacijos tik `developer` rolei ir tik iš `ASSIGNABLE_CATEGORIES` (`CATEGORY_LABELS` be `other`). Savo paskyros rolės / aktyvumo administratorius svetainėje nekeičia.
+- **Paskirstymas (`app/services/bug_report_service.py`):** `routed_category` = patvirtinta `bug_reports.category_label` (jei ne `other`), kitaip naujausia `ok` kategorijos prognozė, jei `needs_review = 0` ir ne `other`; kitaip NULL. Būsena `routing_state`: `review` (NULL), `queue` (yra aktyvus tos kategorijos `developer`), `no_developer`. Skaičiuojama SQL CTE kiekvienoje užklausoje – pakeitimai galioja iš karto, pranešimai nedubliuojami, `assigned_user_id` nėra. Esami `REVIEW_THRESHOLDS` nekeisti.
+- **Programuotojo aplinka (`app/routes/developer.py`):** `/developer/dashboard` (paieška, būsenos / savo kategorijos / prioriteto / sudėtingumo filtrai), `/developer/reports/{id}`, `POST /developer/reports/{id}/status`. Visur `require_role("developer")` ir SQL sąlyga `routed_category IN (jo kategorijos)`; svetima ar nepaskirstyta klaida – 404 (IDOR). Klasifikacijos tvirtinimo / perklasifikavimo formų nėra. Be kategorijų – informacinis pranešimas ir tuščias sąrašas.
+- **Administratoriaus aplinka:** `/dashboard` rodo paskirstymo skaičius, stulpelį ir filtrą `routing`; detalėse – paskirstymo būsena ir kiek programuotojų klaidą mato.
+- **Navigacija ir nukreipimas:** programuotojo meniu „Darbo aplinka“, „Mano pranešimai“, „Pranešti apie klaidą“; administratoriaus – papildomai „Naudotojai“. `home_path("developer") = /developer/dashboard`; `next_path_for_role` programuotojui leidžia `/developer/dashboard` ir `/developer/reports/…`, 6A `safe_next_path` apsaugos nepakeistos.
+- **Neįgyvendinta 6B (vėlesni etapai):** konkretaus programuotojo priskyrimas / prisiėmimas, komentarai, darbo krūvio balansavimas, programuotojo klasifikacijos taisymas, pranešimai el. paštu.
+
+### 6B paskirstymo pagal kategoriją taisyklės (pradinis projektas; įgyvendinta pagal aukščiau aprašytą variantą)
 
 - `developer_categories(user_id, category_label)` su UNIQUE ir išoriniu raktu į `users`; reikšmės tik iš `app.config.CATEGORY_LABELS`. Vienas programuotojas gali turėti kelias kategorijas, viena kategorija – kelis programuotojus. `other` / nepatikimas ar nenustatytas modelio rezultatas lieka administratoriaus peržiūros eilėje, kad klaida nedingtų iš sistemos.
 - **Matomumas ir priskyrimas yra skirtingi dalykai**: 6B programuotojas mato savo kategorijų *bendrą eilę*, o 6C galės prisiimti konkrečią klaidą (`assigned_user_id`). Nepriskirti vienintelio žmogaus automatiškai vien iš kategorijos be administratoriaus patvirtintos taisyklės.

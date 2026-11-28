@@ -276,17 +276,19 @@ def test_tester_cannot_reach_admin_routes(site: Site, method: str, path: str) ->
 
 
 @pytest.mark.parametrize(("method", "path"), ADMIN_ROUTES)
-def test_developer_has_no_access_to_all_reports_before_6b(site: Site, method: str, path: str) -> None:
+def test_developer_has_no_access_to_admin_routes(site: Site, method: str, path: str) -> None:
     site.tester("programuotoja")
     site.change(set_role, "programuotoja", "developer")
     client = site.client()
     login(client, "programuotoja", TESTER_PASSWORD)
 
     assert client.request(method, path, follow_redirects=False).status_code == 403
-    assert "kitame etape" in client.get("/my/reports").text
+    # 6B: programuotojas turi savo darbo aplinką (tik jo kategorijos), ne visų klaidų sąrašą.
+    assert client.get("/developer/dashboard").status_code == 200
 
 
 def test_role_changes_take_effect_immediately(site: Site) -> None:
+    site.admin()  # 6B: perkeliamas .env administratorius, kad tomas nebūtų paskutinis administratorius
     client = site.tester("tomas")
     assert client.get("/dashboard", follow_redirects=False).status_code == 403
 
@@ -645,7 +647,8 @@ def test_developer_redirect_is_limited_like_tester(site: Site) -> None:
     register(site.client(), "programuotoja", "p@pavyzdys.lt", TESTER_PASSWORD)
     site.change(set_role, "programuotoja", "developer")
 
-    assert login(site.client(), "programuotoja", TESTER_PASSWORD, next_path="/dashboard").headers["location"] == "/my/reports"
+    # 6B: programuotojo pradinis puslapis – jo darbo aplinka; administravimo adresas vis tiek atmetamas.
+    assert login(site.client(), "programuotoja", TESTER_PASSWORD, next_path="/dashboard").headers["location"] == "/developer/dashboard"
 
 
 @pytest.mark.parametrize(

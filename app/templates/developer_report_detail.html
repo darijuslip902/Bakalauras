@@ -1,0 +1,57 @@
+{% extends "internal_base.html" %}
+{% import "_macros.html" as ui %}
+{% block title %}{% if report %}Klaida #{{ report.id }}{% else %}Pranešimas nerastas{% endif %}{% endblock %}
+{% block content %}
+<p><a href="/developer/dashboard">&larr; Atgal į mano kategorijų klaidas</a></p>
+
+{% if not report %}
+<h1>Pranešimas nerastas</h1>
+<p class="error" role="alert">Tokio pranešimo jūsų kategorijose nėra.</p>
+{% else %}
+<h1><span class="muted">#{{ report.id }}</span> {{ report.title }}</h1>
+
+{% if message %}<p class="success" role="status">{{ message }}</p>{% endif %}
+{% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+
+<div class="detail-grid">
+  <div class="stack">
+  <section class="card" aria-labelledby="description-heading">
+    <h2 id="description-heading">Aprašymas</h2>
+    <div class="description">{{ report.description }}</div>
+  </section>
+
+  <section class="card" aria-labelledby="classification-heading">
+    <h2 id="classification-heading">Klasifikacija</h2>
+    <dl class="meta">
+      <dt>Kategorija</dt><dd>{{ ui.shown_label(report.category_label, report.auto_category_label, category_labels) }}</dd>
+      <dt>Prioritetas</dt><dd>{{ ui.shown_label(report.priority_label, report.auto_priority_label, priority_labels) }}</dd>
+      <dt>Sudėtingumas</dt><dd>{{ ui.shown_label(report.complexity_label, report.auto_complexity_label, complexity_labels) }}</dd>
+    </dl>
+    <p class="muted small">{% if report.category_label %}Klasifikaciją patvirtino administratorius.{% else %}Pilkesniu kursyvu – automatinė prognozė, dar nepatvirtinta. Pastebėję netikslumą, praneškite administratoriui: klasifikaciją tvirtina ir taiso jis.{% endif %}</p>
+  </section>
+  </div>
+
+  <aside class="card" aria-labelledby="info-heading">
+    <h2 id="info-heading">Informacija</h2>
+    <dl class="meta">
+      <dt>Klaidos numeris</dt><dd>#{{ report.id }}</dd>
+      <dt>Būsena</dt><dd>{{ ui.status_badge(report.status, status_labels) }}</dd>
+      <dt>Pateikta</dt><dd>{{ report.created_at|datetime }}</dd>
+      <dt>Atnaujinta</dt><dd>{{ report.updated_at|datetime }}</dd>
+      <dt>Išspręsta</dt><dd>{% if report.resolved_at %}{{ report.resolved_at|datetime }}{% else %}<span class="muted">Neišspręsta</span>{% endif %}</dd>
+    </dl>
+
+    <form class="status-form" method="post" action="/developer/reports/{{ report.id }}/status">
+      <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+      <label for="new-status">Keisti būseną</label>
+      <select id="new-status" name="status">
+        {% for value in statuses %}
+        <option value="{{ value }}"{% if report.status == value %} selected{% endif %}>{{ status_labels[value] }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit">Išsaugoti būseną</button>
+    </form>
+  </aside>
+</div>
+{% endif %}
+{% endblock %}

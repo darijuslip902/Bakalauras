@@ -2,7 +2,7 @@
 
 Visos SQL užklausos parametrizuotos. Slaptažodžiai saugomi tik kaip PBKDF2-SHA256 maiša.
 Viešai registruojantis visada sukuriama `tester` rolė; `developer` / `admin` suteikiami tik
-administratoriaus veiksmu (`python -m tools.users`).
+administratoriaus veiksmu (6B: puslapis `/admin/users` arba `python -m tools.users`).
 """
 
 import re
@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from enum import Enum
 
+from app import config
 from app.auth import (
     MIN_PASSWORD_LENGTH,
     AuthSettings,
@@ -210,24 +211,129 @@ def authenticate(
     return LoginResult.OK, user
 
 
-# --- Administratoriaus veiksmai (CLI) ----------------------------------------
+# --- Administratoriaus veiksmai (svetainė `/admin/users` ir CLI `tools.users`) ---------
+#
+# Visi rolės / aktyvumo / specializacijų pakeitimai eina per šias funkcijas, todėl apsaugos
+# (paskutinis administratorius, specializacijos tik programuotojui) galioja abiem keliais.
+# Sesijos kiekvienos užklausos metu skaito rolę ir aktyvumą iš DB – pakeitimai galioja iš karto.
+
+# Specializacijomis priskiriamos visos kategorijos, išskyrus `other`: „Kita“ visada lieka
+# administratoriaus peržiūrai (6B paskirstymo taisyklė), todėl jos eilės programuotojams nėra.
+ASSIGNABLE_CATEGORIES = tuple(label for label in config.CATEGORY_LABELS if label != "other")
+
+
+class LastAdminError(Exception):
+    """Veiksmas paliktų sistemą be nė vieno aktyvaus administratoriaus."""
+
+
+class InvalidSpecialization(ValueError):
+    """Neleistina kategorija arba naudotojas nėra programuotojas."""
+
+
+# Atominė sąlyga vienoje UPDATE užklausoje: paskutinio aktyvaus administratoriaus pakeisti negalima.
+_NOT_LAST_ACTIVE_ADMIN = (
+    "NOT (role = 'admin' AND is_active = 1 AND "
+    "(SELECT COUNT(*) FROM users WHERE role = 'admin' AND is_active = 1) <= 1)"
+)
+
+
+def count_active_admins(conn: sqlite3.Connection) -> int:
+    return conn.execute("SELECT COUNT(*) FROM users WHERE role = 'admin' AND is_active = 1").fetchone()[0]
+
+
+def change_role(conn: sqlite3.Connection, user_id: int, role: str) -> User | None:
+    """Pakeičia rolę. Palikus `developer` rolę, jo specializacijos pašalinamos toje pačioje transakcijoje.
+
+    None – naudotojas nerastas; LastAdminError – tai paskutinis aktyvus administratorius.
+    """
+    if role not in ROLES:
+        raise ValueError("neleistina rolė")
+    user = get_user(conn, user_id)
+    if user is None:
+        return None
+    if user.role == role:
+        return user
+    guard = f" AND {_NOT_LAST_ACTIVE_ADMIN}" if role != "admin" else ""
+    with conn:
+        cursor = conn.execute(
+            f"UPDATE users SET role = ?, updated_at = ? WHERE id = ?{guard}", (role, _utc_now(), user_id)
+        )
+        if cursor.rowcount == 0:
+            raise LastAdminError()
+        if role != "developer":
+            conn.execute("DELETE FROM developer_categories WHERE user_id = ?", (user_id,))
+    return get_user(conn, user_id)
+
+
+def change_active(conn: sqlite3.Connection, user_id: int, active: bool) -> User | None:
+    """Aktyvuoja / išjungia paskyrą (specializacijos išlieka, bet neaktyvus naudotojas jų nemato)."""
+    user = get_user(conn, user_id)
+    if user is None:
+        return None
+    if user.is_active == active:
+        return user
+    guard = "" if active else f" AND {_NOT_LAST_ACTIVE_ADMIN}"
+    with conn:
+        cursor = conn.execute(
+            f"UPDATE users SET is_active = ?, updated_at = ? WHERE id = ?{guard}",
+            (1 if active else 0, _utc_now(), user_id),
+        )
+        if cursor.rowcount == 0:
+            raise LastAdminError()
+    return get_user(conn, user_id)
+
+
+def developer_categories(conn: sqlite3.Connection, user_id: int) -> list[str]:
+    rows = conn.execute(
+        "SELECT category_label FROM developer_categories WHERE user_id = ? ORDER BY category_label", (user_id,)
+    )
+    return [row["category_label"] for row in rows]
+
+
+def all_developer_categories(conn: sqlite3.Connection) -> dict[int, list[str]]:
+    """Naudotojo ID -> jo specializacijos (administravimo puslapiui)."""
+    result: dict[int, list[str]] = {}
+    for row in conn.execute("SELECT user_id, category_label FROM developer_categories ORDER BY category_label"):
+        result.setdefault(row["user_id"], []).append(row["category_label"])
+    return result
+
+
+def set_developer_categories(conn: sqlite3.Connection, user_id: int, labels: list[str]) -> list[str]:
+    """Pakeičia visą programuotojo specializacijų sąrašą (tuščias sąrašas – visas pašalina)."""
+    clean = sorted({label.strip() for label in labels})
+    invalid = [label for label in clean if label not in ASSIGNABLE_CATEGORIES]
+    if invalid:
+        raise InvalidSpecialization("neleistina kategorija")
+    user = get_user(conn, user_id)
+    if user is None or user.role != "developer":
+        raise InvalidSpecialization("specializacijas galima priskirti tik programuotojui")
+    now = _utc_now()
+    with conn:
+        conn.execute("DELETE FROM developer_categories WHERE user_id = ?", (user_id,))
+        conn.executemany(
+            "INSERT INTO developer_categories (user_id, category_label, created_at) VALUES (?, ?, ?)",
+            [(user_id, label, now) for label in clean],
+        )
+    return clean
+
+
+def _by_username(conn: sqlite3.Connection, username: str) -> int | None:
+    user = get_user_by_username(conn, username)
+    return user.id if user else None
 
 
 def set_role(conn: sqlite3.Connection, username: str, role: str) -> User | None:
+    """CLI: kaip `change_role`, tik pagal naudotojo vardą."""
     if role not in ROLES:
         raise ValueError("neleistina rolė")
-    with conn:
-        conn.execute("UPDATE users SET role = ?, updated_at = ? WHERE username = ?", (role, _utc_now(), username.strip()))
-    return get_user_by_username(conn, username)
+    user_id = _by_username(conn, username)
+    return None if user_id is None else change_role(conn, user_id, role)
 
 
 def set_active(conn: sqlite3.Connection, username: str, active: bool) -> User | None:
-    with conn:
-        conn.execute(
-            "UPDATE users SET is_active = ?, updated_at = ? WHERE username = ?",
-            (1 if active else 0, _utc_now(), username.strip()),
-        )
-    return get_user_by_username(conn, username)
+    """CLI: kaip `change_active`, tik pagal naudotojo vardą."""
+    user_id = _by_username(conn, username)
+    return None if user_id is None else change_active(conn, user_id, active)
 
 
 def set_password(conn: sqlite3.Connection, username: str, password: str) -> User | None:

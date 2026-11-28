@@ -4,9 +4,9 @@ Internetinis prototipas: klientas arba testuotojas be paskyros pateikia klaidą,
 
 Technologijos: Python, FastAPI, Jinja2, HTML/CSS, SQLite, scikit-learn (TF-IDF + Logistic Regression), pytest. Claude API naudojamas tik atskirame mokymo duomenų žymėjimo CLI, ne svetainėje.
 
-## Dabartinė būklė (2026-11-27, 6A šakoje)
+## Dabartinė būklė (2026-11-28, 6B šakoje)
 
-0–5D etapai baigti, PR #11 sujungtas į main. Modelių versija `20261113-125330`. **6A (naudotojų paskyros, registracija, rolės) įgyvendintas šakoje `claude/phase-6a-user-accounts`**; 6B–6E dar neįgyvendinti. Statistikos puslapis neprivalomas. P0 paliekamas, nors jo atpažinimas silpnas.
+0–5D etapai baigti, PR #11 sujungtas į main. Modelių versija `20261113-125330`. 6A (naudotojų paskyros, registracija, rolės) sujungtas į main (PR #14). **6B (specializacijos, naudotojų administravimas, paskirstymas pagal kategorijas) įgyvendintas šakoje `claude/phase-6b-developer-routing`**; 6C–6E dar neįgyvendinti. Statistikos puslapis neprivalomas. P0 paliekamas, nors jo atpažinimas silpnas.
 
 - 40 024 importuoti GitHub įrašai; 23 884 sėkmingos DI anotacijos (19 412 tinkamų, 4 472 netinkamų).
 - 18 267 mokymo ir validacijos pavyzdžiai; 1 120 atrinktų testo įrašų, iš jų 901 tinkamas (visi 901 su DI etalonu); 30 pilotinių įrašų.
@@ -16,8 +16,8 @@ Technologijos: Python, FastAPI, Jinja2, HTML/CSS, SQLite, scikit-learn (TF-IDF +
 
 ## 6 etapas
 
-- **6A (įgyvendinta):** DB naudotojų paskyros, vieša testuotojo registracija, saugus prisijungimas, rolės (`tester`, `developer`, `admin`) ir savo pranešimų peržiūra. Žr. skyrių „Naudotojų paskyros ir rolės (6A)“.
-- **6B (dar neveikia):** administratoriaus priskiriamos kategorijos programuotojams, kategorijų matomumo taisyklės serverio pusėje.
+- **6A (sujungta į main):** DB naudotojų paskyros, vieša testuotojo registracija, saugus prisijungimas, rolės (`tester`, `developer`, `admin`) ir savo pranešimų peržiūra. Žr. skyrių „Naudotojų paskyros ir rolės (6A)“.
+- **6B (įgyvendinta):** naudotojų valdymas `/admin/users`, programuotojų specializacijos (kategorijos), programuotojo darbo aplinka `/developer/dashboard` ir automatinis paskirstymas pagal kategoriją. Žr. skyrių „Programuotojai ir paskirstymas (6B)“.
 - **6C:** klaidos prisiėmimas, komentarai, įvykių istorija.
 - **6D:** galutinis vientisas mobiliesiems pritaikytas dizainas.
 - **6E:** asmeninės darbo apžvalgos ir filtrai. Multi-tenancy atidėtas; kol kas **vienai įmonei vienas diegimas**.
@@ -75,22 +75,36 @@ Pradinis administratorius aprašomas `.env` faile. Numatytojo slaptažodžio nė
 
 Programa `.env` failą nuskaito pati paleidimo metu; jei kintamasis jau nustatytas aplinkoje, jis turi pirmenybę. `.env` yra `.gitignore` sąraše, todėl į GitHub nepatenka. Niekada neįrašykite tikrų reikšmių į `.env.example`, kodą ar Git istoriją. Pakeitus `SESSION_SECRET_KEY`, visos sesijos nustoja galioti.
 
-## Naudotojų paskyros ir rolės (6A)
+## Naudotojų paskyros ir rolės (6A, 6B)
 
 | Rolė | Ką gali |
 |---|---|
 | svečias (neprisijungęs) | Pateikti klaidą viešoje formoje `/report`; nieko kito nemato |
 | `tester` | Užsiregistruoti `/register`; pateikti klaidą; matyti **tik savo** pranešimus ir jų būsenas (`/my/reports`) |
-| `developer` | Kol kas – tik savo pranešimai. Klaidos pagal priskirtas kategorijas bus 6B etape; prieigos prie visų pranešimų neturi |
-| `admin` | Visa esama vidinė aplinka: `/dashboard`, klaidų detalės ir valdymas, `/import`, `/dashboard/training-data` |
+| `developer` | Darbo aplinka `/developer/dashboard`: **tik jam priskirtų kategorijų** klaidos, jų detalės ir būsenos keitimas; taip pat savo pranešimai ir vieša forma. Klasifikacijos netvirtina |
+| `admin` | Visa esama vidinė aplinka: `/dashboard` (visos klaidos ir paskirstymo indikatoriai), klaidų detalės ir valdymas, `/import`, `/dashboard/training-data`, naudotojų valdymas `/admin/users` |
 
 - **Registracija** visada sukuria `tester` paskyrą; bet koks `role` formos laukas ignoruojamas. Vardas (3–40 lotyniškų raidžių, skaičių, `. _ -`) ir el. paštas unikalūs nepriklausomai nuo raidžių dydžio; slaptažodis bent 10 simbolių, saugomas tik PBKDF2-SHA256 maiša. Vardas, sutampantis su `ADMIN_USERNAME`, rezervuotas.
 - **Teisės tikrinamos serveryje** kiekvienai užklausai (`require_admin` / `require_login`), ne tik paslepiant nuorodas. Testuotojas, atidaręs administratoriaus URL, gauna 403; svetimo pranešimo URL – 404.
 - **Sesijos** slapuke tik naudotojo ID; rolė ir aktyvumas kaskart skaitomi iš DB, todėl rolės pakeitimas ar paskyros išjungimas galioja iš karto, o pakeitus slaptažodį senos sesijos nebegalioja.
 - **Prisijungimo, registracijos ir viešos klaidos formos** (`/report`, tiek svečiui, tiek prisijungusiam) apsaugotos CSRF (dvigubo pateikimo slapukas): be galiojančio žetono pranešimas neišsaugomas (403). Vieša forma veikia ir be paskyrų konfigūracijos.
-- **Nukreipimas po prisijungimo:** `next` priimamas tik jei tai saugus vidinis kelias (be `..`, `%2e`, `\`, išorinių adresų), kurį ta rolė gali atidaryti. Administratorius grįžta į norimą vidinį puslapį; testuotojas ir programuotojas – tik į `/my/reports…` ar `/report`, kitaip į `/my/reports` (senas `next=/dashboard` ignoruojamas). Po 10 nesėkmingų bandymų tam pačiam vardui iš to paties IP 15 min. prisijungti neleidžiama (ribojimas atmintyje, vienam serverio procesui).
+- **Nukreipimas po prisijungimo:** `next` priimamas tik jei tai saugus vidinis kelias (be `..`, `%2e`, `\`, išorinių adresų), kurį ta rolė gali atidaryti. Administratorius grįžta į norimą vidinį puslapį; testuotojas – tik į `/my/reports…` ar `/report`, kitaip į `/my/reports`; programuotojas dar ir į `/developer/…`, kitaip į `/developer/dashboard` (senas `next=/dashboard` ignoruojamas). Po 10 nesėkmingų bandymų tam pačiam vardui iš to paties IP 15 min. prisijungti neleidžiama (ribojimas atmintyje, vienam serverio procesui).
 - **Pranešimo savininkas:** prisijungusio naudotojo pranešimas susiejamas su jo paskyra (`reporter_user_id` imamas tik iš sesijos). Svečių ir visi seni pranešimai lieka be savininko ir niekam nepriskiriami.
 - Slaptažodžio atkūrimo el. paštu nėra (tam reikia pašto infrastruktūros); slaptažodį gali pakeisti administratorius komandine eilute.
+
+## Programuotojai ir paskirstymas (6B)
+
+**Programuotojo paskyra:** naudotojas užsiregistruoja `/register` (visada testuotojas) → administratorius puslapyje **Naudotojai** (`/admin/users`) pakeičia rolę į „Programuotojas“ → pažymi vieną ar kelias kategorijas ir paspaudžia „Išsaugoti“. Viena kategorija gali turėti kelis programuotojus. Kategorija „Kita“ nepriskiriama – tokios klaidos visada lieka administratoriui. Tame pačiame puslapyje keičiama rolė, išjungiama / aktyvuojama paskyra ir matoma, kurios kategorijos neturi programuotojo. Slaptažodžiai ir jų maišos nerodomi.
+
+**Kaip klaida patenka į eilę (kategorijų eilės, be konkretaus darbuotojo priskyrimo):**
+
+1. Jei administratorius patvirtino kategoriją – naudojama ji (pirmenybė prieš modelį).
+2. Kitaip – naujausia sėkminga automatinė kategorijos prognozė, jei ji **nepažymėta peržiūrai** (`needs_review`: įvertis žemiau esamo slenksčio 0,40 arba nepatikimas lietuviško teksto vertimas). Slenksčiai nekeisti.
+3. „Kita“, nenustatyta, modelio nėra / klaida arba peržiūrai pažymėta prognozė → **administratoriaus peržiūra**.
+
+Klaidą mato visi aktyvūs tos kategorijos programuotojai. Administratoriaus sąraše rodomi skaičiai ir filtras „Paskirstymas“: *Programuotojų eilėje*, *Nėra programuotojo* (kategorija be aktyvaus programuotojo), *Reikia administratoriaus peržiūros*. Patvirtinus ar pakeitus kategoriją, pakeitus specializacijas, rolę ar aktyvumą, matomumas pasikeičia iš karto (skaičiuojama kiekvienos užklausos metu, pranešimai nekopijuojami). Pakeitus programuotojo rolę į kitą, jo specializacijos pašalinamos.
+
+**Apsaugos:** visos teisės tikrinamos serveryje; svetimos kategorijos klaidos URL ar būsenos POST programuotojui grąžina 404; visos keičiančios formos turi CSRF žetoną; paskutinio aktyvaus administratoriaus rolės pakeisti ar paskyros išjungti negalima (ir per CLI); savo paskyros rolės / aktyvumo administratorius svetainėje nekeičia.
 
 ### Esamo administratoriaus išsaugojimas
 
@@ -115,7 +129,7 @@ python -m tools.users activate jonas
 python -m tools.users set-password jonas
 ```
 
-Naudotojų valdymo puslapis svetainėje nesukurtas (numatyta vėlesniuose etapuose).
+Nuo 6B tą patį (ir specializacijas) galima atlikti svetainėje `/admin/users`. Abu keliai naudoja tas pačias apsaugas: paskutinio aktyvaus administratoriaus `set-role` / `deactivate` atmetami (išėjimo kodas 2), `list` rodo ir specializacijas.
 
 ## Vidinės aplinkos naudojimas
 

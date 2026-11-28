@@ -21,6 +21,12 @@
 {%- else %}<span class="badge state-none">Neklasifikuota</span>{% endif %}
 {%- endmacro %}
 
+{# 6B: kur klaida paskirstyta (programuotojų eilė / nėra programuotojo / administratoriaus peržiūra). #}
+{% macro routing_badge(report, labels, category_labels) -%}
+<span class="badge routing-{{ report.routing_state }}">{{ labels[report.routing_state] }}</span>
+{%- if report.routed_category %} <span class="muted small nowrap">{{ category_labels.get(report.routed_category, report.routed_category) }}</span>{% endif %}
+{%- endmacro %}
+
 {% macro annotation_badge(status, labels) -%}
 <span class="badge annotation-{{ status }}">{{ labels[status] }}</span>
 {%- endmacro %}

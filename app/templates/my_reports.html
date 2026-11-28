@@ -6,7 +6,7 @@
   <a class="button" href="/report">Pranešti apie naują klaidą</a>
 </div>
 {% if session.role == "developer" %}
-<p class="notice" role="status">Programuotojo darbo aplinka (klaidos pagal priskirtas kategorijas) bus įjungta kitame etape. Kol kas matote tik savo pateiktus pranešimus.</p>
+<p class="notice" role="status">Čia – tik jūsų pačių pateikti pranešimai. Jūsų kategorijų klaidos rodomos <a href="/developer/dashboard">darbo aplinkoje</a>.</p>
 {% endif %}
 {% if reports %}
 <div class="table-wrap">

@@ -90,6 +90,7 @@ class ReportFilters:
     category_label: str = ""
     priority_label: str = ""
     complexity_label: str = ""
+    routing: str = ""  # 6B: queue | no_developer | review
 
 
 def _auto_label_sql(column: str) -> str:
@@ -98,15 +99,67 @@ def _auto_label_sql(column: str) -> str:
             f"AND p.field = '{column}' AND p.status = 'ok' ORDER BY p.id DESC LIMIT 1)")
 
 
-def list_bug_reports(conn: sqlite3.Connection, filters: ReportFilters) -> list[sqlite3.Row]:
+# --- 6B: paskirstymas pagal kategorijas (kategorijų eilės) ---------------------------
+#
+# Kategorija, pagal kurią klaida patenka į programuotojų eilę (`routed_category`):
+#   1) žmogaus patvirtinta kategorija (bug_reports.category_label) turi pirmenybę;
+#   2) kitaip – naujausia sėkminga (`ok`) automatinė prognozė, jei ji nepažymėta peržiūrai
+#      (`needs_review` = įvertis žemiau REVIEW_THRESHOLDS arba nepatikimas lietuviško teksto vertimas);
+#   3) `other`, nenustatyta ar peržiūrai pažymėta kategorija -> NULL: klaida lieka administratoriui.
+# Kiekvienos užklausos metu skaičiuojama iš esamų duomenų, todėl pakeitus kategoriją, prognozę ar
+# specializacijas matomumas persiskaičiuoja iš karto; pranešimai nekopijuojami.
+ROUTING_STATES = {
+    "queue": "Programuotojų eilėje",
+    "no_developer": "Nėra programuotojo",
+    "review": "Reikia administratoriaus peržiūros",
+}
+_ROUTED_CATEGORY_SQL = (
+    "CASE WHEN b.category_label IS NOT NULL THEN NULLIF(b.category_label, 'other') ELSE "
+    "(SELECT CASE WHEN p.needs_review = 0 THEN NULLIF(p.predicted_label, 'other') END "
+    "FROM prediction_runs p WHERE p.bug_report_id = b.id AND p.field = 'category_label' "
+    "AND p.status = 'ok' ORDER BY p.id DESC LIMIT 1) END"
+)
+# Eilę turi tik aktyvūs naudotojai su `developer` role (rolė / aktyvumas tikrinami kiekvieną kartą).
+_ACTIVE_DEVELOPERS_SQL = (
+    "SELECT COUNT(*) FROM developer_categories dc JOIN users u ON u.id = dc.user_id "
+    "WHERE dc.category_label = r.routed_category AND u.role = 'developer' AND u.is_active = 1"
+)
+_ROUTING_STATE_SQL = (
+    "CASE WHEN r.routed_category IS NULL THEN 'review' "
+    f"WHEN ({_ACTIVE_DEVELOPERS_SQL}) > 0 THEN 'queue' ELSE 'no_developer' END"
+)
+
+
+def _routed_reports_sql() -> str:
+    """CTE `s`: visi pranešimai su automatinėmis žymomis, paskirstymo kategorija ir būsena."""
+    auto_columns = ", ".join(f"{_auto_label_sql(c)} AS auto_{c}" for c in _LABEL_COLUMNS)
+    return (
+        f"WITH r AS (SELECT b.*, {auto_columns}, {_ROUTED_CATEGORY_SQL} AS routed_category "
+        "FROM bug_reports b), "
+        f"s AS (SELECT r.*, {_ROUTING_STATE_SQL} AS routing_state, ({_ACTIVE_DEVELOPERS_SQL}) AS developer_count "
+        "FROM r) "
+    )
+
+
+_DEVELOPER_SCOPE_SQL = "routed_category IN (SELECT category_label FROM developer_categories WHERE user_id = ?)"
+
+
+def list_bug_reports(
+    conn: sqlite3.Connection, filters: ReportFilters, developer_id: int | None = None
+) -> list[sqlite3.Row]:
     """Grąžina pranešimus (naujausi viršuje), įskaitant išspręstus, pagal filtrus.
 
     Kategorijos / prioriteto / sudėtingumo filtras ir rodoma reikšmė: žmogaus patvirtinta žyma,
     o jei jos nėra – automatinė prognozė (`auto_<laukas>`, rodoma sąraše su žyma „auto“).
+    6B: nurodžius `developer_id` grąžinami tik to programuotojo kategorijų eilėse esantys pranešimai
+    (tikrinama SQL lygmeniu, todėl tai galioja ir filtrams, ir skaičiams).
     """
     add_casefold_function(conn)
     conditions: list[str] = []
     params: list[object] = []
+    if developer_id is not None:
+        conditions.append(_DEVELOPER_SCOPE_SQL)
+        params.append(developer_id)
     if filters.search:
         conditions.append(
             "(instr(py_casefold(title), ?) > 0 OR instr(py_casefold(description), ?) > 0)"
@@ -118,19 +171,42 @@ def list_bug_reports(conn: sqlite3.Connection, filters: ReportFilters) -> list[s
         params.append(filters.status)
     for column in _LABEL_COLUMNS:  # stulpelių pavadinimai fiksuoti, ne iš naudotojo
         value = getattr(filters, column)
-        effective = f"COALESCE(b.{column}, {_auto_label_sql(column)})"
+        effective = f"COALESCE({column}, auto_{column})"
         if value == UNSET:
             conditions.append(f"{effective} IS NULL")
         elif value:
             conditions.append(f"{effective} = ?")
             params.append(value)
+    if filters.routing:
+        conditions.append("routing_state = ?")
+        params.append(filters.routing)
 
-    auto_columns = ", ".join(f"{_auto_label_sql(c)} AS auto_{c}" for c in _LABEL_COLUMNS)
-    sql = f"SELECT b.*, {auto_columns} FROM bug_reports b"
+    sql = _routed_reports_sql() + "SELECT * FROM s"
     if conditions:
         sql += " WHERE " + " AND ".join(conditions)
-    sql += " ORDER BY b.created_at DESC, b.id DESC"
+    sql += " ORDER BY created_at DESC, id DESC"
     return conn.execute(sql, params).fetchall()
+
+
+def routing_summary(conn: sqlite3.Connection) -> dict[str, int]:
+    """Kiek pranešimų kiekvienoje paskirstymo būsenoje (administratoriaus indikatoriams)."""
+    counts = dict.fromkeys(ROUTING_STATES, 0)
+    for row in conn.execute(_routed_reports_sql() + "SELECT routing_state, COUNT(*) AS n FROM s GROUP BY routing_state"):
+        counts[row["routing_state"]] = row["n"]
+    return counts
+
+
+def get_routed_report(
+    conn: sqlite3.Connection, report_id: int, developer_id: int | None = None
+) -> sqlite3.Row | None:
+    """Pranešimas su paskirstymo informacija. Su `developer_id` – tik jei jis to programuotojo eilėje
+    (kitaip None, todėl svetimos kategorijos klaida programuotojui atrodo kaip neegzistuojanti)."""
+    sql = _routed_reports_sql() + "SELECT * FROM s WHERE id = ?"
+    params: list[object] = [report_id]
+    if developer_id is not None:
+        sql += f" AND {_DEVELOPER_SCOPE_SQL}"
+        params.append(developer_id)
+    return conn.execute(sql, params).fetchone()
 
 
 def get_bug_report(conn: sqlite3.Connection, report_id: int) -> sqlite3.Row | None:

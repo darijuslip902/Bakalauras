@@ -10,6 +10,8 @@ Pavyzdžiai (Windows CMD, projekto kataloge, aktyvavus .venv):
 
 Prieš pirmą `bootstrap-admin` automatiškai sukuriama DB atsarginė kopija (`data/backups/`).
 Pakeitus rolę, aktyvumą ar slaptažodį, tai galioja iš karto (sesijos tikrinamos DB).
+6B: paskutinio aktyvaus administratoriaus rolės pakeisti ar paskyros išjungti negalima; pakeitus
+`developer` rolę kita, jo specializacijos pašalinamos. Specializacijos priskiriamos puslapyje /admin/users.
 """
 
 import getpass
@@ -19,6 +21,8 @@ from app.auth import MIN_PASSWORD_LENGTH, get_auth_settings
 from app.services.user_service import (
     ROLES,
     AdminBootstrap,
+    LastAdminError,
+    all_developer_categories,
     bootstrap_admin,
     list_users,
     set_active,
@@ -64,15 +68,23 @@ def main(argv: list[str] | None = None) -> int:
             print(_BOOTSTRAP_MESSAGES[result])
             return 0 if result in (AdminBootstrap.CREATED, AdminBootstrap.EXISTS) else 2
         if args.command == "list":
+            categories = all_developer_categories(conn)
             for user in list_users(conn):
                 state = "aktyvi" if user.is_active else "išjungta"
-                print(f"{user.id:>4}  {user.username:<30} {user.role:<10} {state:<9} {user.email or '-'}")
+                specializations = ",".join(categories.get(user.id, [])) or "-"
+                print(f"{user.id:>4}  {user.username:<30} {user.role:<10} {state:<9} {user.email or '-'}"
+                      f"  {specializations}")
             return 0
-        if args.command == "set-role":
-            user = set_role(conn, args.username, args.role)
-        elif args.command in ("activate", "deactivate"):
-            user = set_active(conn, args.username, args.command == "activate")
-        else:
+        try:
+            if args.command == "set-role":
+                user = set_role(conn, args.username, args.role)
+            elif args.command in ("activate", "deactivate"):
+                user = set_active(conn, args.username, args.command == "activate")
+        except LastAdminError:
+            print("KLAIDA: tai paskutinis aktyvus administratorius – jo rolės keisti ar paskyros išjungti negalima. "
+                  "Pirmiausia suteikite administratoriaus rolę kitam naudotojui.")
+            return 2
+        if args.command == "set-password":
             password = getpass.getpass("Naujas slaptažodis: ")
             if len(password) < MIN_PASSWORD_LENGTH:
                 print(f"KLAIDA: slaptažodis turi būti bent {MIN_PASSWORD_LENGTH} simbolių.")

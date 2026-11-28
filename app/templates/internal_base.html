@@ -9,16 +9,20 @@
 <body>
   <header class="topbar">
     <div class="topbar-inner">
-      {# Navigacija pagal rolę (6A). Tai tik patogumas: teisės tikrinamos serveryje. #}
+      {# Navigacija pagal rolę (6A, 6B). Tai tik patogumas: teisės tikrinamos serveryje. #}
       {% set role_names = {"tester": "testuotojas", "developer": "programuotojas", "admin": "administratorius"} %}
-      <a class="brand" href="{{ '/dashboard' if session.role == 'admin' else '/my/reports' }}">Klaidų valdymas</a>
+      <a class="brand" href="{{ {'admin': '/dashboard', 'developer': '/developer/dashboard'}.get(session.role, '/my/reports') }}">Klaidų valdymas</a>
       <nav class="topnav" aria-label="Pagrindinė navigacija">
         {% if session.role == "admin" %}
         <a href="/dashboard"{% if active == "dashboard" %} aria-current="page"{% endif %}>Klaidų sąrašas</a>
         <a href="/dashboard/training-data"{% if active == "training" %} aria-current="page"{% endif %}>Mokymo duomenys</a>
         <a href="/import"{% if active == "import" %} aria-current="page"{% endif %}>GitHub importas</a>
+        <a href="/admin/users"{% if active == "users" %} aria-current="page"{% endif %}>Naudotojai</a>
         <a href="/report">Vieša forma</a>
         {% else %}
+        {% if session.role == "developer" %}
+        <a href="/developer/dashboard"{% if active == "developer" %} aria-current="page"{% endif %}>Darbo aplinka</a>
+        {% endif %}
         <a href="/my/reports"{% if active == "my_reports" %} aria-current="page"{% endif %}>Mano pranešimai</a>
         <a href="/report">Pranešti apie klaidą</a>
         {% endif %}

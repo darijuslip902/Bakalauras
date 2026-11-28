@@ -217,8 +217,8 @@ def require_role(*roles: str):
     return dependency
 
 
-# Esami vidiniai maršrutai (klaidų valdymas, importas, mokymo duomenys) – tik administratoriui.
-# Programuotojo prieiga pagal kategorijas – 6B etapas.
+# Esami vidiniai maršrutai (visų klaidų valdymas, importas, mokymo duomenys, naudotojai) – tik
+# administratoriui. Programuotojo prieiga pagal kategorijas – `app.routes.developer` (6B).
 require_admin = require_role("admin")
 
 
@@ -252,12 +252,15 @@ def safe_next_path(value: str | None, default: str = "/dashboard") -> str:
 
 def home_path(role: str) -> str:
     """Pradinis puslapis po prisijungimo pagal rolę."""
-    return "/dashboard" if role == "admin" else "/my/reports"
+    return {"admin": "/dashboard", "developer": "/developer/dashboard"}.get(role, "/my/reports")
 
 
 # Ne administratoriams leidžiami grįžimo puslapiai (tikslus kelias arba kelio pradžia su „/“).
+# 6B: programuotojas papildomai gali grįžti į savo darbo aplinką.
 _NON_ADMIN_NEXT_PATHS = ("/", "/my/reports", "/report", "/report/submitted")
 _NON_ADMIN_NEXT_PREFIXES = ("/my/reports/",)
+_ROLE_NEXT_PATHS = {"developer": ("/developer/dashboard",)}
+_ROLE_NEXT_PREFIXES = {"developer": ("/developer/reports/",)}
 
 
 def next_path_for_role(value: str | None, role: str) -> str:
@@ -274,7 +277,9 @@ def next_path_for_role(value: str | None, role: str) -> str:
     if role == "admin":
         return path
     bare = path.split("?", 1)[0].split("#", 1)[0]
-    if bare in _NON_ADMIN_NEXT_PATHS or bare.startswith(_NON_ADMIN_NEXT_PREFIXES):
+    paths = _NON_ADMIN_NEXT_PATHS + _ROLE_NEXT_PATHS.get(role, ())
+    prefixes = _NON_ADMIN_NEXT_PREFIXES + _ROLE_NEXT_PREFIXES.get(role, ())
+    if bare in paths or bare.startswith(prefixes):
         return path
     return default
 

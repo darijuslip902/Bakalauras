@@ -140,6 +140,18 @@ CREATE TABLE IF NOT EXISTS classification_confirmations (
 );
 CREATE INDEX IF NOT EXISTS idx_classification_confirmations_report
     ON classification_confirmations (bug_report_id, id);
+
+-- 6B: programuotojų specializacijos (kategorijų eilės). Vienas programuotojas – kelios kategorijos,
+-- viena kategorija – keli programuotojai. Kategorijų reikšmės tikrinamos pagal config.CATEGORY_LABELS
+-- (app.services.user_service.set_developer_categories); konkretus klaidos priskyrimas žmogui nekuriamas.
+CREATE TABLE IF NOT EXISTS developer_categories (
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    category_label TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    PRIMARY KEY (user_id, category_label)
+);
+CREATE INDEX IF NOT EXISTS idx_developer_categories_category
+    ON developer_categories (category_label, user_id);
 """
 
 # Stulpeliai, pridėti vėlesniuose etapuose. Senoms DB jie pridedami ALTER TABLE
